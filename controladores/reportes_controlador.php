@@ -1,0 +1,67 @@
+<?php
+
+class Reportescontrolador
+{
+
+    /*===================================================================*/
+    //LISTAR REPORTE POR CLIENTE
+    /*===================================================================*/
+    static public function ctrReportePorCliente($cliente_id)
+    {
+        $reporteporCliente =  ReportesModelo::mdlReportePorCliente($cliente_id);
+        return $reporteporCliente;
+    }
+
+
+    /*===================================================================*/
+    //LISTAR REPORTE CUOTAS PAGADAS
+    /*===================================================================*/
+    static public function ctrCuotasPagadasReport()
+    {
+        $reportecuotasPagadas =  ReportesModelo::mdlCuotasPagadasReport();
+        return $reportecuotasPagadas;
+    }
+
+
+    /*===================================================================*/
+    //LISTAR REPORTE PIVOT
+    /*===================================================================*/
+    static public function ctrReportePivot()
+    {
+        $reportePivot =  ReportesModelo::mdlReportePivot();
+        return $reportePivot;
+    }
+
+
+    /*===================================================================*/
+    //SELECT USUARIO RECORD 
+    /*===================================================================*/
+    static public function ctrListarSelectUsuario()
+    {
+        $selectUsuario = ReportesModelo::mdlListarSelectUsuario();
+        return $selectUsuario;
+       
+    }
+
+
+    /*===================================================================*/
+    //SELECT AÑOS RECORD 
+    /*===================================================================*/
+    static public function ctrListarSelectAnio()
+    {
+        $selectAnio = ReportesModelo::mdlListarSelectAnio();
+        return $selectAnio;
+       
+    }
+
+
+
+    /*===================================================================*/
+    //LISTAR  REPORTE RECOR POR USUARIO
+    /*===================================================================*/
+    static public function ctrReporteRecordUsu($id_usuario, $anio)
+    {
+        $reportepoRecord =  ReportesModelo::mdlReporteRecordUsu($id_usuario, $anio);
+        return $reportepoRecord;
+    }
+}

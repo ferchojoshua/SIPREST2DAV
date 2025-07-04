@@ -1,0 +1,24 @@
+//////////////////////////CONEXION///////////////////////////
+
+modelo: conexio
+conexion_reportes:  r_conexion
+
+
+////////// REDIRECION ////////////
+LINK: https://siprest.developergm.com/
+LINK: http://localhost/siprest/
+
+vistas/plantilla/
+controlador/ usuario_controlador
+vistas/modulos/navbar: cerrar sesion 
+
+
+
+///////////////////////CORREO//////////////////////////
+
+PARA QUE PUEDAS ENVIAR LOS CORREOS DEBES CONFIGURAR LOS SCRIP QUE ESTAN EN LA CARPETA
+MPDF: 
+
+- historial_prestamo_email
+- reporte_arqueocaja_Email
+- ticket_pago_cuota_email
