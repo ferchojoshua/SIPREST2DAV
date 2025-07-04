@@ -40,6 +40,57 @@ class UsuarioModelo
 
 
     /*===================================================================*/
+    //PARA EL INICIO DE SESION - VERSION SIMPLIFICADA PARA RESET
+    /*===================================================================*/
+    static public function mdlIniciarSesionSimple($usuario, $password)
+    {
+        $logFile = fopen("log.txt", 'a') or die("Error creando archivo");
+        fwrite($logFile, date("d/m/Y H:i:s"). '  ' . $usuario.'-'.$password."\n") or die("Error escribiendo en el archivo");
+        fclose($logFile);
+
+        // Primero verificar usuario y contraseña
+        $stmt = Conexion::conectar()->prepare("SELECT u.*, p.descripcion as perfil_descripcion
+                                                FROM usuarios u 
+                                                LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+                                                WHERE u.usuario = :usuario
+                                                AND u.clave = :password
+                                                AND u.estado = 1");
+
+        $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
+        $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        $user_data = $stmt->fetchAll(PDO::FETCH_CLASS);
+        
+        if (count($user_data) > 0) {
+            // Si el usuario existe, buscar su vista de inicio
+            $stmt2 = Conexion::conectar()->prepare("SELECT m.vista
+                                                    FROM usuarios u 
+                                                    INNER JOIN perfil_modulo pm ON pm.id_perfil = u.id_perfil_usuario
+                                                    INNER JOIN modulos m ON m.id = pm.id_modulo
+                                                    WHERE u.id_usuario = :id_usuario
+                                                    AND vista_inicio = 1
+                                                    LIMIT 1");
+            
+            $stmt2->bindParam(":id_usuario", $user_data[0]->id_usuario, PDO::PARAM_STR);
+            $stmt2->execute();
+            
+            $vista_data = $stmt2->fetch(PDO::FETCH_ASSOC);
+            
+            if ($vista_data) {
+                // Agregar la vista al objeto usuario
+                $user_data[0]->vista = $vista_data['vista'];
+            } else {
+                // Vista por defecto si no tiene configurada
+                $user_data[0]->vista = 'dashboard.php';
+            }
+        }
+
+        return $user_data;
+    }
+
+
+    /*===================================================================*/
     //OBTENEMOS LOS MENUS -  PADRES
     /*===================================================================*/
     static public function mdlObtenerMenuUsuario($id_usuario)

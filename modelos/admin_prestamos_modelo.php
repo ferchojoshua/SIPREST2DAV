@@ -245,6 +245,46 @@ class AdminPrestamosModelo
     }
 
     /*===================================================================*/
+    // OBTENER INFORMACIÓN COMPLETA PARA WHATSAPP
+    /*===================================================================*/
+    static public function mdlObtenerInfoWhatsApp($nro_prestamo, $pdetalle_nro_cuota)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT 
+                    c.cliente_nombres,
+                    c.cliente_celular,
+                    pc.nro_prestamo,
+                    pd.pdetalle_nro_cuota,
+                    pd.pdetalle_monto_cuota,
+                    pd.pdetalle_saldo_cuota,
+                    m.moneda_simbolo,
+                    m.moneda_nombre,
+                    pc.pres_monto_total,
+                    (SELECT SUM(pd2.pdetalle_saldo_cuota) 
+                     FROM prestamo_detalle pd2 
+                     WHERE pd2.nro_prestamo = pc.nro_prestamo 
+                     AND pd2.pdetalle_estado_cuota != 'pagada') as saldo_total_prestamo
+                FROM prestamo_detalle pd
+                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
+                WHERE pd.nro_prestamo = :nro_prestamo 
+                AND pd.pdetalle_nro_cuota = :pdetalle_nro_cuota
+            ");
+            
+            $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error al obtener info WhatsApp: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /*===================================================================*/
     // REGISTRAR ABONO DE CUOTA
     /*===================================================================*/
     static public function mdlRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar)

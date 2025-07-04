@@ -734,7 +734,7 @@
 
               }
 
-              window.open("MPDF/reporte_arqueocaja.php?codigo=" + parseInt(data[0]) + "#zoom=120", "Arqueo de Caja", "scrollbards=NO");
+              window.open("MPDF/reporte_arqueocaja_mejorado.php?codigo=" + parseInt(data[0]) + "#zoom=120", "Arqueo de Caja", "scrollbards=NO");
 
 
 

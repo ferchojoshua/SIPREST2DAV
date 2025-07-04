@@ -1,145 +1,551 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- <link rel="stylesheet" href="vistas/assets/login/css/bootstrap.css"> -->
-    <link rel="stylesheet" href="vistas/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-    
+    <link rel="stylesheet" href="vistas/assets/login/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="vistas/assets/login/css/style.css">
-    <link href="https://fonts.googleapis.com/css?family=Poppins:600&display=swap" rel="stylesheet">
-    <!-- <link rel="stylesheet" href="css/all.min.css"> -->
-    <!-- <link rel="stylesheet" href="css/fontawesome.min.css"> -->
-    <link rel="stylesheet" href="vistas/assets/plugins/fontawesome-free/css/all.min.css">
- 
-    <!-- <link href="https://tresplazas.com/web/img/big_punto_de_venta.png" rel="shortcut icon"> -->
-    <title>Inicio de sesión</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://tresplazas.com/web/img/big_punto_de_venta.png" rel="shortcut icon">
+    <title>SIPREST - Inicio de sesión</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 50%;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+
+        .title {
+            color: #343a40;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+            text-align: left;
+        }
+
+        .form-group .icon-left {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #007bff;
+            font-size: 18px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 50px 15px 50px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            background: white;
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #adb5bd;
+            font-weight: 400;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            font-size: 16px;
+            z-index: 20;
+            background: white;
+            padding: 6px;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .password-toggle:hover {
+            color: #007bff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .forgot-password {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .forgot-password:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        .alert {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #343a40;
+        }
+
+        .modal label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #343a40;
+            font-size: 14px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .info-item strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            padding: 8px 12px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <img class="wave" src="vistas/assets/login/img/wave.png">
-    <div class="container">
-        <div class="img">
-            <!-- <img src="vistas/assets/login/img/bg.svg"> -->
-            <img src="vistas/assets/login/img/f1.svg">
-        </div>
-        <div class="login-content">
-            <form method="POST" class="needs-validation-login" novalidate >
-                <img src="vistas/assets/login/img/avatar.svg">
-                <h3 class="title">BIENVENIDO</h3>
-                <!-- AQUI VA EL MENSAJE DE ERROR -->
-                    <!-- <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
-                        <small>mensaje de error</small>
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div> -->                
-                <div class="input-div one">
-                    <div class="i">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="div">
-                        <h4>Usuario</h4>
-                        <input id="loginUsuario" type="text"
-                            class="input" name="loginUsuario"
-                            title="ingrese su nombre de usuario" autocomplete="usuario" value="">
-
-
-                    </div>
+    <div class="login-container">
+        <form method="POST" action="index.php">
+            <?php
+            require_once 'conexion_reportes/r_conexion.php';
+            
+            // Obtener logo de la empresa
+            $query = "SELECT config_logo, confi_razon FROM empresa WHERE confi_id = 1";
+            $resultado = $mysqli->query($query);
+            
+            $logo_path = 'vistas/assets/login/img/avatar.svg';
+            $empresa_nombre = 'SIPREST';
+            
+            if ($resultado && $row = $resultado->fetch_assoc()) {
+                if (!empty($row['config_logo']) && file_exists('uploads/logos/' . $row['config_logo'])) {
+                    $logo_path = 'uploads/logos/' . $row['config_logo'];
+                }
+                if (!empty($row['confi_razon'])) {
+                    $empresa_nombre = $row['confi_razon'];
+                }
+            }
+            ?>
+            
+            <img src="<?php echo $logo_path; ?>" alt="Logo Empresa" class="logo">
+            <h2 class="title"><?php echo $empresa_nombre; ?></h2>
+            <p class="subtitle">Sistema de Préstamos</p>
+            
+            <!-- MENSAJE DE ERROR -->
+            <?php if (isset($_GET['error'])): ?>
+                <div class="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Usuario o contraseña incorrectos
                 </div>
-                <div class="invalid-feedback">Debe ingresar su usuario!</div>
-
-                <div class="input-div pass">
-                    <div class="i">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <div class="div">
-                        <h4>Clave</h4>
-                        <input type="password" id="input" class="input"
-                        name="loginPassword" title="ingrese su Clave" autocomplete="current-password">
-
-
-                    </div>
-                </div>
-                <div class="invalid-feedback">Debe ingresar su contraseña!</div>
-                <div class="view">
-                    <div class="fas fa-eye verPassword" onclick="vista()" id="verPassword"></div>
+            <?php endif; ?>
+            
+            <!-- CAMPO USUARIO -->
+            <div class="form-group">
+                <i class="fas fa-user icon-left"></i>
+                <input 
+                    id="usuario" 
+                    type="text" 
+                    class="form-control" 
+                    name="loginUsuario" 
+                    placeholder="Ingrese su usuario" 
+                    autocomplete="username" 
+                    required>
                 </div>
 
-                <div class="row">
+            <!-- CAMPO CONTRASEÑA -->
+            <div class="form-group">
+                <i class="fas fa-lock icon-left"></i>
+                <input 
+                    id="password" 
+                    type="password" 
+                    class="form-control" 
+                    name="loginPassword" 
+                    placeholder="Ingrese su contraseña" 
+                    autocomplete="current-password" 
+                    required>
+                <i class="fas fa-eye password-toggle" onclick="togglePassword()" id="toggleIcon"></i>
+            </div>
 
-                        <?php
+            <!-- ENLACE OLVIDÉ CONTRASEÑA -->
+            <a href="#" class="forgot-password" onclick="abrirModal()">
+                <i class="fas fa-question-circle"></i>
+                ¿Olvidó su contraseña?
+            </a>
+            
+            <!-- BOTÓN ENVIAR -->
+            <button type="submit" name="btningresar" class="btn-primary">
+                INICIAR SESIÓN
+            </button>
+        </form>
+    </div>
 
-                        $login = new UsuarioControlador();
-                        $login->login();
-
-                        ?>
-
-                        <div class="col-md-12 text-center">
-
-                            <!-- <button type="submit" class="btn btn-info">Iniciar Sesion</button> -->
-                            <input name="btningresar" class="btn" title="click para ingresar" type="submit" value="INICIAR SESION">
-
+    <!-- Modal Recuperar Contraseña -->
+    <div id="modalRecuperacion" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <h3>
+                <i class="fas fa-key" style="color: #007bff;"></i>
+                Recuperar Contraseña
+            </h3>
+            
+            <p style="text-align: center; margin-bottom: 25px; color: #6c757d; font-size: 14px;">
+                Ingrese su nombre de usuario para restablecer su contraseña
+            </p>
+            
+            <form id="formRecuperacion" onsubmit="return false;">
+                <div style="margin-bottom: 25px;">
+                    <label>
+                        <i class="fas fa-user" style="color: #007bff; margin-right: 8px;"></i>
+                        Nombre de usuario:
+                    </label>
+                    <input 
+                        type="text" 
+                        id="usuarioRecuperacion" 
+                        placeholder="Ingrese su usuario"
+                        autocomplete="username">
+                    
+                    <label>
+                        <i class="fas fa-lock" style="color: #28a745; margin-right: 8px;"></i>
+                        Nueva contraseña:
+                    </label>
+                    <input 
+                        type="password" 
+                        id="nuevaPassword" 
+                        placeholder="Ingrese nueva contraseña"
+                        autocomplete="new-password">
+                    
+                    <label>
+                        <i class="fas fa-lock" style="color: #ffc107; margin-right: 8px;"></i>
+                        Confirmar contraseña:
+                    </label>
+                    <input 
+                        type="password" 
+                        id="confirmarPassword" 
+                        placeholder="Confirme nueva contraseña"
+                        autocomplete="new-password">
                         </div>
 
+                <div class="btn-group">
+                    <button type="button" class="btn-primary" onclick="resetearPassword()" style="width: 48%; margin-right: 4%;">
+                        <i class="fas fa-check"></i>
+                        Resetear
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="cerrarModal()" style="width: 48%;">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
                     </div>
-
-
-                <!-- <div class="text-center">
-                    <a class="font-italic isai5" href="">Olvidé mi contraseña</a>
-                </div> -->
-                <!-- <input name="btningresar" class="btn" title="click para ingresar" type="submit"  value="INICIAR SESION">-->
             </form>
         </div>
     </div>
-    <!-- <script src="vistas/assets/login/js/fontawesome.js"></script> -->
-    <script src="vistas/assets/login/js/main.js"></script>
-    <script src="vistas/assets/login/js/main2.js"></script>
-    <!-- <script src="vistas/assets/login/js/jquery.min.js"></script> -->
-    <script src="vistas/assets/plugins/jquery/jquery.min.js"></script>
-    <!-- <script src="vistas/assets/login/js/bootstrap.js"></script> -->
-    <script src="vistas/assets/dist/js/adminlte.min.js"></script>
-    <!-- <script src="vistas/assets/login/js/bootstrap.bundle.js"></script> -->
-    <script src="vistas/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        //BLOQUEAR EL CTR + U
-        //  document.oncontextmenu = function() {
-        //         return false
-        //     };
+        // Focus automático en usuario
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('usuario').focus();
+        });
 
-        //     onkeydown = e => {
-        //         let tecla = e.which || e.keyCode;
+        // Toggle contraseña
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
 
-        //         // Evaluar si se ha presionado la tecla Ctrl:
-        //         if (e.ctrlKey) {
-        //             // Evitar el comportamiento por defecto del nevagador:
-        //             e.preventDefault();
-        //             e.stopPropagation();
+        // Modal functions
+        function abrirModal() {
+            document.getElementById('modalRecuperacion').style.display = 'block';
+        }
 
-        //             // Mostrar el resultado de la combinaci贸n de las teclas:
-        //             if (tecla === 85)// U
-        //                 console.log(" ");
+        function cerrarModal() {
+            document.getElementById('modalRecuperacion').style.display = 'none';
+            document.getElementById('usuarioRecuperacion').value = '';
+            document.getElementById('nuevaPassword').value = '';
+            document.getElementById('confirmarPassword').value = '';
+        }
 
-        //             if (tecla === 83) //S
-        //                 console.log(" ");
+        function resetearPassword() {
+            const usuario = document.getElementById('usuarioRecuperacion').value.trim();
+            const nuevaPassword = document.getElementById('nuevaPassword').value.trim();
+            const confirmarPassword = document.getElementById('confirmarPassword').value.trim();
+            
+            if (!usuario) {
+                alert('Por favor, ingrese su nombre de usuario.');
+                return;
+            }
 
-        //             if (tecla === 123) //F12
-        //                 console.log(" ");
-        //         }
-        //     }
+            if (!nuevaPassword) {
+                alert('Por favor, ingrese una nueva contraseña.');
+                return;
+            }
 
+            if (nuevaPassword.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres.');
+                return;
+            }
 
-        //     $(document).keydown(function(event) {
-        //         if (event.keyCode == 123) { // Prevent F12
-        //             return false;
-        //         } else if (event.ctrlKey && event.shiftKey && event.keyCode == 73) { // Prevent Ctrl+Shift+I        
-        //             return false;
-        //         }
-        //     });
+            if (nuevaPassword !== confirmarPassword) {
+                alert('Las contraseñas no coinciden. Verifique e intente nuevamente.');
+                return;
+            }
+
+            // Llamada AJAX real para resetear la contraseña
+            const formData = new FormData();
+            formData.append('usuario', usuario);
+            formData.append('nueva_password', nuevaPassword);
+
+            fetch('ajax/reset_password_ajax.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Contraseña restablecida exitosamente!\n\n' +
+                          'Usuario: ' + usuario + '\n' +
+                          'Su nueva contraseña ha sido guardada.\n\n' +
+                          'Ahora puede iniciar sesión con su nueva contraseña.');
+                    cerrarModal();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error de conexión. Intente nuevamente.');
+            });
+        }
+
+        // Cerrar modal con click fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalRecuperacion');
+            if (event.target === modal) {
+                cerrarModal();
+            }
+        }
+
+        // Enter para enviar
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('form').submit();
+            }
+        });
+
+        // Enter en campos del modal de recuperación
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalInputs = ['usuarioRecuperacion', 'nuevaPassword', 'confirmarPassword'];
+            modalInputs.forEach(function(inputId) {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            resetearPassword();
+                        }
+                    });
+                }
+            });
+        });
+
+        // Validación
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const usuario = document.getElementById('usuario').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!usuario || !password) {
+                e.preventDefault();
+                alert('Complete todos los campos');
+                return false;
+            }
+        });
     </script>
-
 </body>
 
 </html>
+

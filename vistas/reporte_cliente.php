@@ -1,19 +1,23 @@
+<!-- Incluir estilos estándar -->
+<link rel="stylesheet" href="vistas/assets/css/sistema-estandar.css">
+
+<!-- Incluir estilos estándar -->
+<link rel="stylesheet" href="vistas/assets/css/sistema-estandar.css">
+
   <!-- Content Header (Page header) -->
   <div class="content-header">
       <div class="container-fluid">
           <div class="row mb-2">
-              <!-- <div class="col-sm-6">
-                  <h4 class="m-0">Reporte por Cliente</h4>
-              </div> -->
-              <!-- /.col -->
-              <!-- <div class="col-sm-6">
+              <div class="col-sm-6">
+                  <h4 class="m-0"><i class="fas fa-chart-line text-info"></i> Reporte de Préstamos por Cliente</h4>
+              </div>
+              <div class="col-sm-6">
                   <ol class="breadcrumb float-sm-right">
                       <li class="breadcrumb-item"><a href="index.php">Inicio</a></li>
-                      <li class="breadcrumb-item ">Reportes</li>
+                      <li class="breadcrumb-item">Reportes</li>
                       <li class="breadcrumb-item active">Por Cliente</li>
                   </ol>
-              </div> -->
-              <!-- /.col -->
+              </div>
           </div><!-- /.row -->
       </div><!-- /.container-fluid -->
   </div>
@@ -25,49 +29,114 @@
       <div class="container-fluid">
           <div class="row p-0 m-0">
               <div class="col-md-12">
-                  <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
-                          <h3 class="card-title">Reporte Prestamo por Clientes</h3>
-
+                  <div class="card card-info card-outline shadow">
+                      <div class="card-header bg-gradient-info">
+                          <h3 class="card-title text-white">
+                              <i class="fas fa-users mr-2"></i>Filtros de Búsqueda
+                          </h3>
+                          <div class="card-tools">
+                              <button type="button" class="btn btn-tool text-white" data-card-widget="collapse">
+                                  <i class="fas fa-minus"></i>
+                              </button>
+                          </div>
                       </div>
-                      <div class=" card-body">
-                          <div class="row">
-                              <div class="col-md-6">
-                                  <label for="select_clientes">
-                                      <span class="small">Cliente:</span>
+                      <div class="card-body">
+                          <!-- Filtros Mejorados -->
+                          <div class="row align-items-end mb-3">
+                              <div class="col-lg-4 col-md-6 mb-3">
+                                  <label for="select_clientes" class="form-label">
+                                      <i class="fas fa-user text-info mr-1"></i>
+                                      <span class="font-weight-bold">Seleccionar Cliente:</span>
                                   </label>
-                                  <div class="d-flex align-items-end" style="gap: 10px;">
-                                        <select class="form-control js-example-basic-single" id="select_clientes"></select>
-                                        <a class="btn btn-primary" id="btnFiltrar">Buscar</a>
-                                    </div>
-                                     <div class="invalid-feedback">Seleccione un Cliente</div>
+                                  <select class="form-control js-example-basic-single" id="select_clientes">
+                                      <option value="">🔍 Buscar cliente...</option>
+                                  </select>
+                                  <div class="invalid-feedback">Debe seleccionar un cliente</div>
                               </div>
-                          </div><br>
-                          <div class="col-12 table-responsive">
-                              <table id="tbl_report_cliente" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-info text-left">
+                              
+                              <div class="col-lg-3 col-md-6 mb-3">
+                                  <label class="form-label">
+                                      <i class="fas fa-filter text-info mr-1"></i>
+                                      <span class="font-weight-bold">Estado del Préstamo:</span>
+                                  </label>
+                                  <select class="form-control" id="select_estado">
+                                      <option value="">🔍 Todos los estados</option>
+                                      <option value="aprobado">✅ Aprobado</option>
+                                      <option value="pendiente">⏳ Pendiente</option>
+                                      <option value="anulado">❌ Anulado</option>
+                                      <option value="finalizado">🏁 Finalizado</option>
+                                  </select>
+                              </div>
+                              
+                              <div class="col-lg-2 col-md-6 mb-3">
+                                  <label class="form-label">
+                                      <i class="fas fa-coins text-info mr-1"></i>
+                                      <span class="font-weight-bold">Moneda:</span>
+                                  </label>
+                                  <select class="form-control" id="select_moneda">
+                                      <option value="">💰 Todas</option>
+                                  </select>
+                              </div>
+                              
+                              <div class="col-lg-3 col-md-6 mb-3">
+                                  <label class="form-label text-white">.</label>
+                                  <div class="d-flex gap-2">
+                                      <button class="btn btn-primary btn-block" id="btnFiltrar">
+                                          <i class="fas fa-search mr-1"></i>Buscar Préstamos
+                                      </button>
+                                      <button class="btn btn-secondary" id="btnLimpiar" title="Limpiar filtros">
+                                          <i class="fas fa-broom"></i>
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                          
+                          <!-- Información de Resultados -->
+                          <div class="row mb-3" id="info_resultados" style="display: none;">
+                              <div class="col-12">
+                                  <div class="alert alert-info alert-dismissible fade show mb-0" role="alert">
+                                      <i class="fas fa-info-circle mr-2"></i>
+                                      <span id="texto_resultados"></span>
+                                      <button type="button" class="close" data-dismiss="alert">
+                                          <span>&times;</span>
+                                      </button>
+                                    </div>
+                              </div>
+                          </div>
+                          <!-- Tabla de Resultados Mejorada -->
+                          <div class="col-12">
+                              <div class="card shadow-sm">
+                                  <div class="card-header bg-gradient-secondary">
+                                      <h5 class="card-title text-white mb-0">
+                                          <i class="fas fa-table mr-2"></i>Resultados de la Búsqueda
+                                      </h5>
+                                  </div>
+                                  <div class="card-body p-0">
+                                      <div class="table-responsive">
+                                          <table id="tbl_report_cliente" class="table table-striped table-hover mb-0">
+                                              <thead class="bg-gradient-info text-white">
                                       <tr>
-                                          <th>Id</th>
-                                          <th>Nro Prestamo</th>
-                                          <th>id cliente</th>
-                                          <th class="all">Cliente</th>
-                                          <th>Monto</th>
-                                          <th>Fecha</th>
-                                          <th>Total</th>
-                                          <th>Cuota</th>
-                                          <th>Cant. Cuota</th>
-                                          <th>id fpago</th>
-                                          <th>F. Pago</th>
-                                          <th>Estado</th>
-                                          <!-- <th>Descripcion</th>
-                                          <th>Descripcion</th>  -->
-                                          <th class="text-cetner">Opciones</th>
+                                                      <th style="display: none;">Id</th>
+                                                      <th><i class="fas fa-hashtag mr-1"></i>N° Préstamo</th>
+                                                      <th style="display: none;">id cliente</th>
+                                                      <th><i class="fas fa-user mr-1"></i>Cliente</th>
+                                                      <th><i class="fas fa-money-bill-wave mr-1"></i>Monto</th>
+                                                      <th><i class="fas fa-calendar mr-1"></i>Fecha</th>
+                                                      <th><i class="fas fa-calculator mr-1"></i>Total</th>
+                                                      <th><i class="fas fa-hand-holding-usd mr-1"></i>Cuota</th>
+                                                      <th><i class="fas fa-list-ol mr-1"></i>Cant.</th>
+                                                      <th style="display: none;">id fpago</th>
+                                                      <th><i class="fas fa-credit-card mr-1"></i>F. Pago</th>
+                                                      <th><i class="fas fa-info-circle mr-1"></i>Estado</th>
+                                                      <th class="text-center"><i class="fas fa-cogs mr-1"></i>Acciones</th>
                                       </tr>
                                   </thead>
-                                  <tbody class="small text left">
+                                              <tbody>
                                   </tbody>
                               </table>
-
+                                      </div>
+                                  </div>
+                              </div>
                           </div>
 
                       </div>
@@ -248,65 +317,129 @@
 
       $(document).ready(function() {
           ReporteCliente();
+          CargarMonedas();
 
-          $('.js-example-basic-single').select2();
+          // Inicializar Select2 con configuración mejorada
+          $('.js-example-basic-single').select2({
+              placeholder: "🔍 Buscar cliente...",
+              allowClear: true,
+              width: '100%',
+              language: {
+                  noResults: function() {
+                      return "No se encontraron clientes";
+                  },
+                  searching: function() {
+                      return "Buscando...";
+                  }
+              }
+          });
 
-          // Trigger search on Enter key press in the select_clientes field
-          $('#select_clientes').on('select2:close', function(e) {
-              // Check if the user pressed Enter (keyCode 13) after selecting
-              // This requires listening to a keyup event or similar on the search input of select2
-              // For simplicity, we'll trigger the search on any change/selection if not explicitly an Enter press on the main element
-              if (e.originalEvent && e.originalEvent.keyCode === 13) {
+          // Evento para buscar automáticamente al seleccionar cliente
+          $('#select_clientes').on('select2:select', function() {
+              if ($(this).val()) {
                   $('#btnFiltrar').click();
               }
           });
 
-          $('#select_clientes').on('change', function() {
-              // This ensures search is triggered even if not specifically Enter after selection
-              $('#btnFiltrar').click();
+          // Botón limpiar filtros
+          $('#btnLimpiar').on('click', function() {
+              $('#select_clientes').val('').trigger('change');
+              $('#select_estado').val('');
+              $('#select_moneda').val('');
+              $('#info_resultados').hide();
+              
+              // Destruir y reinicializar tabla vacía
+              if ($.fn.DataTable.isDataTable('#tbl_report_cliente')) {
+                  tbl_report_cliente.destroy();
+              }
+              ReporteCliente();
+              
+              Toast.fire({
+                  icon: 'info',
+                  title: 'Filtros limpiados correctamente'
+              });
           });
 
           /*===================================================================*/
           //FILTRAR AL DAR CLICK EN EL BOTON
           /*===================================================================*/
           $("#btnFiltrar").on('click', function() {
-              tbl_report_cliente.destroy();
-
+              // Validar que se haya seleccionado un cliente
               if ($("#select_clientes").val() == '') {
                   Toast.fire({
-                      icon: 'error',
-                      title: ' Debe Seleccionar un cliente'
-                  })
+                      icon: 'warning',
+                      title: 'Debe seleccionar un cliente para generar el reporte'
+                  });
                   $("#select_clientes").focus();
-
-              } else {
-
-                  cliente_id = $("#select_clientes").val();
+                  return;
               }
+
+              // Destruir tabla existente
+              if ($.fn.DataTable.isDataTable('#tbl_report_cliente')) {
+                  tbl_report_cliente.destroy();
+              }
+
+              // Obtener valores de filtros
+                  cliente_id = $("#select_clientes").val();
+              var estado_filtro = $("#select_estado").val();
+              var moneda_filtro = $("#select_moneda").val();
+              
+              // Mostrar información de filtros aplicados
+              var cliente_nombre = $("#select_clientes option:selected").text();
+              var info_texto = `Mostrando préstamos para: <strong>${cliente_nombre}</strong>`;
+              
+              if (estado_filtro) {
+                  info_texto += ` | Estado: <strong>${$("#select_estado option:selected").text()}</strong>`;
+              }
+              if (moneda_filtro) {
+                  info_texto += ` | Moneda: <strong>${$("#select_moneda option:selected").text()}</strong>`;
+              }
+              
+              $("#texto_resultados").html(info_texto);
+              $("#info_resultados").show();
 
               tbl_report_cliente = $("#tbl_report_cliente").DataTable({
                   responsive: true,
-
-                  dom: 'Bfrtip',
-                  buttons: [{
-                          "extend": 'excelHtml5',
-                          "title": 'Reporte de Prestamos por Cliente',
-                          "exportOptions": {
-                              'columns': [1, 3, 4,5,6,7,8,10,11]
+                  processing: true,
+                  dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                       '<"row"<"col-sm-12"B>>' +
+                       '<"row"<"col-sm-12"tr>>' +
+                       '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                  buttons: [
+                      {
+                          extend: 'excelHtml5',
+                          title: 'Reporte de Préstamos por Cliente - ' + cliente_nombre,
+                          text: '<i class="fas fa-file-excel text-success"></i> Excel',
+                          className: 'btn btn-success btn-sm mr-1',
+                          exportOptions: {
+                              columns: [1, 3, 4, 5, 6, 7, 8, 10, 11]
                           },
-                          "text": '<i class="fa fa-file-excel"></i>',
-                          "titleAttr": 'Exportar a Excel'
+                          titleAttr: 'Exportar a Excel'
                       },
                       {
-                          "extend": 'print',
-                          "text": '<i class="fa fa-print"></i> ',
-                          "titleAttr": 'Imprimir',
-                          "exportOptions": {
-                              'columns': [1,3,4,5,6,7, 8,10,11]
+                          extend: 'pdfHtml5',
+                          title: 'Reporte de Préstamos por Cliente',
+                          text: '<i class="fas fa-file-pdf text-danger"></i> PDF',
+                          className: 'btn btn-danger btn-sm mr-1',
+                          exportOptions: {
+                              columns: [1, 3, 4, 5, 6, 7, 8, 10, 11]
                           },
-                          "download": 'open'
+                          orientation: 'landscape',
+                          pageSize: 'A4'
                       },
-                      'pageLength',
+                      {
+                          extend: 'print',
+                          text: '<i class="fas fa-print text-primary"></i> Imprimir',
+                          className: 'btn btn-primary btn-sm mr-1',
+                          titleAttr: 'Imprimir reporte',
+                          exportOptions: {
+                              columns: [1, 3, 4, 5, 6, 7, 8, 10, 11]
+                          }
+                      },
+                      {
+                          extend: 'pageLength',
+                          className: 'btn btn-info btn-sm'
+                      }
                   ],
                   ajax: {
                       url: "ajax/reportes_ajax.php",
@@ -350,18 +483,25 @@
                         }
                     },
                       {
-                          targets: 12, //columna 2
-                          sortable: false, //no ordene
+                          targets: 12, //columna acciones
+                          sortable: false,
                           render: function(data, type, full, meta) {
-                              return "<center>" +
-                                  "<span class='btnVerPrestamo  text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Editar Moneda '> " +
-                                  "<i class='fa fa-eye fs-6 fs-6'></i> " +
-                                  "</span> " +
-                                  "<span class='btnCronogramaPagos text-warning px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Cronograma de Pagos'> " +
-                                  "<i class='fas fa-file-invoice-dollarfas fa-file-invoice-dollar fs-6'> </i> " + 
-                                  "</span>" +
-
-                                  "</center>"
+                              return `
+                                  <div class="btn-group" role="group">
+                                      <button class="btn btn-info btn-sm btnVerPrestamo" 
+                                              data-toggle="tooltip" title="Ver Detalles del Préstamo">
+                                          <i class="fas fa-eye"></i>
+                                      </button>
+                                      <button class="btn btn-warning btn-sm btnCronogramaPagos" 
+                                              data-toggle="tooltip" title="Cronograma de Pagos">
+                                          <i class="fas fa-file-invoice-dollar"></i>
+                                      </button>
+                                      <button class="btn btn-success btn-sm btnContrato" 
+                                              data-toggle="tooltip" title="Generar Contrato">
+                                          <i class="fas fa-file-contract"></i>
+                                      </button>
+                                  </div>
+                              `;
                           }
                       }
                   ],
@@ -386,20 +526,41 @@
               processData: false,
               dataType: 'json',
               success: function(respuesta) {
-
-                  var options = '<option selected value="">Seleccione un Cliente</option>';
+                  var options = '<option value="">🔍 Buscar cliente...</option>';
 
                   for (let index = 0; index < respuesta.length; index++) {
-                      options = options + '<option value=' + respuesta[index][0] + '>' + respuesta[index][
-                          1
-                      ] + '</option>';
-
+                      options += `<option value="${respuesta[index][0]}">${respuesta[index][1]}</option>`;
                   }
 
-                  $("#select_clientes").append(options);
-
+                  $("#select_clientes").html(options);
               }
           });
+
+          /*===================================================================*/
+          //CARGAR MONEDAS
+          /*===================================================================*/
+          function CargarMonedas() {
+              $.ajax({
+                  url: "ajax/reportes_ajax.php",
+                  type: "POST",
+                  data: { 'accion': 9 }, // Nueva acción para obtener monedas
+                  dataType: 'json',
+                  success: function(respuesta) {
+                      var options = '<option value="">💰 Todas las monedas</option>';
+                      
+                      if (respuesta && respuesta.length > 0) {
+                          for (let index = 0; index < respuesta.length; index++) {
+                              options += `<option value="${respuesta[index].moneda_id}">${respuesta[index].moneda_simbolo} - ${respuesta[index].moneda_nombre}</option>`;
+                          }
+                  }
+
+                      $("#select_moneda").html(options);
+                  },
+                  error: function() {
+                      console.log("Error al cargar monedas");
+              }
+          });
+          }
 
 
           /* ======================================================================================
@@ -444,16 +605,31 @@
           /* ======================================================================================
           IMPRIMIR TICKET DE CRONOGRAMA DE PAGOS
           =========================================================================================*/
-          $('#tbl_report_cliente').on('click', '.btnCronogramaPagos', function() { //class foto tiene que ir en el boton
+          $('#tbl_report_cliente').on('click', '.btnCronogramaPagos', function() {
+              if (tbl_report_cliente.row(this).child.isShown()) {
+                  var data = tbl_report_cliente.row(this).data();
+              } else {
+                  var data = tbl_report_cliente.row($(this).parents('tr')).data();
+              }
 
+              window.open("MPDF/historial_prestamo_nuevo.php?codigo=" + data[1] + "#zoom=100", 
+                         "Cronograma de Pagos", 
+                         "width=1000,height=700,scrollbars=yes,resizable=yes");
+          });
+
+          /* ======================================================================================
+          GENERAR CONTRATO DE PRÉSTAMO
+          =========================================================================================*/
+          $('#tbl_report_cliente').on('click', '.btnContrato', function() {
             if (tbl_report_cliente.row(this).child.isShown()) {
                 var data = tbl_report_cliente.row(this).data();
             } else {
-                var data = tbl_report_cliente.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
+                  var data = tbl_report_cliente.row($(this).parents('tr')).data();
             }
 
-            window.open("MPDF/historial_prestamo.php?codigo=" + data[1] + "#zoom=100", "Cronograma de Pagos ", "scrollbards=NO");
-
+              window.open("MPDF/contrato_mejorado.php?codigo=" + data[1] + "#zoom=100", 
+                         "Contrato de Préstamo", 
+                         "width=1000,height=700,scrollbars=yes,resizable=yes");
             });
 
 
@@ -643,3 +819,72 @@
           }
       }
   </script>
+
+  <style>
+      .card-header.bg-gradient-info {
+          background: linear-gradient(45deg, #17a2b8, #007bff) !important;
+      }
+      
+      .card-header.bg-gradient-secondary {
+          background: linear-gradient(45deg, #6c757d, #495057) !important;
+      }
+      
+      .btn-group .btn {
+          margin-right: 2px;
+      }
+      
+      .btn-group .btn:last-child {
+          margin-right: 0;
+      }
+      
+      .form-label {
+          font-weight: 600;
+          margin-bottom: 5px;
+      }
+      
+      .table thead th {
+          border-bottom: 2px solid #dee2e6;
+          font-weight: 600;
+          font-size: 0.9rem;
+      }
+      
+      .table tbody td {
+          vertical-align: middle;
+          font-size: 0.85rem;
+      }
+      
+      .badge {
+          font-size: 0.75rem;
+          padding: 0.35em 0.65em;
+      }
+      
+      .alert-info {
+          border-left: 4px solid #17a2b8;
+      }
+      
+      .select2-container--default .select2-selection--single {
+          height: 38px;
+          border: 1px solid #ced4da;
+      }
+      
+      .select2-container--default .select2-selection--single .select2-selection__rendered {
+          line-height: 36px;
+          padding-left: 12px;
+      }
+      
+      .select2-container--default .select2-selection--single .select2-selection__arrow {
+          height: 36px;
+      }
+      
+      .dataTables_wrapper .dataTables_filter input {
+          border: 1px solid #ced4da;
+          border-radius: 0.25rem;
+          padding: 0.375rem 0.75rem;
+      }
+      
+      .dataTables_wrapper .dataTables_length select {
+          border: 1px solid #ced4da;
+          border-radius: 0.25rem;
+          padding: 0.375rem 0.75rem;
+      }
+  </style>

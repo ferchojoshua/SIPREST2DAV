@@ -99,9 +99,14 @@
                                   <label for="" class="">
                                       <span class="small"> Celular</span><span class="text-danger">*</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_cel" name="text_cel" placeholder="Celular / telefono" required>
-                                  <div class="invalid-feedback">Debe ingresar el celular </div>
-
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-success text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_cel" name="text_cel" placeholder="87654321" maxlength="8" pattern="[0-9]{8}" required>
+                                  </div>
+                                  <div class="invalid-feedback">Debe ingresar un celular válido (8 dígitos)</div>
+                                  <small class="text-muted">Formato: 8 dígitos sin espacios ni guiones</small>
                               </div>
                           </div>
 
@@ -151,7 +156,13 @@
                                   <label for="" class="">
                                       <span class="small"> Telefono Laboral</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_tel_laboral" name="text_tel_laboral" placeholder="Telefono Laboral">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-info text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_tel_laboral" name="text_tel_laboral" placeholder="22345678" maxlength="8" pattern="[0-9]{8}">
+                                  </div>
+                                  <small class="text-muted">8 dígitos (opcional)</small>
                               </div>
                           </div>
                           <div class="col-lg-6">
@@ -185,9 +196,13 @@
                                   <label for="" class="">
                                       <span class="small"> Nro. Celular</span><span class="text-danger"> *</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_nro_cel_per_e" placeholder="Nro. Celular">
-                                  <!-- <div class="invalid-feedback">Debe ingresar el documento del cliente</div> -->
-
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-warning text-dark font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_nro_cel_per_e" placeholder="87654321" maxlength="8" pattern="[0-9]{8}">
+                                  </div>
+                                  <small class="text-muted">8 dígitos</small>
                               </div>
                           </div>
                           <div class="col-md-12">
@@ -215,9 +230,13 @@
                                   <label for="ipclave" class="">
                                       <span class="small"> Nro. Celular Familiar</span><span class="text-danger"> *</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_nro_cel_fami_e" placeholder="Nro. Celular Familiar">
-                                  <div class="invalid-feedback">Debe ingresar un Nro. Celular</div>
-
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-secondary text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_nro_cel_fami_e" placeholder="87654321" maxlength="8" pattern="[0-9]{8}">
+                                  </div>
+                                  <small class="text-muted">8 dígitos</small>
                               </div>
                           </div>
                           <div class="col-md-12">
@@ -241,7 +260,22 @@
   </div>
   <!-- fin Modal -->
 
-
+  <!-- Estilos CSS para mejorar la apariencia de los campos de teléfono -->
+  <style>
+  .input-group-text {
+      border-right: none;
+  }
+  .telefono-format {
+      border-left: none;
+  }
+  .telefono-format:focus {
+      border-left: none;
+      box-shadow: none;
+  }
+  .input-group:focus-within .input-group-text {
+      border-color: #80bdff;
+  }
+  </style>
 
   <script>
       var accion;
@@ -255,6 +289,75 @@
       });
 
       $(document).ready(function() {
+
+          /***************************************************************************
+           * FORMATEAR CAMPOS DE TELÉFONO - SOLO NÚMEROS, 8 DÍGITOS
+           ******************************************************************************/
+          $('.telefono-format').on('input', function() {
+              // Remover cualquier caracter que no sea número
+              var valor = this.value.replace(/[^0-9]/g, '');
+              
+              // Limitar a 8 dígitos
+              if (valor.length > 8) {
+                  valor = valor.substring(0, 8);
+              }
+              
+              this.value = valor;
+              
+              // Validación visual
+              if (valor.length === 8) {
+                  $(this).removeClass('is-invalid').addClass('is-valid');
+              } else if (valor.length > 0) {
+                  $(this).removeClass('is-valid').addClass('is-invalid');
+              } else {
+                  $(this).removeClass('is-valid is-invalid');
+              }
+          });
+
+          // Prevenir pegar contenido no numérico
+          $('.telefono-format').on('paste', function(e) {
+              e.preventDefault();
+              var paste = (e.clipboardData || window.clipboardData).getData('text');
+              var numericPaste = paste.replace(/[^0-9]/g, '').substring(0, 8);
+              this.value = numericPaste;
+              $(this).trigger('input');
+          });
+
+          // Prevenir teclas no numéricas
+          $('.telefono-format').on('keypress', function(e) {
+              // Permitir teclas de control (backspace, delete, tab, escape, enter, etc.)
+              if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
+                  // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                  (e.keyCode === 65 && e.ctrlKey === true) ||
+                  (e.keyCode === 67 && e.ctrlKey === true) ||
+                  (e.keyCode === 86 && e.ctrlKey === true) ||
+                  (e.keyCode === 88 && e.ctrlKey === true)) {
+                  return;
+              }
+              // Asegurar que solo son números (0-9)
+              if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                  e.preventDefault();
+              }
+          });
+
+          /***************************************************************************
+           * FUNCIÓN PARA OBTENER TELÉFONO COMPLETO CON CÓDIGO DE PAÍS
+           ******************************************************************************/
+          function obtenerTelefonoCompleto(campoId) {
+              var numero = $(campoId).val();
+              return numero ? '+505' + numero : '';
+          }
+
+          /***************************************************************************
+           * FUNCIÓN PARA ESTABLECER TELÉFONO EN CAMPO (REMOVER +505 SI EXISTE)
+           ******************************************************************************/
+          function establecerTelefono(campoId, telefonoCompleto) {
+              if (telefonoCompleto) {
+                  // Remover +505 si existe para mostrar solo los 8 dígitos
+                  var numero = telefonoCompleto.replace(/^\+505/, '');
+                  $(campoId).val(numero);
+              }
+          }
 
           /***************************************************************************
            * INICIAR DATATABLE CLIENTES
@@ -418,24 +521,25 @@
                               datos.append("cliente_id", $("#id_cliente").val()); //id
                               datos.append("cliente_nombres", $("#text_nombres").val()); //modulo
                               datos.append("cliente_dni", $("#text_documento").val());
-                              datos.append("cliente_cel", $("#text_cel").val());
+                              // Enviar teléfonos con código de país completo
+                              datos.append("cliente_cel", obtenerTelefonoCompleto("#text_cel"));
                               datos.append("cliente_direccion", $("#text_direccion").val());
                               datos.append("cliente_correo", $("#text_correo").val());
 
                               // Nuevos campos de Información Laboral
                               datos.append("cliente_empresa_laboral", $("#text_empresa_laboral").val());
                               datos.append("cliente_cargo_laboral", $("#text_cargo_laboral").val());
-                              datos.append("cliente_tel_laboral", $("#text_tel_laboral").val());
+                              datos.append("cliente_tel_laboral", obtenerTelefonoCompleto("#text_tel_laboral"));
                               datos.append("cliente_dir_laboral", $("#text_dir_laboral").val());
 
                               // Nuevos campos de Referencia Personal
                               datos.append("cliente_refe_per_nombre", $("#text_refe_per_e").val());
-                              datos.append("cliente_refe_per_cel", $("#text_nro_cel_per_e").val());
+                              datos.append("cliente_refe_per_cel", obtenerTelefonoCompleto("#text_nro_cel_per_e"));
                               datos.append("cliente_refe_per_dir", $("#text_refe_per_dir").val());
 
                               // Nuevos campos de Referencia Familiar
                               datos.append("cliente_refe_fami_nombre", $("#text_refe_fami_e").val());
-                              datos.append("cliente_refe_fami_cel", $("#text_nro_cel_fami_e").val());
+                              datos.append("cliente_refe_fami_cel", obtenerTelefonoCompleto("#text_nro_cel_fami_e"));
                               datos.append("cliente_refe_fami_dir", $("#text_refe_fami_dir").val());
 
 
@@ -543,21 +647,24 @@
               $("#id_cliente").val(data[0]);
               $("#text_nombres").val(data[1]);
               $("#text_documento").val(data[2]);
-              $("#text_cel").val(data[3]);
+              
+              // Formatear teléfonos para edición (remover +505 para mostrar solo 8 dígitos)
+              establecerTelefono("#text_cel", data[3]);
+              
               $("#text_direccion").val(data[6]);
               $("#text_correo").val(data[7]);
 
               $("#text_empresa_laboral").val(data[11]);
               $("#text_cargo_laboral").val(data[12]);
-              $("#text_tel_laboral").val(data[13]);
+              establecerTelefono("#text_tel_laboral", data[13]);
               $("#text_dir_laboral").val(data[14]);
 
               $("#text_refe_per_e").val(data[9]); 
-              $("#text_nro_cel_per_e").val(data[10]); 
+              establecerTelefono("#text_nro_cel_per_e", data[10]);
               $("#text_refe_per_dir").val(data[15]);
 
               $("#text_refe_fami_e").val(data[16]);
-              $("#text_nro_cel_fami_e").val(data[17]);
+              establecerTelefono("#text_nro_cel_fami_e", data[17]);
               $("#text_refe_fami_dir").val(data[18]);
 
           })
@@ -590,21 +697,24 @@
               $("#id_cliente").val(data[0]);
               $("#text_nombres").val(data[1]);
               $("#text_documento").val(data[2]);
-              $("#text_cel").val(data[3]);
+              
+              // Formatear teléfonos para visualización (remover +505 para mostrar solo 8 dígitos)
+              establecerTelefono("#text_cel", data[3]);
+              
               $("#text_direccion").val(data[6]);
               $("#text_correo").val(data[7]);
 
               $("#text_empresa_laboral").val(data[11]);
               $("#text_cargo_laboral").val(data[12]);
-              $("#text_tel_laboral").val(data[13]);
+              establecerTelefono("#text_tel_laboral", data[13]);
               $("#text_dir_laboral").val(data[14]);
 
               $("#text_refe_per_e").val(data[9]); 
-              $("#text_nro_cel_per_e").val(data[10]); 
+              establecerTelefono("#text_nro_cel_per_e", data[10]);
               $("#text_refe_per_dir").val(data[15]);
 
               $("#text_refe_fami_e").val(data[16]); 
-              $("#text_nro_cel_fami_e").val(data[17]); 
+              establecerTelefono("#text_nro_cel_fami_e", data[17]);
               $("#text_refe_fami_dir").val(data[18]); 
 
           })

@@ -7,6 +7,25 @@ class AjaxReportes
 {
 
     /*===================================================================*/
+    //OBTENER REPORTE DE CLIENTES MOROSOS
+    /*===================================================================*/
+    public function ajaxObtenerReporteMorosos()
+    {
+        $reporteMorosos = ReportesControlador::ctrObtenerReporteMorosos();
+        echo json_encode($reporteMorosos);
+    }
+
+    /*===================================================================*/
+    //OBTENER REPORTE DE RECUPERACION
+    /*===================================================================*/
+    public function ajaxObtenerReporteRecuperacion()
+    {
+        $reporteRecuperacion = ReportesControlador::ctrObtenerReporteRecuperacion($_POST["fecha_inicial"], $_POST["fecha_final"]);
+        echo json_encode($reporteRecuperacion);
+    }
+
+
+    /*===================================================================*/
     //LISTAR REPORTE POR CLIENTE
     /*===================================================================*/
     public function  ReportePorCliente($cliente_id)
@@ -67,28 +86,53 @@ class AjaxReportes
     }
 }
 
-if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR  REPORTE DE PRESTAMOS POR CLIENTE
-    $reporteporCliente = new AjaxReportes();
-    $reporteporCliente->ReportePorCliente($_POST["cliente_id"]);
+if (isset($_POST['accion'])) {
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 2) { //LISTAR  REPORTE CUOTAS PAGADAS
-    $reportecuotasPagadas = new AjaxReportes();
-    $reportecuotasPagadas->ListarCuotasPagadasReport();
+    switch ($_POST['accion']) {
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 3) { //PIVOT
-    $reportePivot = new AjaxReportes();
-    $reportePivot->ListarReportePivot();
+        case 1: //LISTAR  REPORTE DE PRESTAMOS POR CLIENTE
+            $reporteporCliente = new AjaxReportes();
+            $reporteporCliente->ReportePorCliente($_POST["cliente_id"]);
+            break;
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 4) {  // LISTAR SELECT USUARIO RECORD EN COMBO
-    $selectUsuario = new AjaxReportes(); 
-    $selectUsuario->ListarSelectUsuario();
+        case 2: //LISTAR  REPORTE CUOTAS PAGADAS
+            $reportecuotasPagadas = new AjaxReportes();
+            $reportecuotasPagadas->ListarCuotasPagadasReport();
+            break;
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 5) {   // LISTAR SELECT AÑOS RECORD EN COMBO
-    $selectAnio = new AjaxReportes();
-    $selectAnio->ListarSelectAnio();
+        case 3: //PIVOT
+            $reportePivot = new AjaxReportes();
+            $reportePivot->ListarReportePivot();
+            break;
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 6) { //LISTAR  REPORTE RECOR POR USUARIO
-    $reportepoRecord = new AjaxReportes();
-    $reportepoRecord->ReporteRecordUsu($_POST["id_usuario"],$_POST["anio"]);
+        case 4:  // LISTAR SELECT USUARIO RECORD EN COMBO
+            $selectUsuario = new AjaxReportes();
+            $selectUsuario->ListarSelectUsuario();
+            break;
 
+        case 5:   // LISTAR SELECT AÑOS RECORD EN COMBO
+            $selectAnio = new AjaxReportes();
+            $selectAnio->ListarSelectAnio();
+            break;
+
+        case 6: //LISTAR  REPORTE RECOR POR USUARIO
+            $reportepoRecord = new AjaxReportes();
+            $reportepoRecord->ReporteRecordUsu($_POST["id_usuario"], $_POST["anio"]);
+            break;
+            
+        case 7: //REPORTE MOROSOS
+            $reporteMorosos = ReportesControlador::ctrObtenerReporteMorosos();
+            echo json_encode($reporteMorosos);
+            break;
+
+        case 8: //REPORTE RECUPERACION
+            $reporteRecuperacion = ReportesControlador::ctrObtenerReporteRecuperacion($_POST["fecha_inicial"], $_POST["fecha_final"]);
+            echo json_encode($reporteRecuperacion);
+            break;
+
+        case 9: //OBTENER MONEDAS
+            $monedas = ReportesControlador::ctrObtenerMonedas();
+            echo json_encode($monedas);
+            break;
+    }
 }

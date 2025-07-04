@@ -99,6 +99,23 @@
 
                                           </div>
                                       </div>
+                                      <div class="col-md-6">
+                                          <div class="form-group mb-2">
+                                              <label for="" class="">
+                                                  <span class="small">Logo de la Empresa</span>
+                                              </label>
+                                              <input type="file" class="form-control form-control-sm" id="file_logo" name="file_logo" accept="image/*">
+                                              <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB</small>
+                                          </div>
+                                      </div>
+                                      <div class="col-md-6">
+                                          <div class="form-group mb-2">
+                                              <label class="small">Vista Previa del Logo:</label>
+                                              <div class="text-center">
+                                                  <img id="preview_logo" src="vistas/assets/img/default-logo.png" alt="Logo" style="max-width: 150px; max-height: 100px; border: 1px solid #ddd; padding: 5px; border-radius: 5px;">
+                                              </div>
+                                          </div>
+                                      </div>
                                   </div>
                               </form>
 
@@ -134,6 +151,72 @@
             TRAER LOS DATOS
             ======================================================================================*/
           CargarDatosEmpresa();
+
+          // Vista previa del logo
+          $("#file_logo").change(function() {
+              var file = this.files[0];
+              if (file) {
+                  // Validar tipo de archivo
+                  var validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                  if (!validTypes.includes(file.type)) {
+                      Toast.fire({
+                          icon: 'error',
+                          title: 'Formato de archivo no válido. Use JPG, PNG o GIF.'
+                      });
+                      this.value = '';
+                      return;
+                  }
+                  
+                  // Validar tamaño (2MB)
+                  if (file.size > 2 * 1024 * 1024) {
+                      Toast.fire({
+                          icon: 'error',
+                          title: 'El archivo es muy grande. Máximo 2MB.'
+                      });
+                      this.value = '';
+                      return;
+                  }
+                  
+                  var reader = new FileReader();
+                  reader.onload = function(e) {
+                      $('#preview_logo').attr('src', e.target.result);
+                  }
+                  reader.readAsDataURL(file);
+              }
+          });
+
+          // Vista previa del logo
+          $("#file_logo").change(function() {
+              var file = this.files[0];
+              if (file) {
+                  // Validar tipo de archivo
+                  var validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                  if (!validTypes.includes(file.type)) {
+                      Toast.fire({
+                          icon: 'error',
+                          title: 'Formato de archivo no válido. Use JPG, PNG o GIF.'
+                      });
+                      this.value = '';
+                      return;
+                  }
+                  
+                  // Validar tamaño (2MB)
+                  if (file.size > 2 * 1024 * 1024) {
+                      Toast.fire({
+                          icon: 'error',
+                          title: 'El archivo es muy grande. Máximo 2MB.'
+                      });
+                      this.value = '';
+                      return;
+                  }
+                  
+                  var reader = new FileReader();
+                  reader.onload = function(e) {
+                      $('#preview_logo').attr('src', e.target.result);
+                  }
+                  reader.readAsDataURL(file);
+              }
+          });
 
           $("#btnCalcular").on('click', function() {
               /// alert('dsds');
@@ -213,6 +296,12 @@
                           datos.append("confi_correlativo", $("#text_correlativo").val());
                           datos.append("config_correo", $("#text_correo").val());
                           datos.append("config_moneda", $("#text_moneda").val());
+                          
+                          // Agregar logo si se seleccionó
+                          var logoFile = $("#file_logo")[0].files[0];
+                          if (logoFile) {
+                              datos.append("config_logo", logoFile);
+                          }
 
 
                           $.ajax({
@@ -289,6 +378,11 @@
                   $("#text_correlativo").val(nro_correlativo);
                   $("#text_correo").val(email);
                   $("#text_moneda").val(moneda);
+                  
+                  // Mostrar logo actual si existe
+                  if (respuesta["config_logo"] && respuesta["config_logo"] !== '') {
+                      $("#preview_logo").attr('src', 'uploads/logos/' + respuesta["config_logo"]);
+                  }
               }
           });
       }

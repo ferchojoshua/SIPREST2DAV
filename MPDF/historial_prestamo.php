@@ -4,7 +4,7 @@ require '../conexion_reportes/r_conexion.php';
 require 'numeroletras/CifrasEnLetras.php';
 
 $v = new CifrasEnLetras();
-$mpdf = new \Mpdf\Mpdf();
+$mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4']);
 
 $codigo = $_GET['codigo'];
 
@@ -12,10 +12,11 @@ $query = "SELECT
     pc.*, 
     DATE_FORMAT(pc.pres_fecha_registro, '%d/%m/%Y') AS pres_fecha_registro,
     DATE_FORMAT(pc.pres_f_emision, '%d/%m/%Y') AS pres_f_emision,
-    c.cliente_nombres, c.cliente_dni,
+    c.cliente_nombres, c.cliente_dni, c.cliente_direccion,
     fp.fpago_descripcion,
     mo.moneda_nombre, mo.moneda_simbolo,
-    empresa.confi_razon, empresa.confi_ruc, empresa.confi_direccion, empresa.config_correo,
+    empresa.confi_razon, empresa.confi_ruc, empresa.confi_direccion, 
+    empresa.config_correo, empresa.config_celular,
     u.usuario
 FROM prestamo_cabecera pc
 INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
@@ -30,109 +31,293 @@ $resultado = $mysqli->query($query);
 if ($row1 = $resultado->fetch_assoc()) {
     $montoEnLetras = $v->convertirEurosEnLetras($row1['pres_monto_total']);
 
-    $html = <<<HTML
+    $html = '
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Tabla de Cuotas</title>
+        <title>Historial de Préstamo</title>
   <style>
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    td, th { padding: 6px; border: 1px solid #000; text-align: left; }
-    .no-border { border: none; }
-    .header-table td { border: none; vertical-align: top; }
-    .title { font-size: 16px; font-weight: bold; text-align: center; text-decoration: underline; }
-    .section-title { background-color: #f0f0f0; font-weight: bold; }
-    .right { text-align: right; }
-    footer { margin-top: 30px; text-align: center; font-style: italic; font-size: 10px; }
-    .firma { margin-top: 60px; text-align: center; }
-    .firma .linea { border-top: 1px solid #000; width: 200px; margin: 0 auto; margin-top: 10px; }
+            body { 
+                font-family: Arial, sans-serif; 
+                font-size: 12px; 
+                color: #333; 
+                margin: 20px;
+                line-height: 1.4;
+            }
+            
+            .header-empresa {
+                text-align: center;
+                border-bottom: 3px solid #2c3e50;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            
+            .logo-empresa {
+                width: 100px;
+                height: auto;
+                margin-bottom: 15px;
+            }
+            
+            .razon-social {
+                font-size: 24px;
+                font-weight: bold;
+                color: #2c3e50;
+                margin: 10px 0;
+            }
+            
+            .info-empresa {
+                font-size: 14px;
+                color: #7f8c8d;
+                margin: 5px 0;
+            }
+            
+            .titulo-documento {
+                font-size: 20px;
+                font-weight: bold;
+                text-align: center;
+                color: #2c3e50;
+                margin: 30px 0;
+                padding: 15px;
+                background-color: #ecf0f1;
+                border-radius: 8px;
+                border-left: 5px solid #3498db;
+            }
+            
+            .info-prestamo {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin: 30px 0;
+                padding: 20px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+            }
+            
+            .info-item {
+                margin-bottom: 12px;
+                padding: 8px 0;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .info-label {
+                font-weight: bold;
+                color: #2c3e50;
+                display: inline-block;
+                width: 140px;
+            }
+            
+            .info-valor {
+                color: #34495e;
+            }
+            
+            .monto-letras {
+                background-color: #e8f5e8;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid #27ae60;
+            }
+            
+            .tabla-cuotas {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 30px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .tabla-cuotas th,
+            .tabla-cuotas td {
+                border: 1px solid #bdc3c7;
+                padding: 12px 8px;
+                text-align: left;
+            }
+            
+            .tabla-cuotas th {
+                background-color: #3498db;
+                color: white;
+                font-weight: bold;
+                text-align: center;
+            }
+            
+            .tabla-cuotas tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            
+            .tabla-cuotas tr:hover {
+                background-color: #e3f2fd;
+            }
+            
+            .estado-pagado {
+                color: #27ae60;
+                font-weight: bold;
+            }
+            
+            .estado-pendiente {
+                color: #e74c3c;
+                font-weight: bold;
+            }
+            
+            .seccion-firmas {
+                margin-top: 60px;
+                text-align: center;
+            }
+            
+            .firma-linea {
+                border-top: 2px solid #2c3e50;
+                width: 250px;
+                margin: 40px auto 15px;
+            }
+            
+            .firma-texto {
+                font-size: 14px;
+                color: #7f8c8d;
+                font-weight: bold;
+            }
+            
+            .pie-documento {
+                margin-top: 40px;
+                text-align: center;
+                font-size: 10px;
+                color: #95a5a6;
+                border-top: 1px solid #ecf0f1;
+                padding-top: 15px;
+            }
+            
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
   </style>
 </head>
 <body>
-
-  <table class="header-table">
-    <tr>
-      <td width="25%">
-        <img src="img/logo_empresa.png" width="100">
-      </td>
-      <td width="50%" class="title">TABLA DE CUOTAS</td>
-      <td width="25%" class="right">
-        <strong>Prestamo Nro:</strong> {$row1['nro_prestamo']}
-      </td>
-    </tr>
-  </table>
-
-  <table>
-    <tr>
-      <td width="40%">
-        <strong>Cliente:</strong> {$row1['cliente_nombres']}<br>
-        <strong>Documento:</strong> {$row1['cliente_dni']}<br>
-        <strong>Fecha Préstamo:</strong> {$row1['pres_fecha_registro']}<br>
-        <strong>Moneda:</strong> {$row1['moneda_nombre']}
-        <strong>Monto:</strong> {$row1['moneda_simbolo']} {$row1['pres_monto']}<br>
-        <strong>En Letras:</strong> {$montoEnLetras}<br>
-        <strong>Monto Total:</strong> {$row1['moneda_simbolo']} {$row1['pres_monto_total']}<br>
-        <strong>Monto Cuota:</strong> {$row1['moneda_simbolo']} {$row1['pres_monto_cuota']}<br>
-        <strong>Forma de Pago:</strong> {$row1['fpago_descripcion']}<br>
- 
-      </td>
-      <td width="25%" class="left">
-        <!--<strong>Usuario:</strong> {$row1['usuario']}<br>-->
-        <strong>Fecha Emisión:</strong> {$row1['pres_f_emision']}<br>
-        <strong>Estado:</strong> {$row1['pres_estado']}
-        <strong>Nro Cuotas:</strong> {$row1['pres_cuotas']}<br>
-        <strong>Interés (%):</strong> {$row1['pres_interes']}<br>
-        <strong>Monto Interés:</strong> {$row1['moneda_simbolo']} {$row1['pres_monto_interes']}<br>
-      </td>
-    </tr>
-  </table>
-
-  <h3 style="margin-top: 20px; text-align:center;">Detalle de Cuotas</h3>
- 
-  <table>
-    <thead class="section-title">
-      <tr>
-        <th>NRO CUOTA</th>
-        <th>FECHA</th>
-        <th>MONTO</th>
+        <div class="header-empresa">
+            <img src="img/logo.png" class="logo-empresa" alt="Logo Empresa">
+            <div class="razon-social">' . $row1['confi_razon'] . '</div>
+            <div class="info-empresa">RUC: ' . $row1['confi_ruc'] . '</div>
+            <div class="info-empresa">' . $row1['confi_direccion'] . '</div>
+            <div class="info-empresa">Email: ' . $row1['config_correo'] . '</div>
+        </div>
+        
+        <div class="titulo-documento">
+            HISTORIAL DE PRÉSTAMO N° ' . $row1['nro_prestamo'] . '
+        </div>
+        
+        <div class="info-prestamo">
+            <div>
+                <div class="info-item">
+                    <span class="info-label">Cliente:</span>
+                    <span class="info-valor">' . $row1['cliente_nombres'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Documento:</span>
+                    <span class="info-valor">' . $row1['cliente_dni'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dirección:</span>
+                    <span class="info-valor">' . $row1['cliente_direccion'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Fecha Préstamo:</span>
+                    <span class="info-valor">' . $row1['pres_fecha_registro'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Fecha Emisión:</span>
+                    <span class="info-valor">' . $row1['pres_f_emision'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Moneda:</span>
+                    <span class="info-valor">' . $row1['moneda_nombre'] . '</span>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <span class="info-label">Monto Préstamo:</span>
+                    <span class="info-valor">' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pres_monto'], 2) . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Interés (%):</span>
+                    <span class="info-valor">' . $row1['pres_interes'] . '%</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Monto Interés:</span>
+                    <span class="info-valor">' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pres_monto_interes'], 2) . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Monto Total:</span>
+                    <span class="info-valor">' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pres_monto_total'], 2) . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Nro. Cuotas:</span>
+                    <span class="info-valor">' . $row1['pres_cuotas'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Monto Cuota:</span>
+                    <span class="info-valor">' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pres_monto_cuota'], 2) . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Forma de Pago:</span>
+                    <span class="info-valor">' . $row1['fpago_descripcion'] . '</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-valor">' . $row1['pres_estado'] . '</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="monto-letras">
+            <strong>Monto en Letras:</strong> ' . $montoEnLetras . '
+        </div>
+        
+        <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Detalle de Cuotas</h3>
+        
+        <table class="tabla-cuotas">
+            <thead>
+                <tr>
+                    <th>N° CUOTA</th>
+                    <th>FECHA VENCIMIENTO</th>
+                    <th>MONTO CUOTA</th>
         <th>ESTADO</th>
       </tr>
     </thead>
-    <tbody>
-HTML;
+            <tbody>';
 
-    $query2 = "SELECT pdetalle_nro_cuota, DATE_FORMAT(pdetalle_fecha, '%d/%m/%Y') as fecha, pdetalle_monto_cuota, pdetalle_estado_cuota FROM prestamo_detalle WHERE nro_prestamo = '$codigo'";
+    $query2 = "SELECT 
+                    pdetalle_nro_cuota, 
+                    DATE_FORMAT(pdetalle_fecha, '%d/%m/%Y') as fecha, 
+                    pdetalle_monto_cuota, 
+                    pdetalle_estado_cuota 
+                FROM prestamo_detalle 
+                WHERE nro_prestamo = '$codigo' 
+                ORDER BY pdetalle_nro_cuota";
     $resultado2 = $mysqli->query($query2);
 
     while ($row2 = $resultado2->fetch_assoc()) {
+        $estadoClass = $row2['pdetalle_estado_cuota'] == 'pagado' ? 'estado-pagado' : 'estado-pendiente';
         $html .= "
         <tr>
-            <td>{$row2['pdetalle_nro_cuota']}</td>
-            <td>{$row2['fecha']}</td>
-            <td class='right'>".number_format($row2['pdetalle_monto_cuota'], 2)."</td>
-            <td>{$row2['pdetalle_estado_cuota']}</td>
+            <td class='text-center'>{$row2['pdetalle_nro_cuota']}</td>
+            <td class='text-center'>{$row2['fecha']}</td>
+            <td class='text-right'>" . number_format($row2['pdetalle_monto_cuota'], 2) . "</td>
+            <td class='text-center $estadoClass'>" . strtoupper($row2['pdetalle_estado_cuota']) . "</td>
         </tr>";
     }
 
-    $html .= <<<HTML
+    $html .= '
     </tbody>
   </table>
 
-  <div class="firma">
-    <p>Firma Autorizada</p>
-    <div class="linea"></div>
+        <div class="seccion-firmas">
+            <div class="firma-linea"></div>
+            <div class="firma-texto">Firma Autorizada</div>
   </div>
 
-  <footer>
-    Documento generado automáticamente por el sistema - {$row1['confi_razon']}<br>
-    Dirección: {$row1['confi_direccion']} | RUC: {$row1['confi_ruc']}
-  </footer>
-
+        <div class="pie-documento">
+            Documento generado automáticamente por el sistema - ' . $row1['confi_razon'] . '<br>
+            Dirección: ' . $row1['confi_direccion'] . ' | RUC: ' . $row1['confi_ruc'] . ' | Email: ' . $row1['config_correo'] . '<br>
+            Fecha de generación: ' . date('d/m/Y H:i:s') . '
+        </div>
 </body>
-</html>
-HTML;
+    </html>';
 
     $mpdf->WriteHTML($html);
     $mpdf->Output();
@@ -140,3 +325,4 @@ HTML;
 } else {
     echo "No se encontró el préstamo.";
 }
+?>

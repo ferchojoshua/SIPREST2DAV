@@ -1,6 +1,6 @@
 <?php
 
-class Reportescontrolador
+class ReportesControlador
 {
 
     /*===================================================================*/
@@ -63,5 +63,32 @@ class Reportescontrolador
     {
         $reportepoRecord =  ReportesModelo::mdlReporteRecordUsu($id_usuario, $anio);
         return $reportepoRecord;
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER REPORTE DE MOROSOS
+    ====================================================================*/
+    static public function ctrObtenerReporteMorosos()
+    {
+        $respuesta = ReportesModelo::mdlObtenerReporteMorosos();
+        return $respuesta;
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER REPORTE DE RECUPERACION
+    ====================================================================*/
+    static public function ctrObtenerReporteRecuperacion($fecha_inicial, $fecha_final)
+    {
+        $respuesta = ReportesModelo::mdlObtenerReporteRecuperacion($fecha_inicial, $fecha_final);
+        return $respuesta;
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER MONEDAS
+    ====================================================================*/
+    static public function ctrObtenerMonedas()
+    {
+        $respuesta = ReportesModelo::mdlObtenerMonedas();
+        return $respuesta;
     }
 }

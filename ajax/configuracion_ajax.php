@@ -50,16 +50,44 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) {    //OBTENER TODOS LOS D
 }else if (isset($_POST['accion']) && $_POST['accion'] == 2) {       //ACTUALIZAR DATOS DE LA EMPRESA
 
     $actualizarConfig = new AjaxConfiguracion();
+    
+    // Manejar carga del logo
+    $logoFileName = null;
+    if (isset($_FILES['config_logo']) && $_FILES['config_logo']['error'] == 0) {
+        $uploadDir = '../uploads/logos/';
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        $maxSize = 2 * 1024 * 1024; // 2MB
+        
+        $fileType = $_FILES['config_logo']['type'];
+        $fileSize = $_FILES['config_logo']['size'];
+        
+        if (in_array($fileType, $allowedTypes) && $fileSize <= $maxSize) {
+            $fileExtension = pathinfo($_FILES['config_logo']['name'], PATHINFO_EXTENSION);
+            $logoFileName = 'logo_empresa_' . time() . '.' . $fileExtension;
+            $uploadPath = $uploadDir . $logoFileName;
+            
+            if (move_uploaded_file($_FILES['config_logo']['tmp_name'], $uploadPath)) {
+                // Logo subido exitosamente
+            } else {
+                $logoFileName = null;
+            }
+        }
+    }
+    
     $data = array(
         "confi_razon" => $_POST["confi_razon"],
         "confi_ruc" => $_POST["confi_ruc"],
         "confi_direccion" => $_POST["confi_direccion"],
         "confi_correlativo" => $_POST["confi_correlativo"],
-        "confi_correlativo" => $_POST["confi_correlativo"],
         "config_correo" => $_POST["config_correo"],
         "config_moneda" => $_POST["config_moneda"]
-
     );
+    
+    // Agregar logo solo si se subió uno nuevo
+    if ($logoFileName) {
+        $data["config_logo"] = $logoFileName;
+    }
+    
     $actualizarConfig->ajaxActualizarConfiguracion($data);
 
 }else if (isset($_POST['accion']) && $_POST['accion'] == 3) {   //OBTENER CORRELATIVO

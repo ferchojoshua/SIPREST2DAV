@@ -32,10 +32,10 @@ $query = "SELECT caja.caja_id,
 				empresa.confi_razon,
 				empresa.config_correo,
 				caja.caja_interes,
-                usuario.usuario_nombre
+                'N/A' as usuario_nombre,
+				empresa.config_moneda as moneda_simbolo
 				FROM
-				caja
-                INNER JOIN usuario ON caja.id_usuario = usuario.id_usuario,
+				caja,
 				empresa
 				WHERE caja.caja_id =   '" . $_GET['codigo'] . "'";
 
@@ -66,32 +66,32 @@ while ($row1 = $resultado->fetch_assoc()) {
                                     m.moneda_simbolo";
     $resultado_prestamos_moneda = $mysqli->query($query_prestamos_moneda);
 
-    // Consulta para ingresos por moneda
+    // Consulta para ingresos por moneda (corregida - usa moneda de empresa)
     $query_ingresos_moneda = "SELECT
-                                m.moneda_simbolo,
+                                e.config_moneda as moneda_simbolo,
                                 SUM(mov.movi_monto) AS total_ingreso_moneda
                             FROM
                                 movimientos mov
-                            INNER JOIN
-                                moneda m ON mov.moneda_id = m.moneda_id
+                            CROSS JOIN
+                                empresa e
                             WHERE
-                                mov.movi_tipo = 'INGRESO' AND mov.movi_f_registro BETWEEN '$apertura_f_h' AND '$cierre_f_h'
+                                mov.movi_tipo = 'INGRESO' AND mov.movi_fecha BETWEEN '$apertura_f_h' AND '$cierre_f_h'
                             GROUP BY
-                                m.moneda_simbolo";
+                                e.config_moneda";
     $resultado_ingresos_moneda = $mysqli->query($query_ingresos_moneda);
 
-    // Consulta para egresos por moneda
+    // Consulta para egresos por moneda (corregida - usa moneda de empresa)
     $query_egresos_moneda = "SELECT
-                                m.moneda_simbolo,
+                                e.config_moneda as moneda_simbolo,
                                 SUM(mov.movi_monto) AS total_egreso_moneda
                             FROM
                                 movimientos mov
-                            INNER JOIN
-                                moneda m ON mov.moneda_id = m.moneda_id
+                            CROSS JOIN
+                                empresa e
                             WHERE
-                                mov.movi_tipo = 'EGRESO' AND mov.movi_f_registro BETWEEN '$apertura_f_h' AND '$cierre_f_h'
+                                mov.movi_tipo = 'EGRESO' AND mov.movi_fecha BETWEEN '$apertura_f_h' AND '$cierre_f_h'
                             GROUP BY
-                                m.moneda_simbolo";
+                                e.config_moneda";
     $resultado_egresos_moneda = $mysqli->query($query_egresos_moneda);
 
 	//para ver el logo en la i,presion
@@ -118,13 +118,13 @@ while ($row1 = $resultado->fetch_assoc()) {
 	
 		 
 	------------------------------------------<br>
-	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Apertura&nbsp; : &nbsp;&nbsp;&nbsp;S/  ' . $row1['caja_monto_inicial'] . '</h6> 
-	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Interes&nbsp; : &nbsp;&nbsp;&nbsp;S/  '.$row1['caja_interes'].'</h6> 
-	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Prestamo&nbsp;&nbsp;: &nbsp;&nbsp;S/ ' . $row1['caja_prestamo'] . '&nbsp;(' . $row1['caja_count_prestamo'] . ')</h6>
-	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Ingresos&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;S/  ' . $row1['caja_monto_ingreso'] . '&nbsp;&nbsp;(' . $row1['caja_count_ingreso'] . ')</h6>
-	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Egresos&nbsp;&nbsp;&nbsp; : &nbsp;&nbsp;S/  ' . $row1['caja__monto_egreso'] . '&nbsp;&nbsp;(' . $row1['caja_count_egreso'] . ')</h6></b>
+	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Apertura&nbsp; : &nbsp;&nbsp;&nbsp;' . $row1['moneda_simbolo'] . '  ' . $row1['caja_monto_inicial'] . '</h6> 
+	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Interes&nbsp; : &nbsp;&nbsp;&nbsp;' . $row1['moneda_simbolo'] . '  '.$row1['caja_interes'].'</h6> 
+	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Prestamo&nbsp;&nbsp;: &nbsp;&nbsp;' . $row1['moneda_simbolo'] . ' ' . $row1['caja_prestamo'] . '&nbsp;(' . $row1['caja_count_prestamo'] . ')</h6>
+	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Ingresos&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;' . $row1['moneda_simbolo'] . '  ' . $row1['caja_monto_ingreso'] . '&nbsp;&nbsp;(' . $row1['caja_count_ingreso'] . ')</h6>
+	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">Monto Egresos&nbsp;&nbsp;&nbsp; : &nbsp;&nbsp;' . $row1['moneda_simbolo'] . '  ' . $row1['caja__monto_egreso'] . '&nbsp;&nbsp;(' . $row1['caja_count_egreso'] . ')</h6></b>
 	------------------------------------------<br>
-	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-size:11px">Monto Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : &nbsp;&nbsp;&nbsp;&nbsp;S/  ' . $row1['caja_monto_total'] . ' </h6>
+	<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-size:11px">Monto Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : &nbsp;&nbsp;&nbsp;&nbsp;' . $row1['moneda_simbolo'] . '  ' . $row1['caja_monto_total'] . ' </h6>
 	
 
 	';
@@ -141,7 +141,7 @@ while ($row1 = $resultado->fetch_assoc()) {
     $html .= '<br><h6 style="display: inline-block;margin: 0px;padding: 0px;  font-size:11px">Detalle de Ingresos por Moneda:</h6>';
     if ($resultado_ingresos_moneda->num_rows > 0) {
         while ($row_ingreso_moneda = $resultado_ingresos_moneda->fetch_assoc()) {
-            $html .= '<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $row_ingreso_moneda['moneda_simbolo'] . ' ' . $row_ingreso_moneda['total_ingreso_moneda'] . '</h6>';
+            $html .= '<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $row_ingreso_moneda['moneda_simbolo'] . ' ' . number_format($row_ingreso_moneda['total_ingreso_moneda'], 2) . '</h6>';
         }
     } else {
         $html .= '<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No hay ingresos para este período.</h6>';
@@ -150,7 +150,7 @@ while ($row1 = $resultado->fetch_assoc()) {
     $html .= '<br><h6 style="display: inline-block;margin: 0px;padding: 0px;  font-size:11px">Detalle de Egresos por Moneda:</h6>';
     if ($resultado_egresos_moneda->num_rows > 0) {
         while ($row_egreso_moneda = $resultado_egresos_moneda->fetch_assoc()) {
-            $html .= '<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $row_egreso_moneda['moneda_simbolo'] . ' ' . $row_egreso_moneda['total_egreso_moneda'] . '</h6>';
+            $html .= '<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $row_egreso_moneda['moneda_simbolo'] . ' ' . number_format($row_egreso_moneda['total_egreso_moneda'], 2) . '</h6>';
         }
     } else {
         $html .= '<h6 style="display: inline-block;margin: 0px;padding: 0px;  font-weight:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No hay egresos para este período.</h6>';

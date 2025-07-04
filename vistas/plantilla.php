@@ -70,6 +70,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
     <link rel="stylesheet" href="vistas/assets/plugins/select2/css/select2.min.css">
 
+    <!-- ESTILOS ESTÁNDAR DEL SISTEMA - BOTONES Y ELEMENTOS REDONDEADOS -->
+    <link rel="stylesheet" href="vistas/assets/css/sistema-estandar.css">
 
 
     <!-- REQUIRED SCRIPTS -->
