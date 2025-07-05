@@ -380,8 +380,22 @@
                   $("#text_moneda").val(moneda);
                   
                   // Mostrar logo actual si existe
+                  console.log("Datos recibidos del AJAX:", respuesta);
                   if (respuesta["config_logo"] && respuesta["config_logo"] !== '') {
-                      $("#preview_logo").attr('src', 'uploads/logos/' + respuesta["config_logo"]);
+                      console.log("Logo encontrado:", respuesta["config_logo"]);
+                      var logoPath = 'uploads/logos/' + respuesta["config_logo"];
+                      console.log("Ruta del logo:", logoPath);
+                      $("#preview_logo").attr('src', logoPath);
+                      
+                      // Verificar si la imagen se carga correctamente
+                      $("#preview_logo").on('load', function() {
+                          console.log("Logo cargado exitosamente");
+                      }).on('error', function() {
+                          console.error("Error al cargar el logo:", logoPath);
+                          $("#preview_logo").attr('src', 'vistas/assets/img/default-logo.png');
+                      });
+                  } else {
+                      console.log("No se encontró logo en la respuesta");
                   }
               }
           });
