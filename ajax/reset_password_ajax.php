@@ -1,45 +1,35 @@
 <?php
-require_once '../conexion_reportes/r_conexion.php';
 
-header('Content-Type: application/json');
+require_once "../controladores/usuario_controlador.php";
+require_once "../modelos/usuario_modelo.php";
 
-if ($_POST) {
-    $usuario = trim($_POST['usuario']);
-    $nueva_password = trim($_POST['nueva_password']);
-    
-    // Validaciones básicas
-    if (empty($usuario) || empty($nueva_password)) {
-        echo json_encode(['success' => false, 'message' => 'Usuario y contraseña son requeridos']);
-        exit;
-    }
-    
-    if (strlen($nueva_password) < 6) {
-        echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres']);
-        exit;
-    }
-    
-    try {
-        // Verificar que el usuario existe
-        $query_check = "SELECT id_usuario FROM usuarios WHERE usuario = ?";
-        $stmt_check = $mysqli->prepare($query_check);
-        $stmt_check->bind_param("s", $usuario);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        
-        if ($result_check->num_rows == 0) {
-            echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
-            exit;
+class AjaxResetPassword{
+
+    public $usuario;
+    public $nueva_password;
+
+    public function ajaxResetearPassword(){
+
+        // 1. Validar que el usuario existe
+        $user_data = UsuarioModelo::mdlVerificarUsuarioExiste($this->usuario);
+
+        if(!$user_data){
+            echo json_encode(['success' => false, 'message' => 'El usuario proporcionado no existe.']);
+            return;
         }
+
+        // 2. Encriptar la nueva contraseña de forma segura
+        $password_encriptada = crypt($this->nueva_password, '$2a$07$azybxcags23425sdg23sdfhsd$');
         
-        // Encriptar la nueva contraseña usando el mismo método del sistema
-        $password_encriptada = crypt($nueva_password, '$2a$07$azybxcags23425sdg23sdfhsd$');
+        // 3. Actualizar la contraseña en la base de datos
+        $tabla = "usuarios";
+        $data = ["clave" => $password_encriptada];
+        $id = $user_data['id_usuario'];
+        $nameId = "id_usuario";
         
-        // Actualizar la contraseña
-        $query_update = "UPDATE usuarios SET clave = ? WHERE usuario = ?";
-        $stmt_update = $mysqli->prepare($query_update);
-        $stmt_update->bind_param("ss", $password_encriptada, $usuario);
-        
-        if ($stmt_update->execute()) {
+        $respuesta = UsuarioModelo::mdlActualizarClaveUsuario($tabla, $data, $id, $nameId);
+
+        if($respuesta == "ok"){
             echo json_encode([
                 'success' => true, 
                 'message' => 'Contraseña actualizada exitosamente'
@@ -47,23 +37,18 @@ if ($_POST) {
         } else {
             echo json_encode([
                 'success' => false, 
-                'message' => 'Error al actualizar la contraseña'
+                'message' => 'Error al actualizar la contraseña.'
             ]);
         }
-        
-        $stmt_check->close();
-        $stmt_update->close();
-        
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error del servidor: ' . $e->getMessage()
-        ]);
     }
-} else {
-    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
 }
 
-$mysqli->close();
-?> 
+if(isset($_POST['usuario']) && isset($_POST['nueva_password'])){
+    $reset = new AjaxResetPassword();
+    $reset->usuario = $_POST['usuario'];
+    $reset->nueva_password = $_POST['nueva_password'];
+    $reset->ajaxResetearPassword();
+} else {
+    echo json_encode(['success' => false, 'message' => 'Faltan parámetros.']);
+} 
  

@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 require_once "../controladores/usuario_controlador.php";
 require_once "../modelos/usuario_modelo.php";
@@ -95,7 +96,30 @@ class AjaxUsuario
 
 
 
-if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR USUARIOS EN DATA TABLE
+if(isset($_POST["loginUsuario"])){
+    
+    $usuario = trim($_POST["loginUsuario"]);
+    $password = trim($_POST["loginPassword"]);
+
+    // LOGGING - Comentado temporalmente
+    // $logFile = fopen("login_debug.log", 'w'); // 'w' para sobreescribir el log en cada intento
+    // fwrite($logFile, "AJAX: Usuario recibido: '" . $usuario . "' (longitud: " . strlen($usuario) . ")\n");
+    // fwrite($logFile, "AJAX: Contraseña recibida: '" . $password . "' (longitud: " . strlen($password) . ")\n\n");
+    // fclose($logFile);
+
+    $respuesta = UsuarioControlador::login($usuario,$password);
+    
+    if($respuesta && !empty($respuesta) && is_object($respuesta)){
+        $resultado["status"] = "success";
+        $_SESSION["usuario"] = $respuesta;
+
+    }else{
+        $resultado["status"] = "error";
+    }
+
+    echo json_encode($resultado);
+
+} else if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR USUARIOS EN DATA TABLE
     $Usuario = new AjaxUsuario();
     $Usuario->getListarUsuarios();
 

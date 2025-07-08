@@ -228,26 +228,27 @@ class ClienteModelo
     /*===================================================================*/
     // REGISTRAR REFENCIAS
     /*===================================================================*/
-    static public function mdlRegistrarReferencias($cliente_id, $refe_personal, $refe_cel_per, $refe_familiar, $refe_cel_fami)
+    static public function mdlRegistrarReferencias($cliente_id, $refe_personal, $refe_cel_per, $refe_familiar, $refe_cel_fami, $refe_empresa_laboral, $refe_cargo_laboral, $refe_tel_laboral, $refe_dir_laboral)
     {
+        $stmt = Conexion::conectar()->prepare("INSERT INTO referencias(cliente_id, refe_personal, refe_cel_per, refe_familiar, refe_cel_fami, refe_empresa_laboral, refe_cargo_laboral, refe_tel_laboral, refe_dir_laboral) 
+            VALUES(:cliente_id, :refe_personal, :refe_cel_per, :refe_familiar, :refe_cel_fami, :refe_empresa_laboral, :refe_cargo_laboral, :refe_tel_laboral, :refe_dir_laboral)");
 
-        $stmt = Conexion::conectar()->prepare('call SP_REGISTRAR_REFERENCIAS(:cliente_id, :refe_personal, :refe_cel_per, :refe_familiar ,:refe_cel_fami)');
+        $stmt->bindParam(":cliente_id", $cliente_id, PDO::PARAM_INT);
+        $stmt->bindParam(":refe_personal", $refe_personal, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_cel_per", $refe_cel_per, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_familiar", $refe_familiar, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_cel_fami", $refe_cel_fami, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_empresa_laboral", $refe_empresa_laboral, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_cargo_laboral", $refe_cargo_laboral, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_tel_laboral", $refe_tel_laboral, PDO::PARAM_STR);
+        $stmt->bindParam(":refe_dir_laboral", $refe_dir_laboral, PDO::PARAM_STR);
 
-             $stmt->bindParam(":cliente_id", $cliente_id, PDO::PARAM_INT);
-             $stmt->bindParam(":refe_personal", $refe_personal, PDO::PARAM_STR);
-             $stmt->bindParam(":refe_cel_per", $refe_cel_per, PDO::PARAM_STR);
-             $stmt->bindParam(":refe_familiar", $refe_familiar, PDO::PARAM_STR);
-             $stmt->bindParam(":refe_cel_fami", $refe_cel_fami, PDO::PARAM_STR);
-            
-
-             if ($stmt->execute()) {
-                return "ok";
-            } else {
-                return 'error';
-            }
-            
-            
-            var_dump($stmt);
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+        $stmt = null;
     }
 
 
@@ -260,8 +261,10 @@ class ClienteModelo
                                                     cliente_id,
                                                     refe_personal,
                                                     refe_cel_per,
+                                                    refe_per_dir,
                                                     refe_familiar,
-                                                    refe_cel_fami
+                                                    refe_cel_fami,
+                                                    refe_fami_dir
                                                         
                                                     FROM
                                                         referencias 
@@ -271,13 +274,7 @@ class ClienteModelo
 
         $stmt->execute();
 
-        //return $stmt->fetch();
         return $stmt->fetch(PDO::FETCH_OBJ);
-
-
-        // $smt->execute();
-        // return $stmt->fetch(PDO::FETCH_OBJ);
-        var_dump($stmt);
     }
 
 

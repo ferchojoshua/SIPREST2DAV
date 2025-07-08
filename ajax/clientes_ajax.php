@@ -141,15 +141,23 @@ class AjaxCliente
     /*=========================================================*/
     public function ajaxRegistrarReferencias()
     {
-        $regReferencia = ClienteControlador::ctrRegistrarReferencias(
+        $refe_empresa_laboral = $_POST['refe_empresa_laboral'] ?? null;
+        $refe_cargo_laboral = $_POST['refe_cargo_laboral'] ?? null;
+        $refe_tel_laboral = $_POST['refe_tel_laboral'] ?? null;
+        $refe_dir_laboral = $_POST['refe_dir_laboral'] ?? null;
+
+        $respuesta = ClienteControlador::ctrRegistrarReferencias(
             $this->cliente_id,
             $this->refe_personal,
             $this->refe_cel_per,
             $this->refe_familiar,
             $this->refe_cel_fami,
-
+            $refe_empresa_laboral,
+            $refe_cargo_laboral,
+            $refe_tel_laboral,
+            $refe_dir_laboral
         );
-        echo json_encode($regReferencia);
+        echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
     }
 
 
@@ -245,8 +253,10 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR CLIENTE EN DATA
     $regReferencia->cliente_id = $_POST["cliente_id"];
     $regReferencia->refe_personal = $_POST["refe_personal"];
     $regReferencia->refe_cel_per = $_POST["refe_cel_per"];
+    $regReferencia->refe_per_dir = $_POST["refe_per_dir"] ?? null;
     $regReferencia->refe_familiar = $_POST["refe_familiar"];
     $regReferencia->refe_cel_fami = $_POST["refe_cel_fami"];
+    $regReferencia->refe_fami_dir = $_POST["refe_fami_dir"] ?? null;
     $regReferencia->ajaxRegistrarReferencias();
 
 

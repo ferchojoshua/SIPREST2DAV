@@ -57,164 +57,231 @@ $query = "SELECT
 $resultado = $mysqli->query($query);
 
 if ($row1 = $resultado->fetch_assoc()) {
-    $html = '
-    <!DOCTYPE html>
-    <html>
+    // Verificar si existe logo de empresa personalizado
+    $logo_empresa = '';
+    if (!empty($row1['config_logo']) && file_exists('../uploads/logos/' . $row1['config_logo'])) {
+        $logo_empresa = '../uploads/logos/' . $row1['config_logo'];
+    } else {
+        // Logo por defecto si no existe logo de empresa
+        $logo_empresa = 'img/logo.png';
+    }
+
+    $html = '<!DOCTYPE html>
+    <html lang="es">
     <head>
         <meta charset="utf-8">
-        <title>Ticket de Pago</title>
+        <title>Recibo de Pago de Cuota</title>
         <style>
             body {
-                font-family: Arial, sans-serif;
-                font-size: 11px;
-                line-height: 1.3;
-                color: #333;
+                font-family: "Arial", sans-serif;
+                font-size: 10px;
                 margin: 0;
-                padding: 5px;
+                padding: 10px;
+                color: #000;
+                line-height: 1.3;
             }
-            .ticket-header {
+            
+            .recibo-container {
+                width: 100%;
+                max-width: 280px;
+                margin: 0 auto;
+                border: 1px solid #000;
+                padding: 8px;
+            }
+            
+            .recibo-header {
                 text-align: center;
-                margin-bottom: 15px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 8px;
+                margin-bottom: 10px;
             }
-            .ticket-logo {
+            
+            .recibo-logo {
                 width: 50px;
                 height: auto;
-                margin-bottom: 8px;
+                margin-bottom: 5px;
             }
-            .ticket-empresa {
-                font-size: 14px;
-                font-weight: bold;
-                margin: 3px 0;
-                color: #2c3e50;
-            }
-            .ticket-ruc {
-                font-size: 11px;
-                color: #666;
-                margin: 2px 0;
-            }
-            .ticket-direccion {
-                font-size: 10px;
-                color: #666;
-                margin: 2px 0;
-            }
-            .ticket-separador {
-                border-top: 1px dashed #666;
-                margin: 10px 0;
-                padding-top: 10px;
-            }
-            .ticket-titulo {
-                text-align: center;
-                font-weight: bold;
-                font-size: 12px;
-                margin: 10px 0;
-                color: #2c3e50;
-            }
-            .ticket-info {
-                font-size: 10px;
-                line-height: 1.4;
-                margin: 3px 0;
-            }
-            .ticket-info-label {
-                font-weight: bold;
-                color: #2c3e50;
-            }
-            .ticket-total {
+            
+            .recibo-empresa {
                 font-size: 12px;
                 font-weight: bold;
-                margin: 8px 0;
-                text-align: center;
-                background-color: #f8f9fa;
-                padding: 5px;
-                border-radius: 3px;
+                margin: 3px 0;
+                text-transform: uppercase;
             }
-            .ticket-firma {
-                text-align: center;
-                margin-top: 20px;
-            }
-            .ticket-firma-linea {
-                border-top: 1px solid #333;
-                width: 150px;
-                margin: 15px auto 5px;
-            }
-            .ticket-pie {
-                text-align: center;
+            
+            .recibo-ruc {
                 font-size: 9px;
-                color: #666;
+                margin: 2px 0;
+            }
+            
+            .recibo-direccion {
+                font-size: 8px;
+                margin: 2px 0;
+            }
+            
+            .recibo-contacto {
+                font-size: 8px;
+                margin: 2px 0;
+            }
+            
+            .recibo-titulo {
+                font-size: 11px;
+                font-weight: bold;
+                text-align: center;
+                margin: 8px 0;
+                padding: 5px;
+                border: 1px solid #000;
+                background-color: #f5f5f5;
+            }
+            
+            .recibo-seccion {
+                margin: 8px 0;
+                border-bottom: 1px dashed #ccc;
+                padding-bottom: 6px;
+            }
+            
+            .recibo-info {
+                margin: 3px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+            
+            .recibo-info-label {
+                font-weight: bold;
+                width: 45%;
+                font-size: 9px;
+            }
+            
+            .recibo-info-value {
+                width: 55%;
+                text-align: right;
+                font-size: 9px;
+            }
+            
+            .recibo-total {
+                text-align: center;
+                font-size: 12px;
+                font-weight: bold;
+                margin: 10px 0;
+                padding: 8px;
+                border: 2px solid #000;
+                background-color: #f0f0f0;
+            }
+            
+            .recibo-firma {
                 margin-top: 15px;
+                text-align: center;
+            }
+            
+            .recibo-firma-linea {
+                border-top: 1px solid #000;
+                width: 150px;
+                margin: 15px auto 8px;
+            }
+            
+            .recibo-pie {
+                text-align: center;
+                font-size: 8px;
+                margin-top: 10px;
                 border-top: 1px dashed #ccc;
                 padding-top: 8px;
+                color: #666;
             }
         </style>
     </head>
     <body>
-        <div class="ticket-header">';
-    
-    // Logo de la empresa
-    if (!empty($row1['config_logo']) && file_exists('../uploads/logos/' . $row1['config_logo'])) {
-        $html .= '<img src="../uploads/logos/' . $row1['config_logo'] . '" class="ticket-logo" alt="Logo">';
-    } else {
-        // Logo por defecto si no existe logo de empresa
-        $html .= '<img src="../vistas/assets/img/default-logo.png" class="ticket-logo" alt="Logo por defecto">';
-    }
-    
-    $html .= '<div class="ticket-empresa">' . $row1['confi_razon'] . '</div>
-            <div class="ticket-ruc">RUC: ' . $row1['confi_ruc'] . '</div>
-            <div class="ticket-direccion">' . $row1['confi_direccion'] . '</div>
-        </div>
-        
-        <div class="ticket-titulo">RECIBO DE PAGO DE CUOTA</div>
-        
-        <div class="ticket-separador">
-            <div class="ticket-info">
-                <span class="ticket-info-label">Nro. Préstamo:</span> ' . $row1['nro_prestamo'] . '
+        <div class="recibo-container">
+            <div class="recibo-header">
+                <img src="' . $logo_empresa . '" class="recibo-logo" alt="Logo">
+                <div class="recibo-empresa">' . $row1['confi_razon'] . '</div>
+                <div class="recibo-ruc">RUC: ' . $row1['confi_ruc'] . '</div>
+                <div class="recibo-direccion">' . $row1['confi_direccion'] . '</div>';
+                
+            // Agregar teléfono si existe
+            if (!empty($row1['config_celular'])) {
+                $html .= '<div class="recibo-contacto">Tel: ' . $row1['config_celular'] . '</div>';
+            }
+            
+            // Agregar email si existe
+            if (!empty($row1['config_correo'])) {
+                $html .= '<div class="recibo-contacto">Email: ' . $row1['config_correo'] . '</div>';
+            }
+            
+            $html .= '</div>
+            
+            <div class="recibo-titulo">RECIBO DE PAGO DE CUOTA</div>
+            
+            <div class="recibo-seccion">
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Nro. Préstamo:</span>
+                    <span class="recibo-info-value">' . $row1['nro_prestamo'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Fecha de Pago:</span>
+                    <span class="recibo-info-value">' . $row1['pdetalle_fecha_registro_format'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Recibo N°:</span>
+                    <span class="recibo-info-value">' . str_pad($row1['nro_prestamo'] . $row1['pdetalle_nro_cuota'], 8, '0', STR_PAD_LEFT) . '</span>
+                </div>
             </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Fecha:</span> ' . $row1['pdetalle_fecha_registro_format'] . '
+            
+            <div class="recibo-seccion">
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Cliente:</span>
+                    <span class="recibo-info-value" style="font-size: 8px;">' . $row1['cliente_nombres'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Documento:</span>
+                    <span class="recibo-info-value">' . $row1['cliente_dni'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Forma de Pago:</span>
+                    <span class="recibo-info-value">' . $row1['fpago_descripcion'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Moneda:</span>
+                    <span class="recibo-info-value">' . $row1['moneda_nombre'] . '</span>
+                </div>
             </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Cliente:</span><br>' . $row1['cliente_nombres'] . '
+            
+            <div class="recibo-seccion">
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Cuota N°:</span>
+                    <span class="recibo-info-value">' . $row1['pdetalle_nro_cuota'] . ' de ' . $row1['pres_cuotas'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Cuotas Pagadas:</span>
+                    <span class="recibo-info-value">' . $row1['pdetalle_cant_cuota_pagada'] . ' de ' . $row1['pres_cuotas'] . '</span>
+                </div>
+                <div class="recibo-info">
+                    <span class="recibo-info-label">Saldo Pendiente:</span>
+                    <span class="recibo-info-value">' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pdetalle_saldo_cuota'], 2) . '</span>
+                </div>
             </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Documento:</span> ' . $row1['cliente_dni'] . '
-            </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Forma de Pago:</span> ' . $row1['fpago_descripcion'] . '
-            </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Moneda:</span> ' . $row1['moneda_nombre'] . '
-            </div>
-        </div>
-        
-        <div class="ticket-separador">
-            <div class="ticket-info">
-                <span class="ticket-info-label">Nro. Cuota:</span> ' . $row1['pdetalle_nro_cuota'] . '
-            </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Cuotas Pagadas:</span> ' . $row1['pdetalle_cant_cuota_pagada'] . ' de ' . $row1['pres_cuotas'] . '
-            </div>
-            <div class="ticket-total">
-                <span class="ticket-info-label">MONTO PAGADO</span><br>
+            
+            <div class="recibo-total">
+                MONTO PAGADO<br>
                 ' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pdetalle_monto_cuota'], 2) . '
             </div>
-            <div class="ticket-info">
-                <span class="ticket-info-label">Saldo Pendiente:</span> ' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pdetalle_saldo_cuota'], 2) . '
+            
+            <div class="recibo-firma">
+                <div class="recibo-firma-linea"></div>
+                <div style="font-size: 9px; font-weight: bold;">FIRMA AUTORIZADA</div>
+                <div style="font-size: 8px; margin-top: 3px;">' . $row1['confi_razon'] . '</div>
             </div>
-        </div>
-        
-        <div class="ticket-firma">
-            <div class="ticket-firma-linea"></div>
-            <div>Firma Autorizada</div>
-        </div>
-        
-        <div class="ticket-pie">
-            Documento generado automáticamente<br>
-            Gracias por su pago puntual
+            
+            <div class="recibo-pie">
+                Documento generado automáticamente<br>
+                ' . date('d/m/Y H:i:s') . '<br>
+                Gracias por su pago puntual
+            </div>
         </div>
     </body>
     </html>';
     
     $mpdf->WriteHTML($html);
-$mpdf->Output();
 } else {
     echo "Error: No se encontraron datos del préstamo.";
 }

@@ -131,7 +131,7 @@
                               <table class="table display table-hover text-nowrap compact  w-100  rounded" id="tbl_clientes">
                                   <thead>
                                       <tr>
-                                          <th>Dni</th>
+                                          <th>Cédula</th>
                                           <th>Cliente</th>
                                           <th>Cant. Prest</th>
                                           <th>Total Prestamos</th>
@@ -165,7 +165,7 @@
                                   <thead>
                                       <tr>
                                           <th>id</th>
-                                          <th class="all">Dni</th>
+                                          <th class="all">Cédula</th>
                                           <th class="desktop">Cliente</th>
                                           <th class="all">Nro Prestamo</th>
                                           <th>Nro Cuota</th>
@@ -196,7 +196,11 @@
   <script>
       var tbl_cuotas_vencidas;
       $(document).ready(function() {
-          //cap();
+          // Verificar que Chart.js esté cargado
+          if (typeof Chart === 'undefined') {
+              console.error('Chart.js no está cargado');
+              return;
+          }
 
           /*************************************
            * TARJETAS AJAX EN TABLERO
@@ -264,74 +268,87 @@
                   // console.log(sumatoalventasmes);
                   $("#titulo_grafico").html('Prestamos Total del Mes:  C$/.  ' + sumatotalprestamomes.toString().replace(/\d(?=(\d{3})+\.)/g, "$&,"));
 
-                  var barChartCanvas = $("#barChart").get(0).getContext('2d');
-
-                  var areaChartData = {
-                      labels: fecha_pres,
-                      datasets: [{
-                          label: 'Prestamos del dia',
-                          backgroundColor: 'rgba(60,141,188,0.9)',
-                          data: total_prest
-                      }]
+                  // Verificar que el canvas exista
+                  var canvas = document.getElementById('barChart');
+                  if (!canvas) {
+                      console.error('El elemento canvas #barChart no existe');
+                      return;
                   }
 
+                  try {
+                      var barChartCanvas = canvas.getContext('2d');
+                      if (!barChartCanvas) {
+                          console.error('No se pudo obtener el contexto 2d del canvas');
+                          return;
+                      }
 
-                  var barChartData = $.extend(true, {}, areaChartData);
-                  var temp0 = areaChartData.datasets[0];
-                  barChartData.datasets[0] = temp0;
-
-                  var barChartOptions = {
-                      maintainAspectRatio: false,
-                      responsive: true,
-                      events: false,
-                      legend: {
-                          display: true
-                      },
-                      scales: {
-                          xAxes: [{
-                              stacked: true,
-                          }],
-                          yAxes: [{
-                              stacked: true
+                      var areaChartData = {
+                          labels: fecha_pres,
+                          datasets: [{
+                              label: 'Prestamos del dia',
+                              backgroundColor: 'rgba(60,141,188,0.9)',
+                              data: total_prest
                           }]
-                      },
-                      animation: {
-                          duration: 500,
-                          easing: "easeOutQuart",
-                          onComplete: function() {
-                              var ctx = this.chart.ctx;
-                              ctx.font = Chart.helpers.fontString(Chart.defaults.global
-                                  .defaultFontFamily, 'normal',
-                                  Chart.defaults.global.defaultFontFamily);
-                              ctx.textAlign = 'center';
-                              ctx.textBaseline = 'bottom';
+                      }
 
-                              this.data.datasets.forEach(function(dataset) {
-                                  for (var i = 0; i < dataset.data.length; i++) {
-                                      var model = dataset._meta[Object.keys(dataset
-                                              ._meta)[0]].data[i]._model,
-                                          scale_max = dataset._meta[Object.keys(dataset
-                                              ._meta)[0]].data[i]._yScale.maxHeight;
-                                      ctx.fillStyle = '#444';
-                                      var y_pos = model.y - 5;
-                                      // Make sure data value does not get overflown and hidden
-                                      // when the bar's value is too close to max value of scale
-                                      // Note: The y value is reverse, it counts from top down
-                                      if ((scale_max - model.y) / scale_max >= 0.93)
-                                          y_pos = model.y + 20;
-                                      ctx.fillText(dataset.data[i], model.x, y_pos);
-                                  }
-                              });
+                      var barChartData = $.extend(true, {}, areaChartData);
+                      var temp0 = areaChartData.datasets[0];
+                      barChartData.datasets[0] = temp0;
+
+                      var barChartOptions = {
+                          maintainAspectRatio: false,
+                          responsive: true,
+                          events: false,
+                          legend: {
+                              display: true
+                          },
+                          scales: {
+                              xAxes: [{
+                                  stacked: true,
+                              }],
+                              yAxes: [{
+                                  stacked: true
+                              }]
+                          },
+                          animation: {
+                              duration: 500,
+                              easing: "easeOutQuart",
+                              onComplete: function() {
+                                  var ctx = this.chart.ctx;
+                                  ctx.font = Chart.helpers.fontString(Chart.defaults.global
+                                      .defaultFontFamily, 'normal',
+                                      Chart.defaults.global.defaultFontFamily);
+                                  ctx.textAlign = 'center';
+                                  ctx.textBaseline = 'bottom';
+
+                                  this.data.datasets.forEach(function(dataset) {
+                                      for (var i = 0; i < dataset.data.length; i++) {
+                                          var model = dataset._meta[Object.keys(dataset
+                                                  ._meta)[0]].data[i]._model,
+                                              scale_max = dataset._meta[Object.keys(dataset
+                                                  ._meta)[0]].data[i]._yScale.maxHeight;
+                                          ctx.fillStyle = '#444';
+                                          var y_pos = model.y - 5;
+                                          // Make sure data value does not get overflown and hidden
+                                          // when the bar's value is too close to max value of scale
+                                          // Note: The y value is reverse, it counts from top down
+                                          if ((scale_max - model.y) / scale_max >= 0.93)
+                                              y_pos = model.y + 20;
+                                          ctx.fillText(dataset.data[i], model.x, y_pos);
+                                      }
+                                  });
+                              }
                           }
                       }
+
+                      new Chart(barChartCanvas, {
+                          type: 'bar',
+                          data: barChartData,
+                          options: barChartOptions
+                      });
+                  } catch (error) {
+                      console.error('Error al crear el gráfico:', error);
                   }
-
-                  new Chart(barChartCanvas, {
-                      type: 'bar',
-                      data: barChartData,
-                      options: barChartOptions
-                  })
-
 
               }
           });

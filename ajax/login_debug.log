@@ -1,0 +1,10 @@
+
+DEBUG mdlIniciarSesion:
+  - Usuario buscado: 'Gunner'
+  - Longitud del usuario: 6
+MODELO (mdlIniciarSesion): Usuario encontrado: Gunner
+MODELO (mdlIniciarSesion): Hash de la BD: $2a$07$azybxcags23425sdg23sdeanQZqjaf6Birm2NvcYTNtJw24CsO5uq
+MODELO (mdlIniciarSesion): Pass recibida: 123456
+MODELO (mdlIniciarSesion): Pass encriptada para comparar: $2a$07$azybxcags23425sdg23sdeanQZqjaf6Birm2NvcYTNtJw24CsO5uq
+MODELO (mdlIniciarSesion): Resultado de la comparación (hash_equals): true
+

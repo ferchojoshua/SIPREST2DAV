@@ -81,8 +81,11 @@
                               <div class="col-lg-3 col-md-6 mb-3">
                                   <label class="form-label text-white">.</label>
                                   <div class="d-flex gap-2">
-                                      <button class="btn btn-primary btn-block" id="btnFiltrar">
-                                          <i class="fas fa-search mr-1"></i>Buscar Préstamos
+                                      <button class="btn btn-primary" id="btnFiltrar">
+                                          <i class="fas fa-search mr-1"></i>Préstamos
+                                      </button>
+                                      <button class="btn btn-success" id="btnEstadoCuenta">
+                                          <i class="fas fa-file-invoice-dollar mr-1"></i>Estado de Cuenta
                                       </button>
                                       <button class="btn btn-secondary" id="btnLimpiar" title="Limpiar filtros">
                                           <i class="fas fa-broom"></i>
@@ -515,6 +518,37 @@
               });
           })
 
+          /*===================================================================*/
+          //EVENTO PARA ESTADO DE CUENTA
+          /*===================================================================*/
+          $("#btnEstadoCuenta").on('click', function() {
+              // Validar que se haya seleccionado un cliente
+              if ($("#select_clientes").val() == '') {
+                  Toast.fire({
+                      icon: 'warning',
+                      title: 'Debe seleccionar un cliente para generar el estado de cuenta'
+                  });
+                  $("#select_clientes").focus();
+                  return;
+              }
+
+              // Destruir tabla existente
+              if ($.fn.DataTable.isDataTable('#tbl_report_cliente')) {
+                  tbl_report_cliente.destroy();
+              }
+
+              // Obtener valores de filtros
+              cliente_id = $("#select_clientes").val();
+              
+              // Mostrar información de filtros aplicados
+              var cliente_nombre = $("#select_clientes option:selected").text();
+              var info_texto = `Estado de cuenta detallado para: <strong>${cliente_nombre}</strong>`;
+              
+              $("#texto_resultados").html(info_texto);
+              $("#info_resultados").show();
+
+              CargarEstadoCuenta();
+          })
 
           /*===================================================================*/
           //CARGAR CLIENTES
@@ -787,7 +821,165 @@
           });
       }
 
-
+      function CargarEstadoCuenta() {
+          cliente_id = $("#select_clientes").val();
+          
+          tbl_report_cliente = $("#tbl_report_cliente").DataTable({
+              responsive: true,
+              processing: true,
+              dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                   '<"row"<"col-sm-12"B>>' +
+                   '<"row"<"col-sm-12"tr>>' +
+                   '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+              buttons: [
+                  {
+                      extend: 'excelHtml5',
+                      title: 'Estado de Cuenta - ' + $("#select_clientes option:selected").text(),
+                      text: '<i class="fas fa-file-excel text-success"></i> Excel',
+                      className: 'btn btn-success btn-sm mr-1',
+                      exportOptions: {
+                          columns: [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+                      },
+                      titleAttr: 'Exportar a Excel'
+                  },
+                  {
+                      extend: 'pdfHtml5',
+                      title: 'Estado de Cuenta Detallado',
+                      text: '<i class="fas fa-file-pdf text-danger"></i> PDF',
+                      className: 'btn btn-danger btn-sm mr-1',
+                      exportOptions: {
+                          columns: [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+                      },
+                      orientation: 'landscape',
+                      pageSize: 'A4'
+                  },
+                  {
+                      extend: 'print',
+                      text: '<i class="fas fa-print text-primary"></i> Imprimir',
+                      className: 'btn btn-primary btn-sm mr-1',
+                      titleAttr: 'Imprimir estado de cuenta',
+                      exportOptions: {
+                          columns: [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+                      }
+                  }
+              ],
+              ajax: {
+                  url: "ajax/reportes_ajax.php",
+                  dataSrc: "",
+                  type: "POST",
+                  data: {
+                      'accion': 11, // Nueva acción para estado de cuenta
+                      'cliente_id': cliente_id
+                  },
+              },
+              columns: [
+                  { data: 'pres_id', visible: false },
+                  { data: 'nro_prestamo', title: '<i class="fas fa-hashtag mr-1"></i>N° Préstamo' },
+                  { data: 'cliente_id', visible: false },
+                  { data: 'cliente_nombres', title: '<i class="fas fa-user mr-1"></i>Cliente' },
+                  { 
+                      data: 'pres_monto',
+                      title: '<i class="fas fa-money-bill-wave mr-1"></i>Capital',
+                      render: function(data, type, row) {
+                          return row.moneda_simbolo + ' ' + parseFloat(data).toFixed(2);
+                      }
+                  },
+                  { 
+                      data: 'pres_monto_interes',
+                      title: '<i class="fas fa-percentage mr-1"></i>Interés',
+                      render: function(data, type, row) {
+                          return row.moneda_simbolo + ' ' + parseFloat(data).toFixed(2);
+                      }
+                  },
+                  { 
+                      data: 'pres_monto_total',
+                      title: '<i class="fas fa-calculator mr-1"></i>Total',
+                      render: function(data, type, row) {
+                          return '<strong>' + row.moneda_simbolo + ' ' + parseFloat(data).toFixed(2) + '</strong>';
+                      }
+                  },
+                  { 
+                      data: 'monto_pagado',
+                      title: '<i class="fas fa-check-circle mr-1"></i>Pagado',
+                      render: function(data, type, row) {
+                          return '<span class="text-success">' + row.moneda_simbolo + ' ' + parseFloat(data).toFixed(2) + '</span>';
+                      }
+                  },
+                  { 
+                      data: 'saldo_pendiente',
+                      title: '<i class="fas fa-exclamation-triangle mr-1"></i>Saldo',
+                      render: function(data, type, row) {
+                          var color = parseFloat(data) > 0 ? 'text-danger' : 'text-success';
+                          return '<span class="' + color + '">' + row.moneda_simbolo + ' ' + parseFloat(data).toFixed(2) + '</span>';
+                      }
+                  },
+                  { 
+                      data: 'pres_cuotas_pagadas',
+                      title: '<i class="fas fa-list-ol mr-1"></i>Cuotas Pagadas',
+                      className: 'text-center'
+                  },
+                  { 
+                      data: 'cuotas_pendientes',
+                      title: '<i class="fas fa-clock mr-1"></i>Pendientes',
+                      className: 'text-center'
+                  },
+                  { 
+                      data: 'porcentaje_avance',
+                      title: '<i class="fas fa-chart-pie mr-1"></i>% Avance',
+                      render: function(data, type, row) {
+                          var color = parseFloat(data) >= 100 ? 'success' : (parseFloat(data) >= 50 ? 'warning' : 'danger');
+                          return '<div class="progress" style="height: 20px;">' +
+                                 '<div class="progress-bar bg-' + color + '" style="width: ' + data + '%">' +
+                                 data + '%</div></div>';
+                      }
+                  },
+                  { data: 'fecha_registro', title: '<i class="fas fa-calendar mr-1"></i>Fecha Registro' },
+                  { 
+                      data: 'estado',
+                      title: '<i class="fas fa-info-circle mr-1"></i>Estado',
+                      render: function(data, type, row) {
+                          var badges = {
+                              'aprobado': 'badge-success',
+                              'pendiente': 'badge-warning',
+                              'anulado': 'badge-danger',
+                              'finalizado': 'badge-info'
+                          };
+                          return '<span class="badge ' + (badges[data] || 'badge-secondary') + '">' + data + '</span>';
+                      }
+                  },
+                  { data: 'fpago_descripcion', title: '<i class="fas fa-credit-card mr-1"></i>F. Pago' },
+                  { data: 'moneda_nombre', title: '<i class="fas fa-coins mr-1"></i>Moneda' },
+                  {
+                      data: null,
+                      title: '<i class="fas fa-cogs mr-1"></i>Acciones',
+                      sortable: false,
+                      render: function(data, type, row) {
+                          return `
+                              <div class="btn-group" role="group">
+                                  <button class="btn btn-info btn-sm btnVerDetalleCuotas" 
+                                          data-nro-prestamo="${row.nro_prestamo}"
+                                          data-toggle="tooltip" title="Ver Detalle de Cuotas">
+                                      <i class="fas fa-list"></i>
+                                  </button>
+                                  <button class="btn btn-warning btn-sm btnCronogramaPagos" 
+                                          data-toggle="tooltip" title="Cronograma de Pagos">
+                                      <i class="fas fa-file-invoice-dollar"></i>
+                                  </button>
+                                  <button class="btn btn-success btn-sm btnContrato" 
+                                          data-toggle="tooltip" title="Generar Contrato">
+                                      <i class="fas fa-file-contract"></i>
+                                  </button>
+                              </div>
+                          `;
+                      }
+                  }
+              ],
+              "order": [[ 12, 'desc' ]], // Ordenar por fecha de registro
+              "pageLength": 10,
+              "language": idioma_espanol,
+              select: true
+          });
+      }
 
       //FUNCIONES
 

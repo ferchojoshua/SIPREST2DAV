@@ -64,7 +64,8 @@ class AjaxAdminPrestamos
          $RegistrarAbono = AdminPrestamosControlador::ctrRegistrarAbono(
              $this->nro_prestamo,
              $this->pdetalle_nro_cuota,
-             $this->monto_a_abonar
+             $this->monto_a_abonar,
+             $this->tipo_abono
          );
          echo json_encode($RegistrarAbono);
      }
@@ -106,5 +107,6 @@ if (isset($_POST["accion"]) && $_POST["accion"] == 1) {             //LISTAR PRE
     $RegistrarAbono->nro_prestamo = $_POST["nro_prestamo"];
     $RegistrarAbono->pdetalle_nro_cuota = $_POST["pdetalle_nro_cuota"];
     $RegistrarAbono->monto_a_abonar = $_POST["monto_a_abonar"];
+    $RegistrarAbono->tipo_abono = $_POST["tipo_abono"] ?? 'normal';
     $RegistrarAbono->ajaxRegistrarAbono();
 }

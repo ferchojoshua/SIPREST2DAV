@@ -111,11 +111,10 @@ class ClienteControlador
     /*===================================================================*/
     ////REGISTRAR LAS REFERENCIAS DEL CLIENTE
     /*===================================================================*/
-    static public function ctrRegistrarReferencias($cliente_id, $refe_personal, $refe_cel_per, $refe_familiar,$refe_cel_fami)
+    static public function ctrRegistrarReferencias($cliente_id, $refe_personal, $refe_cel_per, $refe_familiar, $refe_cel_fami, $refe_empresa_laboral, $refe_cargo_laboral, $refe_tel_laboral, $refe_dir_laboral)
     {
-        $regReferencia = ClienteModelo::mdlRegistrarReferencias($cliente_id, $refe_personal, $refe_cel_per, $refe_familiar, $refe_cel_fami);
-        return $regReferencia;
-        var_dump($regReferencia);
+        $respuesta = ClienteModelo::mdlRegistrarReferencias($cliente_id, $refe_personal, $refe_cel_per, $refe_familiar, $refe_cel_fami, $refe_empresa_laboral, $refe_cargo_laboral, $refe_tel_laboral, $refe_dir_laboral);
+        return $respuesta;
     }
 
 

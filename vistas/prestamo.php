@@ -59,9 +59,9 @@
 
                                                       <input type="text" class=" form-control form-control-sm"
                                                           id="text_dni" autocomplete="off" name="text_dni"
-                                                          placeholder="Dni del cliente" required>
+                                                          placeholder="Cédula del cliente" required>
 
-                                                      <div class="invalid-feedback">Debe ingresar el dni del cliente
+                                                      <div class="invalid-feedback">Debe ingresar la Cedula del cliente
                                                       </div>
                                                   </div>
                                               </div>
@@ -170,68 +170,59 @@
 
                                                   </div>
                                               </div>
-                                              <div class="col-md-2 ">
+                                              <div class="col-md-4">
                                                   <div class="form-group mb-2">
                                                       <label for="" class="">
+                                                          <span class="small">Sistema de amortización:</span>
+                                                      </label>
+                                                      <select name="" id="select_tipo_calculo"
+                                                          class="form-select form-select-sm"
+                                                          aria-label=".form-select-sm example" required>
+                                                      </select>
 
+                                                      <div class="invalid-feedback">Seleccione un tipo de amortización</div>
+                                                  </div>
+                                              </div>
+                                              <div class="col-md-4">
+                                                  <div class="form-group mb-2">
+                                                      <label for="" class="">
                                                           <span class="small">Fecha</span>
                                                       </label>
-                                                      <input type="date" class=" form-control form-control-sm"
-                                                          data-inputmask-alias="datetime"
-                                                          data-inputmask-inputformat="dd/mm/yyyy" id="text_fecha"
-                                                          required>
-
-                                                      <div class="invalid-feedback">Debe ingresar la Fecha </div>
-                                                  </div>
-                                              </div>
-                                              <div class="col-md-2">
-                                                  <div class="form-group mb-2">
-                                                      <label for="">&nbsp;</label><br>
-
-                                                      <button class="btn btn-info btn-sm float-right"
-                                                          id="btnCalcular">Calcular</button>
-                                                      <button class="btn btn-danger btn-sm float-right"
-                                                          id="btnLimpiarCampos" hidden>Limpiar</button>
-                                                  </div>
-                                              </div>
-
-                                              <div class="col-md-4">
-                                                  <div class="form-group mb-2">
-                                                      <label for="" class="">
-
-                                                          <span class="small"> Monto por Cuota</span>
-                                                      </label>
-
-                                                      <input type="number" class=" form-control form-control-sm"
-                                                          id="text_monto_por_cuota" placeholder="Monto por cuota"
-                                                          disabled>
-                                                      <!-- <input type="number" class=" form-control form-control-sm" id="text_calcula_m_cuota" placeholder="calcula_m_cuota" disabled> -->
-
+                                                      <input type="date" class="form-control form-control-sm" id="text_fecha" required>
+                                                      <div class="invalid-feedback">Ingrese una fecha</div>
                                                   </div>
                                               </div>
                                               <div class="col-md-4">
                                                   <div class="form-group mb-2">
                                                       <label for="" class="">
-
-                                                          <span class="small"> Total Interes</span>
+                                                          <span class="small">Monto por Cuota</span>
                                                       </label>
-                                                      <input type="number" class=" form-control form-control-sm"
-                                                          id="text_interes_resultado" placeholder="Total interes"
-                                                          disabled>
-
+                                                      <input type="text" class="form-control form-control-sm" id="text_monto_por_cuota" readonly>
                                                   </div>
                                               </div>
                                               <div class="col-md-4">
                                                   <div class="form-group mb-2">
                                                       <label for="" class="">
-
-                                                          <span class="small"> Monto total a Pagar</span>
+                                                          <span class="small">Total Interés</span>
                                                       </label>
-                                                      <input type="number" class=" form-control form-control-sm"
-                                                          id="text_total_resultado" placeholder="Monto total a pagar"
-                                                          disabled>
-
+                                                      <input type="text" class="form-control form-control-sm" id="text_interes_resultado" readonly>
                                                   </div>
+                                              </div>
+                                              <div class="col-md-4">
+                                                  <div class="form-group mb-2">
+                                                      <label for="" class="">
+                                                          <span class="small">Monto total a Pagar</span>
+                                                      </label>
+                                                      <input type="text" class="form-control form-control-sm" id="text_total_resultado" readonly>
+                                                  </div>
+                                              </div>
+                                              <div class="col-12 text-center mt-3">
+                                                  <button type="button" class="btn btn-info" id="btnCalcular">
+                                                      <i class="fas fa-calculator"></i> CALCULAR
+                                                  </button>
+                                                  <button type="button" class="btn btn-danger" id="btnLimpiarCampos" hidden>
+                                                      <i class="fas fa-broom"></i> LIMPIAR
+                                                  </button>
                                               </div>
                                               <div class="col-md-12">
                                                   <div class="form-group mb-2">
@@ -495,7 +486,7 @@ $(document).ready(function() {
 
 
     /*===================================================================*/
-    //VALIDAR SI EL DNI ESTA REGISTRADO O DESACTIVADO
+    //VALIDAR SI LA CÉDULA ESTA REGISTRADA O DESACTIVADA
     /*===================================================================*/
     $("#text_dni").change(function() {
 
@@ -704,6 +695,7 @@ $(document).ready(function() {
             var montoPresta = parseFloat($("#text_monto").val());
             var interes = parseFloat($("#text_interes").val());
             var cuota = parseInt($("#text_cuotas").val());
+            var tipoCalculo = $("#select_tipo_calculo").val();
             var fixed_installment_C = parseFloat($("#text_monto_por_cuota").val()); // Cuota fija calculada
             var annual_interest_rate = interes / 100;
             var i_per_period;
@@ -735,6 +727,7 @@ $(document).ready(function() {
             }
 
             var saldo_capital_restante = montoPresta;
+            var amortizacion_fija = tipoCalculo === 'aleman' ? montoPresta / cuota : 0;
 
             // Limpiar la tabla de detalle antes de agregar nuevas filas
             $("#tbody_tabla_detalle_pro").empty();
@@ -761,21 +754,31 @@ $(document).ready(function() {
                 }
 
                 var nro_cuota = i_cuota + 1;
+                var interes_cuota, capital_cuota, cuota_total;
 
-                var interes_cuota = saldo_capital_restante * i_per_period;
-                var capital_cuota = fixed_installment_C - interes_cuota;
+                if (tipoCalculo === 'frances') {
+                    interes_cuota = saldo_capital_restante * i_per_period;
+                    capital_cuota = fixed_installment_C - interes_cuota;
+                    cuota_total = fixed_installment_C;
+                } else { // Sistema Alemán
+                    capital_cuota = amortizacion_fija;
+                    interes_cuota = saldo_capital_restante * i_per_period;
+                    cuota_total = capital_cuota + interes_cuota;
+                }
+
                 saldo_capital_restante -= capital_cuota;
 
                 // Asegurarse de que el saldo no sea negativo en la última cuota
                 if (i_cuota === cuota - 1) {
                     capital_cuota += saldo_capital_restante; // Ajustar el capital de la última cuota
+                    cuota_total = capital_cuota + interes_cuota;
                     saldo_capital_restante = 0; // El saldo debe ser 0 al final
                 }
 
                 var fila = '<tr>' +
                     '<td>' + nro_cuota + '</td>' +
                     '<td>' + current_date + '</td>' +
-                    '<td>' + fixed_installment_C.toFixed(2) + '</td>' +
+                    '<td>' + cuota_total.toFixed(2) + '</td>' +
                     '<td>' + capital_cuota.toFixed(2) + '</td>' +
                     '<td>' + interes_cuota.toFixed(2) + '</td>' +
                     '<td>' + saldo_capital_restante.toFixed(2) + '</td>' +
@@ -1038,6 +1041,91 @@ $(document).ready(function() {
         }
     });
 
+    /*===================================================================*/
+    //CARGA LOS TIPOS DE CALCULO AL INICIAR
+    /*===================================================================*/
+    function CargarTiposCalculo() {
+        $.ajax({
+            url: "ajax/prestamo_ajax.php",
+            method: "POST",
+            data: {
+                'accion': 4
+            },
+            dataType: 'json',
+            success: function(respuesta) {
+                var options = '<option value="">Seleccione un tipo de cálculo</option>';
+                respuesta.forEach(function(tipo) {
+                    options += '<option value="' + tipo.nombre + '" title="' + tipo.descripcion + '">' + 
+                              tipo.nombre + '</option>';
+                });
+                $("#select_tipo_calculo").html(options);
+            }
+        });
+    }
+
+    CargarTiposCalculo();
+
+    // Función para calcular la amortización
+    function calcularAmortizacion() {
+        let monto = $('#text_monto').val();
+        let tasa = $('#text_interes').val();
+        let plazo = $('#text_cuotas').val();
+        let sistema = $('#select_tipo_calculo').val();
+        let fecha = $('#text_fecha').val();
+        
+        if (!monto || !tasa || !plazo || !sistema || !fecha) {
+            return;
+        }
+        
+        $.ajax({
+            url: 'ajax/prestamo_ajax.php',
+            type: 'POST',
+            data: {
+                funcion: 'calcular_amortizacion',
+                monto: monto,
+                tasa: tasa,
+                plazo: plazo,
+                sistema: sistema,
+                fecha: fecha
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) {
+                    console.error(response.error);
+                    return;
+                }
+                
+                // Actualizar monto por cuota
+                $('#text_monto_por_cuota').val(response.cuota_inicial.toFixed(2));
+                
+                // Actualizar tabla de amortización
+                let tabla = '';
+                response.tabla_amortizacion.forEach(function(fila) {
+                    tabla += `
+                        <tr>
+                            <td>${fila.nro_cuota}</td>
+                            <td>${fila.fecha}</td>
+                            <td>${fila.monto.toFixed(2)}</td>
+                            <td>${fila.capital.toFixed(2)}</td>
+                            <td>${fila.interes.toFixed(2)}</td>
+                            <td>${fila.saldo.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                
+                $('#tabla_amortizacion tbody').html(tabla);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al calcular amortización:', error);
+            }
+        });
+    }
+    
+    // Calcular cuando cambien los valores
+    $('#text_monto, #text_interes, #text_cuotas, #select_tipo_calculo, #text_fecha').on('change', function() {
+        calcularAmortizacion();
+    });
+
 }) /// FIN DOCUMENT READY         
 
 
@@ -1049,67 +1137,61 @@ $(document).ready(function() {
 
 
 function recalcularPrestamo() {
-    var montoPresta = parseFloat($("#text_monto").val()); // Monto principal del préstamo
-    var interes = parseFloat($("#text_interes").val()); // Tasa de interés anual en porcentaje
-    var cuota = parseInt($("#text_cuotas").val());     // Número total de cuotas
-    var fpago = $("#select_f_pago").val(); // Frecuencia de pago (1=DIARIO, 2=SEMANAL, etc.)
+    var montoPresta = parseFloat($("#text_monto").val()) || 0;
+    var cuota = parseInt($("#text_cuotas").val()) || 0;
+    var interes = parseFloat($("#text_interes").val()) || 0;
+    var fpago = $("#select_f_pago").val();
+    var tipoCalculo = $("#select_tipo_calculo").val();
+    var fechaInicio = $("#text_fecha").val();
 
-    // Validar entradas
-    if (isNaN(montoPresta) || montoPresta <= 0 ||
-        isNaN(interes) || interes < 0 ||
-        isNaN(cuota) || cuota <= 0 ||
-        fpago === "0") {
-        $("#text_monto_por_cuota").val("");
-        $("#text_interes_resultado").val("");
-        $("#text_total_resultado").val("");
+    if (montoPresta <= 0 || cuota <= 0 || interes <= 0 || !fpago || !tipoCalculo || !fechaInicio) {
         return;
     }
 
-    var annual_interest_rate = interes / 100; // Convertir porcentaje a decimal
+    // Llamar al servidor para calcular la amortización
+    $.ajax({
+        url: "ajax/prestamo_ajax.php",
+        method: "POST",
+        data: {
+            'accion': 5,
+            'monto': montoPresta,
+            'cuotas': cuota,
+            'interes': interes,
+            'fpago': fpago,
+            'tipo_calculo': tipoCalculo,
+            'fecha_inicio': fechaInicio
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            if (respuesta.error) {
+                Swal.fire("Error", respuesta.error, "error");
+                return;
+            }
 
-    var i_per_period; // Tasa de interés por período
-    switch (fpago) {
-        case "1": // DIARIO
-            i_per_period = annual_interest_rate / 365;
-            break;
-        case "2": // SEMANAL
-            i_per_period = annual_interest_rate / 52;
-            break;
-        case "3": // QUINCENAL (asumiendo 24 quincenas al año)
-            i_per_period = annual_interest_rate / 24;
-            break;
-        case "4": // MENSUAL
-            i_per_period = annual_interest_rate / 12;
-            break;
-        case "5": // BIMESTRAL (cada 2 meses, 6 períodos al año)
-            i_per_period = annual_interest_rate / 6;
-            break;
-        case "6": // SEMESTRAL (cada 6 meses, 2 períodos al año)
-            i_per_period = annual_interest_rate / 2;
-            break;
-        case "7": // ANUAL
-            i_per_period = annual_interest_rate / 1;
-            break;
-        default:
-            i_per_period = annual_interest_rate / 12; // Por defecto a mensual si la frecuencia es desconocida
-    }
+            // Actualizar campos con los resultados
+            $("#text_monto_por_cuota").val(respuesta.cuota_inicial.toFixed(2));
+            $("#text_interes_resultado").val(respuesta.total_intereses.toFixed(2));
+            $("#text_total_resultado").val(respuesta.total_pagar.toFixed(2));
 
-    var fixed_installment_C; // Cuota fija
-    if (i_per_period === 0) {
-        fixed_installment_C = montoPresta / cuota;
-    } else {
-        // Fórmula de la Cuota Fija (Sistema Francés)
-        // C = P * [i(1 + i)^n] / [(1 + i)^n – 1]
-        fixed_installment_C = montoPresta * (i_per_period * Math.pow((1 + i_per_period), cuota)) / (Math.pow((1 + i_per_period), cuota) - 1);
-    }
-
-    // Calcular el total de intereses y el monto total a pagar
-    var total_amount_to_pay = fixed_installment_C * cuota;
-    var total_interest_paid = total_amount_to_pay - montoPresta;
-
-    $("#text_monto_por_cuota").val(fixed_installment_C.toFixed(2));
-    $("#text_interes_resultado").val(total_interest_paid.toFixed(2));
-    $("#text_total_resultado").val(total_amount_to_pay.toFixed(2));
+            // Limpiar y actualizar la tabla de detalle
+            $("#tbody_tabla_detalle_pro").empty();
+            respuesta.tabla_amortizacion.forEach(function(fila) {
+                var tr = `<tr>
+                    <td>${fila.nro_cuota}</td>
+                    <td>${fila.fecha}</td>
+                    <td>${fila.monto.toFixed(2)}</td>
+                    <td>${fila.capital.toFixed(2)}</td>
+                    <td>${fila.interes.toFixed(2)}</td>
+                    <td>${fila.saldo.toFixed(2)}</td>
+                </tr>`;
+                $("#tbody_tabla_detalle_pro").append(tr);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error("Error al calcular amortización:", error);
+            Swal.fire("Error", "No se pudo calcular la amortización", "error");
+        }
+    });
 }
 
 
@@ -1173,6 +1255,7 @@ function RegistarPrestamo() {
     var fpago_id = $("#select_f_pago").val();
     var moneda_id = $("#select_moneda").val();
     var pres_f_emision = $("#text_fecha").val();
+    var tipo_calculo = $("#select_tipo_calculo").val();
 
     var pres_monto_cuota = $("#text_monto_por_cuota").val();
     var pres_monto_interes = $("#text_interes_resultado").val();
@@ -1207,6 +1290,7 @@ function RegistarPrestamo() {
             formData.append('pres_monto_total', parseFloat(pres_monto_total));
             formData.append('id_usuario', id_usuario);
             formData.append('caja_id', caja_id);
+            formData.append('tipo_calculo', tipo_calculo);
 
 
 
@@ -1554,4 +1638,9 @@ var idioma_espanol = {
         "SSortDescending": ": ordenar de manera Descendente ",
     }
 }
+
+// Activar recálculo al cambiar tipo de cálculo
+$('#select_tipo_calculo').on('change', function() {
+    $('#btnCalcular').click();
+});
   </script>

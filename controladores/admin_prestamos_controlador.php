@@ -118,18 +118,25 @@ class AdminPrestamosControlador
     }
 
     /*===================================================================*/
-    // REGISTRAR ABONO DE CUOTA
+    // REGISTRAR ABONO DE CUOTA (NORMAL O EXTRAORDINARIO)
     /*===================================================================*/
-    static public function ctrRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar)
+    static public function ctrRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar, $tipo_abono = 'normal')
     {
         // Obtener información antes del abono para WhatsApp
         $infoWhatsApp = AdminPrestamosModelo::mdlObtenerInfoWhatsApp($nro_prestamo, $pdetalle_nro_cuota);
         
-        // Procesar el abono
-        $RegistrarAbono = AdminPrestamosModelo::mdlRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar);
+        // Procesar el abono según el tipo
+        if ($tipo_abono === 'extraordinario') {
+            $RegistrarAbono = AdminPrestamosModelo::mdlRegistrarAbonoExtraordinario($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar);
+        } else {
+            $RegistrarAbono = AdminPrestamosModelo::mdlRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar);
+        }
         
         // Si el abono fue exitoso y tenemos información completa, enviar WhatsApp
-        if ($RegistrarAbono === "ok" && $infoWhatsApp && !empty($infoWhatsApp['cliente_celular'])) {
+        $fue_exitoso = ($tipo_abono === 'extraordinario' && is_array($RegistrarAbono) && $RegistrarAbono['status'] === 'ok') || 
+                       ($tipo_abono === 'normal' && $RegistrarAbono === "ok");
+        
+        if ($fue_exitoso && $infoWhatsApp && !empty($infoWhatsApp['cliente_celular'])) {
             // Modificar la información para reflejar el abono
             $infoWhatsApp['pdetalle_monto_cuota'] = $monto_a_abonar; // El monto abonado
             self::enviarWhatsAppAbono($infoWhatsApp);

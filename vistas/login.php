@@ -284,7 +284,7 @@
 
 <body>
     <div class="login-container">
-        <form method="POST" action="index.php">
+        <form method="POST" id="frmLogin">
             <?php
             require_once 'conexion_reportes/r_conexion.php';
             
@@ -351,7 +351,7 @@
             </a>
             
             <!-- BOTÓN ENVIAR -->
-            <button type="submit" name="btningresar" class="btn-primary">
+            <button type="button" name="btningresar" id="btnIngresar" class="btn-primary">
                 INICIAR SESIÓN
             </button>
         </form>
@@ -543,6 +543,63 @@
                 alert('Complete todos los campos');
                 return false;
             }
+        });
+    </script>
+
+    <!-- jQuery -->
+    <script src="vistas/assets/plugins/jquery/jquery.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="vistas/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <!-- PLANTILLA DE SWEETALERT -->
+    <script src="vistas/assets/dist/js/plantilla.js"></script>
+
+    <script>
+        // VALIDACIÓN DE LOGIN CON AJAX
+        $("#btnIngresar").on("click", function() {
+
+            //OBTENER DATOS DEL FORMULARIO
+            var data = new FormData($('#frmLogin')[0]);
+
+            //ENVIARLOS AL CONTROLADOR
+            $.ajax({
+                url: "ajax/usuario_ajax.php",
+                type: "POST",
+                data: data,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    $("#btnIngresar").html(
+                        '<i class="fas fa-spinner fa-spin"></i> Ingresando...');
+                    $("#btnIngresar").attr("disabled", true);
+                },
+                success: function(respuesta) {
+
+                    $("#btnIngresar").html('INICIAR SESIÓN');
+                    $("#btnIngresar").attr("disabled", false);
+
+                    console.log("Respuesta del servidor:", respuesta);
+                    
+                    try {
+                        var response = JSON.parse(respuesta);
+                        if (response.status == "success") {
+                            window.location.href = "./";
+                        } else {
+                            fncSweetAlert("error", "Usuario y/o password inválido");
+                        }
+                    } catch (e) {
+                        console.error("Error al parsear JSON:", e);
+                        console.error("Respuesta recibida:", respuesta);
+                        alert("Respuesta del servidor:\n\n" + respuesta);
+                        fncSweetAlert("error", "Error inesperado en la respuesta del servidor.");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $("#btnIngresar").html('INICIAR SESIÓN');
+                    $("#btnIngresar").attr("disabled", false);
+                    fncSweetAlert("error", "Error en la solicitud: " + textStatus);
+                }
+            });
+
         });
     </script>
 </body>

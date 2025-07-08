@@ -91,4 +91,31 @@ class ReportesControlador
         $respuesta = ReportesModelo::mdlObtenerMonedas();
         return $respuesta;
     }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER REPORTE DIARIO
+    ====================================================================*/
+    static public function ctrObtenerReporteDiario($fecha)
+    {
+        $respuesta = ReportesModelo::mdlObtenerReporteDiario($fecha);
+        return $respuesta;
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER ESTADO DE CUENTA DETALLADO POR CLIENTE
+    ====================================================================*/
+    static public function ctrObtenerEstadoCuentaCliente($cliente_id)
+    {
+        $respuesta = ReportesModelo::mdlObtenerEstadoCuentaCliente($cliente_id);
+        return $respuesta;
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER DETALLE DE CUOTAS POR PRÉSTAMO
+    ====================================================================*/
+    static public function ctrObtenerDetalleCuotasPrestamo($nro_prestamo)
+    {
+        $respuesta = ReportesModelo::mdlObtenerDetalleCuotasPrestamo($nro_prestamo);
+        return $respuesta;
+    }
 }

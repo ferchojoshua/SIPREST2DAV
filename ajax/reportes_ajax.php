@@ -134,5 +134,20 @@ if (isset($_POST['accion'])) {
             $monedas = ReportesControlador::ctrObtenerMonedas();
             echo json_encode($monedas);
             break;
+
+        case 10: //REPORTE DIARIO
+            $reporteDiario = ReportesControlador::ctrObtenerReporteDiario($_POST["fecha"]);
+            echo json_encode($reporteDiario);
+            break;
+
+        case 11: //ESTADO DE CUENTA POR CLIENTE
+            $estadoCuenta = ReportesControlador::ctrObtenerEstadoCuentaCliente($_POST["cliente_id"]);
+            echo json_encode($estadoCuenta);
+            break;
+
+        case 12: //DETALLE DE CUOTAS POR PRÉSTAMO
+            $detalleCuotas = ReportesControlador::ctrObtenerDetalleCuotasPrestamo($_POST["nro_prestamo"]);
+            echo json_encode($detalleCuotas);
+            break;
     }
 }

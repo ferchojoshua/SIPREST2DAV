@@ -279,6 +279,32 @@
                                   <span class="small">Monto a Abonar:</span>
                                   <input type="number" step="0.01" class="form-control form-control-sm" id="monto_a_abonar" placeholder="Ingrese monto a abonar">
                               </label>
+                              <div class="d-flex justify-content-between mt-2">
+                                  <button type="button" class="btn btn-info btn-sm" id="btnAbonoCompleto">
+                                      <i class="fas fa-coins"></i> Pago Completo
+                                  </button>
+                                  <button type="button" class="btn btn-warning btn-sm" id="btnAbonoMitad">
+                                      <i class="fas fa-divide"></i> 50%
+                                  </button>
+                                  <button type="button" class="btn btn-success btn-sm" id="btnAbonoMinimo">
+                                      <i class="fas fa-percentage"></i> 25%
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-lg-12">
+                          <div class="form-group mb-2">
+                              <label for="" class="">
+                                  <span class="small">Tipo de Abono:</span>
+                                  <select class="form-control form-control-sm" id="tipo_abono">
+                                      <option value="normal">Normal - Solo para esta cuota</option>
+                                      <option value="extraordinario">Extraordinario - Aplicar a múltiples cuotas</option>
+                                  </select>
+                              </label>
+                              <small class="text-muted">
+                                  <i class="fas fa-info-circle"></i> 
+                                  El abono extraordinario se aplicará primero a la cuota actual y el excedente a las siguientes cuotas.
+                              </small>
                           </div>
                       </div>
                   </div>
@@ -789,12 +815,14 @@
               $("#monto_cuota_original").val(simbolo_moneda + ' ' + pdetalle_monto_cuota);
               $("#saldo_pendiente_abono").val(simbolo_moneda + ' ' + pdetalle_saldo_cuota.toFixed(2));
               $("#monto_a_abonar").val(""); // Limpiar el campo de monto a abonar
+              $("#tipo_abono").val("normal"); // Resetear tipo de abono
 
               // Guardar los datos en el modal (aún útil para btnRegistrarAbono)
               $("#modal_abonar_cuota").data('nro_prestamo', nro_prestamo);
               $("#modal_abonar_cuota").data('pdetalle_nro_cuota', pdetalle_nro_cuota);
               $("#modal_abonar_cuota").data('pdetalle_saldo_cuota', pdetalle_saldo_cuota); // Guardar el saldo actual para validación
               $("#modal_abonar_cuota").data('pdetalle_monto_cuota', pdetalle_monto_cuota); // Guardar para rellenar
+              $("#modal_abonar_cuota").data('simbolo_moneda', simbolo_moneda); // Guardar símbolo de moneda
 
               // Abrir el modal explícitamente
               $("#modal_abonar_cuota").modal({
@@ -805,6 +833,26 @@
           });
 
           /* ======================================================================================
+            BOTONES DE ABONO RÁPIDO
+          =========================================================================================*/
+          $("#btnAbonoCompleto").on('click', function() {
+              var saldo_pendiente = parseFloat($("#modal_abonar_cuota").data('pdetalle_saldo_cuota'));
+              $("#monto_a_abonar").val(saldo_pendiente.toFixed(2));
+          });
+
+          $("#btnAbonoMitad").on('click', function() {
+              var saldo_pendiente = parseFloat($("#modal_abonar_cuota").data('pdetalle_saldo_cuota'));
+              var mitad = saldo_pendiente * 0.5;
+              $("#monto_a_abonar").val(mitad.toFixed(2));
+          });
+
+          $("#btnAbonoMinimo").on('click', function() {
+              var saldo_pendiente = parseFloat($("#modal_abonar_cuota").data('pdetalle_saldo_cuota'));
+              var minimo = saldo_pendiente * 0.25;
+              $("#monto_a_abonar").val(minimo.toFixed(2));
+          });
+
+          /* ======================================================================================
             REGISTRAR ABONO DE CUOTA
           =========================================================================================*/
           $("#btnRegistrarAbono").on('click', function() {
@@ -812,6 +860,8 @@
               var pdetalle_nro_cuota = $("#modal_abonar_cuota").data('pdetalle_nro_cuota');
               var pdetalle_saldo_cuota_actual = parseFloat($("#modal_abonar_cuota").data('pdetalle_saldo_cuota'));
               var monto_a_abonar = parseFloat($("#monto_a_abonar").val());
+              var tipo_abono = $("#tipo_abono").val();
+              var simbolo_moneda = $("#modal_abonar_cuota").data('simbolo_moneda');
 
               if (isNaN(monto_a_abonar) || monto_a_abonar <= 0) {
                   Toast.fire({
@@ -821,17 +871,26 @@
                   return;
               }
 
-              if (monto_a_abonar > pdetalle_saldo_cuota_actual) {
+              // Validación diferente según el tipo de abono
+              if (tipo_abono === "normal" && monto_a_abonar > pdetalle_saldo_cuota_actual) {
                   Toast.fire({
                       icon: 'error',
-                      title: 'El monto a abonar no puede ser mayor que el saldo pendiente.'
+                      title: 'Para abono normal, el monto no puede ser mayor que el saldo pendiente de la cuota (' + simbolo_moneda + ' ' + pdetalle_saldo_cuota_actual.toFixed(2) + ').'
                   });
                   return;
               }
 
+              var mensaje_confirmacion = 'Monto a abonar: <b>' + simbolo_moneda + ' ' + monto_a_abonar.toFixed(2) + '</b><br>';
+              mensaje_confirmacion += 'Tipo de abono: <b>' + (tipo_abono === 'extraordinario' ? 'Extraordinario' : 'Normal') + '</b>';
+              
+              if (tipo_abono === 'extraordinario' && monto_a_abonar > pdetalle_saldo_cuota_actual) {
+                  var excedente = monto_a_abonar - pdetalle_saldo_cuota_actual;
+                  mensaje_confirmacion += '<br><small class="text-info"><i class="fas fa-info-circle"></i> Excedente de ' + simbolo_moneda + ' ' + excedente.toFixed(2) + ' se aplicará a las siguientes cuotas.</small>';
+              }
+
               Swal.fire({
                   title: '¿Desea registrar este abono para la cuota Nro "' + pdetalle_nro_cuota + '"?',
-                  html: 'Monto a abonar: <b>' + monto_a_abonar.toFixed(2) + '</b>',
+                  html: mensaje_confirmacion,
                   icon: 'warning',
                   showCancelButton: true,
                   confirmButtonColor: '#8FCE00',
@@ -845,6 +904,7 @@
                       datos.append("nro_prestamo", nro_prestamo);
                       datos.append("pdetalle_nro_cuota", pdetalle_nro_cuota);
                       datos.append("monto_a_abonar", monto_a_abonar);
+                      datos.append("tipo_abono", tipo_abono);
 
                       $.ajax({
                           url: "ajax/admin_prestamos_ajax.php",
@@ -855,19 +915,49 @@
                           processData: false,
                           dataType: 'json',
                           success: function(respuesta) {
+                              console.log("Respuesta del servidor:", respuesta);
+                              
+                              // Manejo de respuesta para abono normal
                               if (respuesta == "ok") {
                                   Toast.fire({
                                       icon: 'success',
                                       title: 'Abono registrado correctamente.'
                                   });
-                                  $("#modal_abonar_cuota").modal('hide'); // Cerrar el modal
-                                  prestamo_detalle_dt.ajax.reload(); // Recargar la tabla de cuotas
-                                  CargarCantCuotasPagadas(); // Actualizar contador de cuotas pagadas
-                                  tbl_ls_prestamos.ajax.reload(); // Recargar la tabla de préstamos
-                              } else {
+                                  $("#modal_abonar_cuota").modal('hide');
+                                  prestamo_detalle_dt.ajax.reload();
+                                  CargarCantCuotasPagadas();
+                                  tbl_ls_prestamos.ajax.reload();
+                              }
+                              // Manejo de respuesta para abono extraordinario
+                              else if (typeof respuesta === 'object' && respuesta.status === 'ok') {
+                                  var mensaje = 'Abono extraordinario registrado correctamente.<br>';
+                                  mensaje += '<strong>Cuotas afectadas:</strong><br>';
+                                  
+                                  respuesta.cuotas_afectadas.forEach(function(cuota) {
+                                      mensaje += '• Cuota ' + cuota.cuota + ': ' + simbolo_moneda + ' ' + cuota.monto_aplicado.toFixed(2);
+                                      mensaje += ' (' + (cuota.estado === 'pagada' ? 'Pagada completamente' : 'Pago parcial') + ')<br>';
+                                  });
+                                  
+                                  if (respuesta.monto_sobrante > 0) {
+                                      mensaje += '<br><span class="text-warning">⚠️ Sobrante de ' + simbolo_moneda + ' ' + respuesta.monto_sobrante.toFixed(2) + ' (no hay más cuotas pendientes)</span>';
+                                  }
+                                  
+                                  Swal.fire({
+                                      icon: 'success',
+                                      title: '¡Abono Extraordinario Exitoso!',
+                                      html: mensaje,
+                                      confirmButtonText: 'Entendido'
+                                  });
+                                  
+                                  $("#modal_abonar_cuota").modal('hide');
+                                  prestamo_detalle_dt.ajax.reload();
+                                  CargarCantCuotasPagadas();
+                                  tbl_ls_prestamos.ajax.reload();
+                              }
+                              else {
                                   Toast.fire({
                                       icon: 'error',
-                                      title: 'Error al registrar el abono.'
+                                      title: 'Error al registrar el abono: ' + (respuesta.message || respuesta)
                                   });
                               }
                           },

@@ -227,8 +227,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
             
         </script>
-
-
+        
+        <!-- PLANTILLA DE SWEETALERT -->
+        <script src="vistas/assets/dist/js/plantilla.js"></script>
     </body>
 
 <?php else : ?>

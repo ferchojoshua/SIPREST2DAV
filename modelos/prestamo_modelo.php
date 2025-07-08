@@ -9,15 +9,15 @@ class PrestamoModelo
     /*===================================================================*/
     //REGISTRAR PRESTAMO
     /*===================================================================*/
-    static public function mdlRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id)
+    static public function mdlRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo)
     {
         //print_r($nro_boleta);
         $fecha = date('Y-m-d H:i:s');
         // date("d/m/Y H:i:s"). 
         try {
             //INSERTAMOS LA CABECERA
-            $stmt = Conexion::conectar()->prepare("INSERT INTO prestamo_cabecera (nro_prestamo, cliente_id, pres_monto, pres_cuotas, pres_interes, fpago_id, moneda_id, pres_f_emision, pres_monto_cuota, pres_monto_interes, pres_monto_total, pres_estado, pres_estatus,id_usuario,pres_aprobacion,pres_fecha_registro, pres_estado_caja, caja_id ) 
-                                                VALUES (:nro_prestamo, :cliente_id, :pres_monto, :pres_cuotas, :pres_interes, :fpago_id, :moneda_id, :pres_f_emision, :pres_monto_cuota, :pres_monto_interes, :pres_monto_total, 'Pendiente', '1',:id_usuario, 'pendiente', CURRENT_TIME(), 'VIGENTE', :caja_id)");
+            $stmt = Conexion::conectar()->prepare("INSERT INTO prestamo_cabecera (nro_prestamo, cliente_id, pres_monto, pres_cuotas, pres_interes, fpago_id, moneda_id, pres_f_emision, pres_monto_cuota, pres_monto_interes, pres_monto_total, pres_estado, pres_estatus, id_usuario, pres_aprobacion, pres_fecha_registro, pres_estado_caja, caja_id, tipo_calculo) 
+                                                VALUES (:nro_prestamo, :cliente_id, :pres_monto, :pres_cuotas, :pres_interes, :fpago_id, :moneda_id, :pres_f_emision, :pres_monto_cuota, :pres_monto_interes, :pres_monto_total, 'Pendiente', '1', :id_usuario, 'pendiente', CURRENT_TIME(), 'VIGENTE', :caja_id, :tipo_calculo)");
 
             $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
             $stmt->bindParam(":cliente_id", $cliente_id, PDO::PARAM_STR);
@@ -32,6 +32,7 @@ class PrestamoModelo
             $stmt->bindParam(":pres_monto_total", $pres_monto_total, PDO::PARAM_STR);
             $stmt->bindParam(":id_usuario", $id_usuario, PDO::PARAM_STR);
             $stmt->bindParam(":caja_id", $caja_id, PDO::PARAM_STR);
+            $stmt->bindParam(":tipo_calculo", $tipo_calculo, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
 
@@ -111,5 +112,20 @@ class PrestamoModelo
         $smt = Conexion::conectar()->prepare('call SP_ALERTA_PRESTAMO_CAJA()');
         $smt->execute();
         return $smt->fetch(PDO::FETCH_OBJ);
+    }
+
+    /*===================================================================*/
+    //OBTENER TIPOS DE CALCULO
+    /*===================================================================*/
+    static public function mdlObtenerTiposCalculo()
+    {
+        $stmt = Conexion::conectar()->prepare("SELECT tipo_calculo_id as id, 
+                                                    tipo_calculo_nombre as nombre, 
+                                                    tipo_calculo_descripcion as descripcion 
+                                             FROM tipos_calculo_interes 
+                                             WHERE tipo_calculo_estado = '1' 
+                                             ORDER BY tipo_calculo_id");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

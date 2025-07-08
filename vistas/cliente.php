@@ -34,7 +34,7 @@
                                       <tr>
                                           <th>Id</th>
                                           <th>Nombre</th>
-                                          <th>Dni</th>
+                                          <th>Cédula</th>
                                           <th>Celular</th>
                                           <th>Prestamo</th>
                                           <th>Estado</th>
@@ -198,7 +198,7 @@
                                   </label>
                                   <div class="input-group">
                                       <div class="input-group-prepend">
-                                          <span class="input-group-text bg-warning text-dark font-weight-bold">+505</span>
+                                          <span class="input-group-text bg-success text-white font-weight-bold">+505</span>
                                       </div>
                                       <input type="tel" class="form-control form-control-sm telefono-format" id="text_nro_cel_per_e" placeholder="87654321" maxlength="8" pattern="[0-9]{8}">
                                   </div>
@@ -259,6 +259,122 @@
       </div>
   </div>
   <!-- fin Modal -->
+
+  <!-- MODAL REGISTRAR REFERENCIAS-->
+  <div class="modal fade" id="modal_registro_referencia" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+              <div class="modal-header bg-success py-1 align-items-center">
+                  <h5 class="modal-title" id="titulo_modal_referencia">Registrar Referencias</h5>
+                  <button type="button" class="close text-white border-0 fs-5" id="btncerrarmodal_referencia" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <form class="needs-validation" novalidate>
+                      <input type="hidden" id="id_refe">
+                      
+                      <h5 class="text-center text-info mb-3">
+                          <i class="fas fa-users"></i> Información de Referencias
+                      </h5>
+                      
+                      <div class="row">
+                          <!-- REFERENCIA PERSONAL -->
+                          <div class="col-12">
+                              <h6 class="bg-light p-2 rounded">
+                                  <i class="fas fa-user text-primary"></i> Referencia Personal
+                              </h6>
+                          </div>
+                          
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label class="small font-weight-bold">
+                                      Nombre Completo <span class="text-danger">*</span>
+                                  </label>
+                                  <input type="text" class="form-control form-control-sm" id="text_refe_personal" placeholder="Nombre de referencia personal" required>
+                                  <div class="invalid-feedback">Debe ingresar el nombre de la referencia personal</div>
+                              </div>
+                          </div>
+                          
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label class="small font-weight-bold">
+                                      Teléfono <span class="text-danger">*</span>
+                                  </label>
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-primary text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_cel_personal" placeholder="87654321" maxlength="8" pattern="[0-9]{8}" required>
+                                  </div>
+                                  <small class="text-muted">8 dígitos</small>
+                                  <div class="invalid-feedback">Debe ingresar un teléfono válido</div>
+                              </div>
+                          </div>
+                          
+                          <div class="col-md-12">
+                              <div class="form-group mb-3">
+                                  <label class="small font-weight-bold">
+                                      Dirección
+                                  </label>
+                                  <input type="text" class="form-control form-control-sm" id="text_dir_personal" placeholder="Dirección de referencia personal">
+                              </div>
+                          </div>
+                          
+                          <!-- REFERENCIA FAMILIAR -->
+                          <div class="col-12 mt-3">
+                              <h6 class="bg-light p-2 rounded">
+                                  <i class="fas fa-home text-success"></i> Referencia Familiar
+                              </h6>
+                          </div>
+                          
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label class="small font-weight-bold">
+                                      Nombre Completo <span class="text-danger">*</span>
+                                  </label>
+                                  <input type="text" class="form-control form-control-sm" id="text_refe_familiar" placeholder="Nombre de referencia familiar" required>
+                                  <div class="invalid-feedback">Debe ingresar el nombre de la referencia familiar</div>
+                              </div>
+                          </div>
+                          
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label class="small font-weight-bold">
+                                      Teléfono <span class="text-danger">*</span>
+                                  </label>
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-success text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_cel_familiar" placeholder="87654321" maxlength="8" pattern="[0-9]{8}" required>
+                                  </div>
+                                  <small class="text-muted">8 dígitos</small>
+                                  <div class="invalid-feedback">Debe ingresar un teléfono válido</div>
+                              </div>
+                          </div>
+                          
+                          <div class="col-md-12">
+                              <div class="form-group mb-2">
+                                  <label class="small font-weight-bold">
+                                      Dirección
+                                  </label>
+                                  <input type="text" class="form-control form-control-sm" id="text_dir_familiar" placeholder="Dirección de referencia familiar">
+                              </div>
+                          </div>
+                      </div>
+                  </form>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" id="btncerrar_referencia">Cerrar</button>
+                  <button type="button" class="btn btn-success btn-sm" id="btnregistrar_referencia">
+                      <i class="fas fa-save"></i> Registrar Referencias
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+  <!-- fin Modal Referencias -->
 
   <!-- Estilos CSS para mejorar la apariencia de los campos de teléfono -->
   <style>
@@ -421,6 +537,9 @@
                               "</span> " +
                               "<span class='btnEditarCliente  text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Editar Cliente'> " +
                               "<i class='fas fa-pencil-alt fs-6'></i> " +
+                              "</span> " +
+                              "<span class='btnReferencia text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Gestionar Referencias'> " +
+                              "<i class='fas fa-users fs-6'></i> " +
                               "</span> " +
                               "<span class='btnEliminarCliente text-danger px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Eliminar Cliente'> " +
                               "<i class='fas fa-trash fs-6'> </i> " +
@@ -801,7 +920,7 @@
               });
               $("#modal_registro_referencia").modal('show'); //modal de registrar producto
               $("#titulo_modal_referencia").html('Registrar Referencias');
-              $("#btnregistrar_referencia").html('Registrar');
+              $("#btnregistrar_referencia").html('<i class="fas fa-save"></i> Registrar Referencias');
 
               if (tbl_clientes.row(this).child.isShown()) {
                   var data = tbl_clientes.row(this).data();
@@ -809,13 +928,123 @@
                   var data = tbl_clientes.row($(this).parents('tr')).data(); 
               }
               var cliente_id = data[0];
+              var cliente_nombre = data[1];
               $("#id_refe").val(cliente_id);
 
+              // Limpiar campos del modal
+              $("#text_refe_personal").val("");
+              $("#text_cel_personal").val("");
+              $("#text_dir_personal").val("");
+              $("#text_refe_familiar").val("");
+              $("#text_cel_familiar").val("");
+              $("#text_dir_familiar").val("");
+              
+              // Actualizar título con nombre del cliente
+              $("#titulo_modal_referencia").html('Registrar Referencias - ' + cliente_nombre);
 
           })
 
+          /* ======================================================================================
+           REGISTRAR REFERENCIAS DEL CLIENTE
+          =========================================================================================*/
+          $("#btnregistrar_referencia").on('click', function() {
+              var form = $("#modal_registro_referencia .needs-validation")[0];
+              
+              if (form.checkValidity()) {
+                  
+                  Swal.fire({
+                      title: '¿Está seguro de registrar las referencias?',
+                      icon: 'warning',
+                      showCancelButton: true,
+                      confirmButtonColor: '#3085d6',
+                      cancelButtonColor: '#d33',
+                      confirmButtonText: 'Sí, registrar',
+                      cancelButtonText: 'Cancelar',
+                  }).then((result) => {
 
-         
+                      if (result.isConfirmed) {
+
+                          var datos = new FormData();
+
+                          datos.append("accion", 8);
+                          datos.append("cliente_id", $("#id_refe").val());
+                          datos.append("refe_personal", $("#text_refe_personal").val());
+                          datos.append("refe_cel_per", obtenerTelefonoCompleto("#text_cel_personal"));
+                          datos.append("refe_per_dir", $("#text_dir_personal").val());
+                          datos.append("refe_familiar", $("#text_refe_familiar").val());
+                          datos.append("refe_cel_fami", obtenerTelefonoCompleto("#text_cel_familiar"));
+                          datos.append("refe_fami_dir", $("#text_dir_familiar").val());
+
+                          // Datos Laborales de la Referencia
+                          datos.append("refe_empresa_laboral", $("#text_refe_empresa_laboral").val());
+                          datos.append("refe_cargo_laboral", $("#text_refe_cargo_laboral").val());
+                          datos.append("refe_tel_laboral", obtenerTelefonoCompleto("#text_refe_tel_laboral"));
+                          datos.append("refe_dir_laboral", $("#text_refe_dir_laboral").val());
+
+                          $.ajax({
+                              url: "ajax/clientes_ajax.php",
+                              method: "POST",
+                              data: datos,
+                              cache: false,
+                              contentType: false,
+                              processData: false,
+                              dataType: 'json',
+                              success: function(respuesta) {
+
+                                  if (respuesta == "ok") {
+
+                                      Toast.fire({
+                                          icon: 'success',
+                                          title: 'Las referencias se registraron correctamente'
+                                      });
+
+                                      $("#modal_registro_referencia").modal('hide');
+                                      tbl_clientes.ajax.reload();
+
+                                  } else {
+                                      Toast.fire({
+                                          icon: 'error',
+                                          title: 'Error al registrar las referencias: ' + respuesta
+                                      });
+                                  }
+                              },
+                              error: function(jqXHR, textStatus, errorThrown) {
+                                  Toast.fire({
+                                      icon: 'error',
+                                      title: 'Error de comunicación con el servidor'
+                                  });
+                              }
+                          });
+                      }
+                  })
+
+              } else {
+                  $(".needs-validation").addClass("was-validated");
+                  Toast.fire({
+                      icon: 'warning',
+                      title: 'Por favor complete todos los campos obligatorios'
+                  });
+              }
+          })
+
+
+          /* ======================================================================================
+           EVENTO AL CERRAR MODAL DE REFERENCIAS
+          =========================================================================================*/
+          $("#btncerrarmodal_referencia, #btncerrar_referencia").on('click', function() {
+              $("#id_refe").val("");
+              $("#text_refe_personal").val("");
+              $("#text_cel_personal").val("");
+              $("#text_dir_personal").val("");
+              $("#text_refe_familiar").val("");
+              $("#text_cel_familiar").val("");
+              $("#text_dir_familiar").val("");
+              $("#text_refe_empresa_laboral").val("");
+              $("#text_refe_cargo_laboral").val("");
+              $("#text_refe_tel_laboral").val("");
+              $("#text_refe_dir_laboral").val("");
+              $(".needs-validation").removeClass("was-validated");
+          })
 
 
           /* ======================================================================================
