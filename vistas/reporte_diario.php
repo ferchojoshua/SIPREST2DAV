@@ -254,10 +254,10 @@
                     if (data && Array.isArray(data)) {
                         // Inicializar totales
                         var totales = {
-                            prestamos: {cantidad: 0, monto: 0},
-                            cuotas: {cantidad: 0, monto: 0},
-                            ingresos: {cantidad: 0, monto: 0},
-                            egresos: {cantidad: 0, monto: 0}
+                            prestamos: {cantidad: 0, monto: 0, simbolo: ''},
+                            cuotas: {cantidad: 0, monto: 0, simbolo: ''},
+                            ingresos: {cantidad: 0, monto: 0, simbolo: ''},
+                            egresos: {cantidad: 0, monto: 0, simbolo: ''}
                         };
                         
                         // Procesar datos y calcular totales
@@ -266,31 +266,35 @@
                                 case 'PRÉSTAMOS':
                                     totales.prestamos.cantidad += parseInt(item.cantidad);
                                     totales.prestamos.monto += parseFloat(item.monto_total);
+                                    totales.prestamos.simbolo = item.moneda_simbolo;
                                     break;
                                 case 'PAGOS DE CUOTAS':
                                     totales.cuotas.cantidad += parseInt(item.cantidad);
                                     totales.cuotas.monto += parseFloat(item.monto_total);
+                                    totales.cuotas.simbolo = item.moneda_simbolo;
                                     break;
                                 case 'INGRESOS':
                                     totales.ingresos.cantidad += parseInt(item.cantidad);
                                     totales.ingresos.monto += parseFloat(item.monto_total);
+                                    totales.ingresos.simbolo = item.moneda_simbolo;
                                     break;
                                 case 'EGRESOS':
                                     totales.egresos.cantidad += parseInt(item.cantidad);
                                     totales.egresos.monto += parseFloat(item.monto_total);
+                                    totales.egresos.simbolo = item.moneda_simbolo;
                                     break;
                             }
                         });
                         
                         // Actualizar resumen
                         $('#cantidad_prestamos').text(totales.prestamos.cantidad);
-                        $('#total_prestamos').text('$' + totales.prestamos.monto.toFixed(2));
+                        $('#total_prestamos').text(totales.prestamos.simbolo + ' ' + totales.prestamos.monto.toFixed(2));
                         $('#cantidad_cuotas').text(totales.cuotas.cantidad);
-                        $('#total_cuotas').text('$' + totales.cuotas.monto.toFixed(2));
+                        $('#total_cuotas').text(totales.cuotas.simbolo + ' ' + totales.cuotas.monto.toFixed(2));
                         $('#cantidad_ingresos').text(totales.ingresos.cantidad);
-                        $('#total_ingresos').text('$' + totales.ingresos.monto.toFixed(2));
+                        $('#total_ingresos').text(totales.ingresos.simbolo + ' ' + totales.ingresos.monto.toFixed(2));
                         $('#cantidad_egresos').text(totales.egresos.cantidad);
-                        $('#total_egresos').text('$' + totales.egresos.monto.toFixed(2));
+                        $('#total_egresos').text(totales.egresos.simbolo + ' ' + totales.egresos.monto.toFixed(2));
                         
                         $('#resumen_totales').show();
                         
@@ -428,6 +432,30 @@
                     });
                 }
             });
+        }
+
+        function mostrarTotales(resumen) {
+            // resumen debe ser un objeto con las claves: prestamos, cuotas, ingresos, egresos, y cada uno debe tener monto y simbolo
+            $('#total_prestamos').html(resumen.prestamos.simbolo + ' ' + resumen.prestamos.monto);
+            $('#total_cuotas').html(resumen.cuotas.simbolo + ' ' + resumen.cuotas.monto);
+            $('#total_ingresos').html(resumen.ingresos.simbolo + ' ' + resumen.ingresos.monto);
+            $('#total_egresos').html(resumen.egresos.simbolo + ' ' + resumen.egresos.monto);
+        }
+
+        // Al llenar la tabla detallada, usa el símbolo de la columna Moneda
+        function llenarTablaDetalle(data) {
+            let tbody = '';
+            data.forEach(function(fila) {
+                tbody += `<tr>
+                    <td>${fila.tipo_operacion}</td>
+                    <td>${fila.cantidad}</td>
+                    <td>${fila.simbolo} ${fila.monto_capital}</td>
+                    <td>${fila.simbolo} ${fila.monto_interes}</td>
+                    <td>${fila.simbolo} ${fila.monto_total}</td>
+                    <td>${fila.simbolo}</td>
+                </tr>`;
+            });
+            $('#tbl_reporte_diario tbody').html(tbody);
         }
     });
 </script> 

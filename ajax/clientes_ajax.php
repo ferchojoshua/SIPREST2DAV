@@ -185,17 +185,29 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR CLIENTE EN DATA
 
 
 } else if (isset($_POST['accion']) && $_POST['accion'] == 2) { //PARA REGISTRAR EL CLIENTE
-    $registroCliente = new AjaxCliente();
-    $registroCliente->cliente_nombres = $_POST["cliente_nombres"];
-    $registroCliente->cliente_dni = $_POST["cliente_dni"];
-    $registroCliente->cliente_cel = $_POST["cliente_cel"];
-    $registroCliente->cliente_direccion = $_POST["cliente_direccion"];
-    $registroCliente->cliente_correo = $_POST["cliente_correo"];
-    $registroCliente->cliente_refe = $_POST["cliente_refe"];
-    $registroCliente->cliente_cel_refe = $_POST["cliente_cel_refe"];
-    $registroCliente->ajaxRegistrarCliente();
-
-
+    
+    // Llamada directa al controlador para mayor claridad
+    $respuesta = ClienteControlador::ctrRegistrarcliente(
+        $_POST["cliente_nombres"],
+        $_POST["cliente_dni"],
+        $_POST["cliente_cel"],
+        $_POST["cliente_direccion"],
+        $_POST["cliente_correo"],
+        // Nuevos campos de Información Laboral
+        $_POST['cliente_empresa_laboral'],
+        $_POST['cliente_cargo_laboral'],
+        $_POST['cliente_tel_laboral'],
+        $_POST['cliente_dir_laboral'],
+        // Nuevos campos de Referencia Personal
+        $_POST['cliente_refe_per_nombre'],
+        $_POST['cliente_refe_per_cel'],
+        $_POST['cliente_refe_per_dir'],
+        // Nuevos campos de Referencia Familiar
+        $_POST['cliente_refe_fami_nombre'],
+        $_POST['cliente_refe_fami_cel'],
+        $_POST['cliente_refe_fami_dir']
+    );
+    echo json_encode($respuesta);
 
 } else if (isset($_POST['accion']) && $_POST['accion'] == 3) { //ACTUALIZAR CLIENTE
     $actualizarCliente = new AjaxCliente();

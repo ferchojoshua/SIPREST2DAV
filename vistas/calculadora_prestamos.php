@@ -25,6 +25,12 @@ require_once "../utilitarios/calculadora_prestamos.php";
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
+                                        <label>Moneda:</label>
+                                        <select class="form-control" name="moneda" id="moneda" required></select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
                                         <label>Sistema de Amortización:</label>
                                         <select class="form-control" name="sistema" id="sistema">
                                             <option value="frances">Sistema Francés (Cuota Fija)</option>
@@ -102,6 +108,30 @@ require_once "../utilitarios/calculadora_prestamos.php";
 
 <script>
 $(document).ready(function() {
+    let simboloMoneda = 'S/'; // Valor por defecto
+
+    // Cargar monedas en el select
+    $.ajax({
+        url: '../ajax/moneda_ajax.php',
+        type: 'POST',
+        data: {accion: 5},
+        dataType: 'json',
+        success: function(monedas) {
+            let options = '';
+            monedas.forEach(function(moneda, idx) {
+                let selected = idx === 0 ? 'selected' : '';
+                options += `<option value="${moneda.moneda_id}" data-simbolo="${moneda.moneda_simbolo}" ${selected}>${moneda.moneda_nombre} (${moneda.moneda_abrevia})</option>`;
+            });
+            $('#moneda').html(options);
+            simboloMoneda = $('#moneda option:selected').data('simbolo') || 'S/';
+        }
+    });
+
+    // Cambiar símbolo al cambiar moneda
+    $('#moneda').on('change', function() {
+        simboloMoneda = $('#moneda option:selected').data('simbolo') || 'S/';
+    });
+
     $('#formCalculadora').on('submit', function(e) {
         e.preventDefault();
         
@@ -118,12 +148,12 @@ $(document).ready(function() {
                 
                 // Mostrar resumen
                 let resumen = `
-                    <p><strong>Monto del préstamo:</strong> S/ ${formatNumber(response.monto)}</p>
+                    <p><strong>Monto del préstamo:</strong> ${simboloMoneda} ${formatNumber(response.monto)}</p>
                     <p><strong>Tasa de interés anual:</strong> ${response.tasa}%</p>
                     <p><strong>Plazo:</strong> ${response.plazo} meses</p>
-                    ${response.cuotaInicial ? `<p><strong>Cuota inicial:</strong> S/ ${formatNumber(response.cuotaInicial)}</p>` : ''}
-                    <p><strong>Monto total a pagar:</strong> S/ ${formatNumber(response.totalPagar)}</p>
-                    <p><strong>Interés total:</strong> S/ ${formatNumber(response.totalIntereses)}</p>
+                    ${response.cuotaInicial ? `<p><strong>Cuota inicial:</strong> ${simboloMoneda} ${formatNumber(response.cuotaInicial)}</p>` : ''}
+                    <p><strong>Monto total a pagar:</strong> ${simboloMoneda} ${formatNumber(response.totalPagar)}</p>
+                    <p><strong>Interés total:</strong> ${simboloMoneda} ${formatNumber(response.totalIntereses)}</p>
                 `;
                 $('#resumen').html(resumen);
                 
@@ -134,10 +164,10 @@ $(document).ready(function() {
                 response.tablaAmortizacion.forEach(function(fila) {
                     tabla.row.add([
                         fila.fecha,
-                        'S/ ' + formatNumber(fila.cuota),
-                        'S/ ' + formatNumber(fila.capital),
-                        'S/ ' + formatNumber(fila.interes),
-                        'S/ ' + formatNumber(fila.saldo)
+                        simboloMoneda + ' ' + formatNumber(fila.cuota),
+                        simboloMoneda + ' ' + formatNumber(fila.capital),
+                        simboloMoneda + ' ' + formatNumber(fila.interes),
+                        simboloMoneda + ' ' + formatNumber(fila.saldo)
                     ]);
                 });
                 

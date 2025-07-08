@@ -205,7 +205,7 @@
                   </div>
                   <div class="row">
                       <div class="table-responsive">
-                          <table id="prestamo_detalle" class="table display table-hover text-nowrap compact  w-100  rounded">
+                          <table id="prestamo_detalle" class="table display table-hover text-nowrap compact  w-100  rounded" style="width: 100%;">
                               <thead class="bg-info text-left">
                                   <tr>
                                       <th>Id</th>
@@ -514,8 +514,8 @@
 
               var nro_prestamo = data[1];
               var pdetalle_nro_cuota = data[2];
-              var estado = data[5];
-              // console.log(nro_prestamo,pdetalle_nro_cuota,estado );
+              var estado = data[6];
+              console.log("Datos para pagar cuota:", nro_prestamo, pdetalle_nro_cuota, estado);
 
               Swal.fire({
                   title: 'Desea Pagar cuota Nro "' + data[2] + '" ?',
@@ -714,22 +714,16 @@
             LIQUIDAR TOTALMENTE EL PRESTAMO AL HACER CLICK
           =========================================================================================*/
           $("#btnLiquidar").on('click', function() {
-              var count = 0;
               var nro_prestamo = $("#text_nro_prestamo_d").val();
-
               var arreglo_cuota = new Array();
-              //  var estado_cuota = new Array();
 
-              $("#prestamo_detalle tbody tr").each(function(i, e) {
-                  arreglo_cuota.push($(this).find('td').eq(1).text());
-                  //estado_cuota.push($(this).find('td').eq(4).text());
-                  count++;
-              })
+              // Usar el API del DataTable para obtener los datos
+              prestamo_detalle_dt.rows().data().each(function(row) {
+                  arreglo_cuota.push(row[2]); // Índice 2 es pdetalle_nro_cuota
+              });
 
               var pdetalle_nro_cuota = arreglo_cuota.toString();
-              //var pdetalle_estado_cuota = estado_cuota.toString();
-              // console.log(pdetalle_nro_cuota );
-
+              console.log("Cuotas a liquidar:", pdetalle_nro_cuota);
 
               Swal.fire({
                   title: 'Esta seguro que desea liquidar totalmente el prestamo"' + nro_prestamo + '" ?',
@@ -751,21 +745,16 @@
                               pdetalle_nro_cuota: pdetalle_nro_cuota
                           },
                           async: true,
-                          //   cache: false,
-                          //   contentType: false,
-                          //   processData: false,
                           dataType: 'json',
                           success: function(respuesta) {
 
-                              // console.log(respuesta);
-
+                              console.log(respuesta);
 
                               if (respuesta == "ok") {
 
                                   Toast.fire({
                                       icon: 'success',
                                       title: 'Prestamo Liquidado Correctamente '
-                                      // title: titulo_msj
                                   });
                                   CargarCantCuotasPagadas();
 
@@ -779,14 +768,10 @@
                                   });
                               }
 
-
-
                           }
                       });
 
-
                   }
-
 
               })
           })
@@ -807,7 +792,7 @@
               var nro_prestamo = data[1];
               var pdetalle_nro_cuota = data[2];
               var pdetalle_monto_cuota = data[4];
-              var pdetalle_saldo_cuota = parseFloat(data[5].replace(/[^0-9.-]+/g, ''));
+              var pdetalle_saldo_cuota = parseFloat(String(data[5]).replace(/[^0-9.-]+/g, ''));
               var simbolo_moneda = data[7];
 
               // Asignar los valores a los campos del modal de abono
@@ -981,50 +966,37 @@
       //FUNCION PARA TRAER EL DETALLE PARA PAGAR UNA CUOTA
       /*===================================================================*/
       function Traer_Detalle(nro_prestamo) {
+          console.log("Traer_Detalle llamado con nro_prestamo:", nro_prestamo);
+          
+          // Destruir DataTable existente si existe
+          if ($.fn.DataTable.isDataTable('#prestamo_detalle')) {
+              console.log("Destruyendo DataTable existente");
+              $('#prestamo_detalle').DataTable().destroy();
+          }
+          
           prestamo_detalle_dt = $("#prestamo_detalle").DataTable({
-              //responsive: true,
+              destroy: true,
               dom: 'tp',
               ajax: {
                   url: "ajax/admin_prestamos_ajax.php",
-                  dataSrc: "",
                   type: "POST",
                   data: {
                       'accion': 2,
                       'nro_prestamo': nro_prestamo
-                  }, //LISTAR 
+                  },
+                  dataSrc: ""
               },
-              columnDefs: [{
-                  targets: 0,
-                  visible: false
-
-              }, {
-                  targets: 4, // Columna de Monto (pdetalle_monto_cuota) - Índice 4
-                  render: function(data, type, row) {
-                      return row[7] + ' ' + data; // Usar row[7] para el símbolo de moneda
-                  }
-              },
-              {
-                  targets: 5, // Columna de Saldo Pendiente (pdetalle_saldo_cuota) - Índice 5
-                  render: function(data, type, row) {
-                      return row[7] + ' ' + data; // Usar row[7] para el símbolo de moneda
-                  }
-              },
-               {
-                  targets: 6, // Columna de Estado (pdetalle_estado_cuota) - Índice 6
-                  createdCell: function(td, cellData, rowData, row, col) {
-                      if (rowData[6] == 'pagada') { // rowData[6] es correcto para el estado
-                          $(td).html("<span class='badge badge-success'>pagada</span>")
-                      } else if (rowData[6] == 'parcialmente_pagada') { // rowData[6] es correcto para el estado
-                          $(td).html("<span class='badge badge-info'>parcialmente pagada</span>")
-                      } else {
-                          $(td).html("<span class='badge badge-danger'>pendiente</span>")
-                      }
-                  }
-              }, {
-                  targets: 7, // Columna de Opciones - Índice 7
-                  sortable: false, //no ordene
-                  render: function(td, cellData, rowData, row, col) {
-                      if (rowData[6] == 'pagada') {
+              columnDefs: [
+                  { targets: 0, visible: false },
+                  { targets: 4, render: function(data, type, row) { return row[7] + ' ' + data; } },
+                  { targets: 5, render: function(data, type, row) { return row[7] + ' ' + data; } },
+                  { targets: 6, render: function(data) {
+                      if (data == 'pagada') return "<span class='badge badge-success'>pagada</span>";
+                      if (data == 'parcialmente_pagada') return "<span class='badge badge-info'>parcialmente pagada</span>";
+                      return "<span class='badge badge-danger'>pendiente</span>";
+                  }},
+                  { targets: 7, sortable: false, render: function(data, type, row) {
+                      if (row[6] == 'pagada') {
                           return "<center>" +
                               "<span class='text-secondary px-1 disabled'  data-bs-toggle='tooltip' data-bs-placement='top' > " +
                               "<i class='fas fa-hand-holding-usd fs-6'></i> " +
@@ -1035,7 +1007,7 @@
                               "<span class='EnviarCorreoCuotaP text-warning px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Enviar Recibo por Correo'> " +
                               "<i class='fas fa-envelope fs-6'> </i> " +
                               "</span>" +
-                              "</center>"
+                              "</center>";
                       } else {
                           return "<center>" +
                               "<span class='btnAbonarCuota text-success px-1' style='cursor:pointer;' data-bs-toggle='modal' data-bs-target='#modal_abonar_cuota' title='Abonar Cuota'> " +
@@ -1044,12 +1016,11 @@
                               "<span class=' text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' > " +
                               "<i class='far fa-file-alt fs-6'> </i> " +
                               "</span>" +
-                              "</center>"
+                              "</center>";
                       }
-                  }
-              }],
-
-              "language": idioma_espanol,
+                  }}
+              ],
+              language: idioma_espanol,
               select: true
           });
       }

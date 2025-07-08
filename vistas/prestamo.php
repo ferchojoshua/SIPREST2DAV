@@ -1643,4 +1643,42 @@ var idioma_espanol = {
 $('#select_tipo_calculo').on('change', function() {
     $('#btnCalcular').click();
 });
+
+let simboloMoneda = 'S/'; // Valor por defecto
+
+// Cargar símbolo de moneda al cambiar el select
+$('#select_moneda').on('change', function() {
+    simboloMoneda = $('#select_moneda option:selected').text().split('|').pop().trim().split(' ')[0] || 'S/';
+    actualizarLabelsMoneda();
+});
+
+function actualizarLabelsMoneda() {
+    // Actualizar los labels de totales y resumen
+    $("#label_monto_por_cuota").text(simboloMoneda);
+    $("#label_total_interes").text(simboloMoneda);
+    $("#label_total_pagar").text(simboloMoneda);
+    // Actualizar la tabla de detalle si es necesario
+    $("#tbody_tabla_detalle_pro tr").each(function() {
+        $(this).find('td').each(function(idx) {
+            if(idx >= 2 && idx <= 4) {
+                let val = $(this).text().replace(/^[^\d-]+/, '');
+                $(this).text(simboloMoneda + ' ' + val);
+            }
+        });
+    });
+}
+
+// Llamar a actualizarLabelsMoneda al cargar la página
+$(document).ready(function() {
+    simboloMoneda = $('#select_moneda option:selected').text().split('|').pop().trim().split(' ')[0] || 'S/';
+    actualizarLabelsMoneda();
+});
+
+// Al mostrar los totales y la tabla, usar simboloMoneda dinámicamente
+function mostrarTotalesPrestamo(cuota, interes, total) {
+    $("#text_monto_por_cuota").val(cuota.toFixed(2));
+    $("#text_interes_resultado").val(interes.toFixed(2));
+    $("#text_total_resultado").val(total.toFixed(2));
+    actualizarLabelsMoneda();
+}
   </script>
