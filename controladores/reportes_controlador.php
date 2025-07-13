@@ -118,4 +118,22 @@ class ReportesControlador
         $respuesta = ReportesModelo::mdlObtenerDetalleCuotasPrestamo($nro_prestamo);
         return $respuesta;
     }
+
+    /**
+     * Reporte de cobranza diaria: cuotas pendientes para una fecha
+     */
+    static public function ctrReporteCobranzaDiaria($fecha) {
+        require_once "../modelos/reportes_modelo.php";
+        $reporte = ReportesModelo::mdlReporteCobranzaDiaria($fecha);
+        return $reporte;
+    }
+
+    /**
+     * Reporte de cuotas atrasadas por promotor
+     */
+    static public function ctrReporteCuotasAtrasadas($fecha) {
+        require_once "../modelos/reportes_modelo.php";
+        $reporte = ReportesModelo::mdlReporteCuotasAtrasadas($fecha);
+        return $reporte;
+    }
 }

@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../modelos/admin_prestamos_modelo.php';
 
 class AdminPrestamosControlador
 {
@@ -9,7 +10,8 @@ class AdminPrestamosControlador
     /*===================================================================*/
     static public function ctrListarPrestamoPorUsuario($id_usuario)
     {
-        $listPrestamosporUsuario = AdminPrestamosModelo::mdlListarPrestamoPorUsuario($id_usuario);
+        $listPrestamosporUsuario = AdminPrestamosModelo::
+        mdlListarPrestamoPorUsuario($id_usuario);
         return $listPrestamosporUsuario;
     }
 
@@ -29,62 +31,17 @@ class AdminPrestamosControlador
     /*===================================================================*/
     static public function ctrPagarCuota($nro_prestamo, $pdetalle_nro_cuota)
     {
-        // Obtener información antes del pago para WhatsApp
-        $infoWhatsApp = AdminPrestamosModelo::mdlObtenerInfoWhatsApp($nro_prestamo, $pdetalle_nro_cuota);
-        
-        // Procesar el pago
-        $PagarCuota = AdminPrestamosModelo::mdlPagarCuota($nro_prestamo, $pdetalle_nro_cuota);
-        
-        // Si el pago fue exitoso y tenemos información completa, enviar WhatsApp
-        if ($PagarCuota === "ok" && $infoWhatsApp && !empty($infoWhatsApp['cliente_celular'])) {
-            self::enviarWhatsAppPagoCuota($infoWhatsApp);
-        }
-        
-        return $PagarCuota;
-    }
+        $pagoExitoso = AdminPrestamosModelo::mdlPagarCuota($nro_prestamo, $pdetalle_nro_cuota);
 
-    /*===================================================================*/
-    //ENVIAR WHATSAPP AL PAGAR CUOTA
-    /*===================================================================*/
-    private static function enviarWhatsAppPagoCuota($infoWhatsApp)
-    {
-        try {
-            // Incluir la clase de WhatsApp
-            require_once "../utilitarios/WhatsAppAPI.php";
-            
-            $whatsapp = new WhatsAppAPI();
-            
-            // Verificar si la configuración está completa
-            if (!$whatsapp->validarConfiguracion()) {
-                error_log("WhatsApp: Configuración incompleta - revisar credenciales de Twilio");
-                return false;
+        if ($pagoExitoso == "ok") {
+            $infoWhatsApp = AdminPrestamosModelo::mdlObtenerInfoParaWhatsApp($nro_prestamo, $pdetalle_nro_cuota);
+            if ($infoWhatsApp) {
+                // Para un pago completo, el monto pagado es el de la cuota.
+                $infoWhatsApp['monto_pagado'] = $infoWhatsApp['pdetalle_monto_cuota'];
             }
-            
-            // Calcular saldo restante del préstamo completo
-            $saldo_restante = floatval($infoWhatsApp['saldo_total_prestamo']) ?: 0;
-            
-            // Enviar mensaje
-            $resultado = $whatsapp->enviarMensajePagoCuota(
-                $infoWhatsApp['cliente_celular'],
-                $infoWhatsApp['cliente_nombres'],
-                $infoWhatsApp['nro_prestamo'],
-                $infoWhatsApp['pdetalle_nro_cuota'],
-                floatval($infoWhatsApp['pdetalle_monto_cuota']),
-                $saldo_restante,
-                $infoWhatsApp['moneda_simbolo']
-            );
-            
-            if ($resultado) {
-                error_log("WhatsApp enviado exitosamente a " . $infoWhatsApp['cliente_nombres']);
-            } else {
-                error_log("Error al enviar WhatsApp a " . $infoWhatsApp['cliente_nombres']);
-            }
-            
-            return $resultado;
-            
-        } catch (Exception $e) {
-            error_log("Error en envío de WhatsApp: " . $e->getMessage());
-            return false;
+            return array("status" => "ok", "whatsapp_data" => $infoWhatsApp);
+        } else {
+            return array("status" => "error", "message" => $pagoExitoso);
         }
     }
 
@@ -114,7 +71,6 @@ class AdminPrestamosControlador
         }
 
         return $LiquidarPrestamo;
-
     }
 
     /*===================================================================*/
@@ -122,74 +78,78 @@ class AdminPrestamosControlador
     /*===================================================================*/
     static public function ctrRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar, $tipo_abono = 'normal')
     {
-        // Obtener información antes del abono para WhatsApp
-        $infoWhatsApp = AdminPrestamosModelo::mdlObtenerInfoWhatsApp($nro_prestamo, $pdetalle_nro_cuota);
-        
         // Procesar el abono según el tipo
         if ($tipo_abono === 'extraordinario') {
             $RegistrarAbono = AdminPrestamosModelo::mdlRegistrarAbonoExtraordinario($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar);
+            return $RegistrarAbono; // Se mantiene la lógica original para este caso complejo.
         } else {
             $RegistrarAbono = AdminPrestamosModelo::mdlRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar);
         }
         
-        // Si el abono fue exitoso y tenemos información completa, enviar WhatsApp
-        $fue_exitoso = ($tipo_abono === 'extraordinario' && is_array($RegistrarAbono) && $RegistrarAbono['status'] === 'ok') || 
-                       ($tipo_abono === 'normal' && $RegistrarAbono === "ok");
-        
-        if ($fue_exitoso && $infoWhatsApp && !empty($infoWhatsApp['cliente_celular'])) {
-            // Modificar la información para reflejar el abono
-            $infoWhatsApp['pdetalle_monto_cuota'] = $monto_a_abonar; // El monto abonado
-            self::enviarWhatsAppAbono($infoWhatsApp);
+        if ($RegistrarAbono === "ok") {
+            $infoWhatsApp = AdminPrestamosModelo::mdlObtenerInfoParaWhatsApp($nro_prestamo, $pdetalle_nro_cuota);
+            if ($infoWhatsApp) {
+                // Para un abono, el monto pagado es el que se envía como parámetro.
+                $infoWhatsApp['monto_pagado'] = $monto_a_abonar;
+            }
+            return array("status" => "ok", "whatsapp_data" => $infoWhatsApp);
+        } else {
+            return array("status" => "error", "message" => $RegistrarAbono);
         }
-        
-        return $RegistrarAbono;
     }
 
     /*===================================================================*/
-    //ENVIAR WHATSAPP AL REGISTRAR ABONO
+    // REIMPRIMIR CONTRATO POR ADMINISTRADOR
     /*===================================================================*/
-    private static function enviarWhatsAppAbono($infoWhatsApp)
-    {
+    static public function ctrReimprimirContratoAdmin($id_prestamo){
+        // 1. Obtener el estado actual del contrato
+        $estadoContrato = AdminPrestamosModelo::mdlObtenerEstadoReimpresion($id_prestamo);
+
+        if ($estadoContrato === false) {
+            return array("status" => "error", "message" => "Error al verificar el estado del contrato.");
+        }
+
+        if ($estadoContrato['reimpreso_admin'] == 1) {
+            return array("status" => "error", "message" => "Este contrato ya ha sido reimpreso previamente.");
+        }
+
+        // 2. Actualizar la bandera de reimpresión
+        $actualizarReimpresion = AdminPrestamosModelo::mdlActualizarReimpresionAdmin($id_prestamo);
+
+        if ($actualizarReimpresion == "ok") {
+            return "ok"; // Para mantener compatibilidad con el JavaScript
+        } else {
+            return "error";
+        }
+    }
+
+    /*===================================================================*/
+    // ENVIAR TABLA DE PAGOS POR CORREO
+    /*===================================================================*/
+    static public function ctrEnviarTablaCorreo($nro_prestamo, $cliente_nombres) {
         try {
-            // Incluir la clase de WhatsApp
-            require_once "../utilitarios/WhatsAppAPI.php";
-            
-            $whatsapp = new WhatsAppAPI();
-            
-            // Verificar si la configuración está completa
-            if (!$whatsapp->validarConfiguracion()) {
-                error_log("WhatsApp: Configuración incompleta - revisar credenciales de Twilio");
-                return false;
+            // Obtener información del préstamo y cliente
+            $infoPrestamo = AdminPrestamosModelo::mdlObtenerInfoPrestamo($nro_prestamo);
+            if (!$infoPrestamo) {
+                return array("status" => "error", "message" => "No se encontró información del préstamo.");
             }
+
+            // Obtener el historial de pagos
+            $historialPagos = AdminPrestamosModelo::mdlDetallePrestamo($nro_prestamo);
+            if (!$historialPagos) {
+                return array("status" => "error", "message" => "No se encontró historial de pagos.");
+            }
+
+            // Llamar al modelo para enviar correo
+            $resultadoEnvio = AdminPrestamosModelo::mdlEnviarTablaCorreo($infoPrestamo, $historialPagos, $cliente_nombres);
             
-            // Calcular saldo restante del préstamo completo
-            $saldo_restante = floatval($infoWhatsApp['saldo_total_prestamo']) ?: 0;
-            
-            // Crear mensaje específico para abono
-            $mensaje = $whatsapp->crearMensajeAbono(
-                $infoWhatsApp['cliente_nombres'],
-                $infoWhatsApp['nro_prestamo'],
-                $infoWhatsApp['pdetalle_nro_cuota'],
-                floatval($infoWhatsApp['pdetalle_monto_cuota']), // Monto del abono
-                $saldo_restante,
-                $infoWhatsApp['moneda_simbolo']
-            );
-            
-            // Formatear número y enviar
-            $numero_formateado = $whatsapp->formatearNumeroTelefono($infoWhatsApp['cliente_celular']);
-            $resultado = $whatsapp->enviarMensaje($numero_formateado, $mensaje);
-            
-            if ($resultado) {
-                error_log("WhatsApp de abono enviado exitosamente a " . $infoWhatsApp['cliente_nombres']);
+            if ($resultadoEnvio === "ok") {
+                return array("status" => "ok", "message" => "Tabla de pagos enviada correctamente.");
             } else {
-                error_log("Error al enviar WhatsApp de abono a " . $infoWhatsApp['cliente_nombres']);
+                return array("status" => "error", "message" => $resultadoEnvio);
             }
-            
-            return $resultado;
-            
         } catch (Exception $e) {
-            error_log("Error en envío de WhatsApp de abono: " . $e->getMessage());
-            return false;
+            return array("status" => "error", "message" => "Error al enviar correo: " . $e->getMessage());
         }
     }
 }

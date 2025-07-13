@@ -22,7 +22,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Listado de Usuarios</h3>
                           <button class="btn btn-info btn-sm float-right" id="abrirmodal_usuario"><i
                                   class="fas fa-plus"></i>
@@ -31,7 +31,7 @@
                       <div class=" card-body">
                           <div class="table-responsive">
                               <table id="tbl_usuarios" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-info text-left">
+                                  <thead class="bg-gradient-info text-white">
                                       <tr>
                                           <th>Id</th>
                                           <th>Nombres</th>

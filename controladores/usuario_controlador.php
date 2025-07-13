@@ -86,6 +86,13 @@ class UsuarioControlador{
     }
 
 
+    static public function ctrObtenerColectores()
+    {
+        $respuesta = UsuarioModelo::mdlObtenerColectores();
+        return $respuesta;
+    }
+
+
     /*===================================================================*/
      //ELIMINAR USUARIOS
      /*===================================================================*/

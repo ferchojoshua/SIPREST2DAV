@@ -1,6 +1,12 @@
-[2025-07-08 18:47:58] Acción recibida: listar_notas
-[2025-07-08 18:47:58] Notas obtenidas: Array
+[2025-07-12 10:09:39] Acción recibida: listar_notas
+[2025-07-12 10:09:39] Notas obtenidas: Array
 (
 )
 
-[2025-07-08 18:47:58] Respuesta formateada: {"data":[]}
+[2025-07-12 10:09:39] Respuesta formateada: {"data":[]}
+[2025-07-12 10:09:41] Acción recibida: listar_notas
+[2025-07-12 10:09:41] Notas obtenidas: Array
+(
+)
+
+[2025-07-12 10:09:41] Respuesta formateada: {"data":[]}

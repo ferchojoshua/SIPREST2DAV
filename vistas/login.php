@@ -382,26 +382,40 @@
                         placeholder="Ingrese su usuario"
                         autocomplete="username">
                     
-                    <label>
-                        <i class="fas fa-lock" style="color: #28a745; margin-right: 8px;"></i>
-                        Nueva contraseña:
-                    </label>
-                    <input 
-                        type="password" 
-                        id="nuevaPassword" 
-                        placeholder="Ingrese nueva contraseña"
-                        autocomplete="new-password">
-                    
-                    <label>
-                        <i class="fas fa-lock" style="color: #ffc107; margin-right: 8px;"></i>
-                        Confirmar contraseña:
-                    </label>
-                    <input 
-                        type="password" 
-                        id="confirmarPassword" 
-                        placeholder="Confirme nueva contraseña"
-                        autocomplete="new-password">
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 10px;">
+                            <input type="radio" name="metodoRecuperacion" value="manual" checked> 
+                            Establecer nueva contraseña manualmente
+                        </label>
+                        
+                        <div id="opcionManual">
+                            <label>
+                                <i class="fas fa-lock" style="color: #28a745; margin-right: 8px;"></i>
+                                Nueva contraseña:
+                            </label>
+                            <input 
+                                type="password" 
+                                id="nuevaPassword" 
+                                placeholder="Ingrese nueva contraseña"
+                                autocomplete="new-password">
+                            
+                            <label>
+                                <i class="fas fa-lock" style="color: #ffc107; margin-right: 8px;"></i>
+                                Confirmar contraseña:
+                            </label>
+                            <input 
+                                type="password" 
+                                id="confirmarPassword" 
+                                placeholder="Confirme nueva contraseña"
+                                autocomplete="new-password">
                         </div>
+                        
+                        <label style="display: block; margin-top: 15px; margin-bottom: 10px;">
+                            <input type="radio" name="metodoRecuperacion" value="email"> 
+                            Recibir contraseña temporal por correo electrónico
+                        </label>
+                    </div>
+                </div>
 
                 <div class="btn-group">
                     <button type="button" class="btn-primary" onclick="resetearPassword()" style="width: 48%; margin-right: 4%;">
@@ -412,7 +426,7 @@
                         <i class="fas fa-times"></i>
                         Cancelar
                     </button>
-                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -453,56 +467,95 @@
 
         function resetearPassword() {
             const usuario = document.getElementById('usuarioRecuperacion').value.trim();
-            const nuevaPassword = document.getElementById('nuevaPassword').value.trim();
-            const confirmarPassword = document.getElementById('confirmarPassword').value.trim();
+            const metodoRecuperacion = document.querySelector('input[name="metodoRecuperacion"]:checked').value;
             
             if (!usuario) {
                 alert('Por favor, ingrese su nombre de usuario.');
                 return;
             }
-
-            if (!nuevaPassword) {
-                alert('Por favor, ingrese una nueva contraseña.');
-                return;
-            }
-
-            if (nuevaPassword.length < 6) {
-                alert('La contraseña debe tener al menos 6 caracteres.');
-                return;
-            }
-
-            if (nuevaPassword !== confirmarPassword) {
-                alert('Las contraseñas no coinciden. Verifique e intente nuevamente.');
-                return;
-            }
-
-            // Llamada AJAX real para resetear la contraseña
-            const formData = new FormData();
-            formData.append('usuario', usuario);
-            formData.append('nueva_password', nuevaPassword);
-
-            fetch('ajax/reset_password_ajax.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Contraseña restablecida exitosamente!\n\n' +
-                          'Usuario: ' + usuario + '\n' +
-                          'Su nueva contraseña ha sido guardada.\n\n' +
-                          'Ahora puede iniciar sesión con su nueva contraseña.');
-                    cerrarModal();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            
+            if (metodoRecuperacion === 'manual') {
+                const nuevaPassword = document.getElementById('nuevaPassword').value.trim();
+                const confirmarPassword = document.getElementById('confirmarPassword').value.trim();
+                
+                if (!nuevaPassword) {
+                    alert('Por favor, ingrese una nueva contraseña.');
+                    return;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('❌ Error de conexión. Intente nuevamente.');
-            });
-        }
 
+                if (nuevaPassword.length < 6) {
+                    alert('La contraseña debe tener al menos 6 caracteres.');
+                    return;
+                }
+
+                if (nuevaPassword !== confirmarPassword) {
+                    alert('Las contraseñas no coinciden. Verifique e intente nuevamente.');
+                    return;
+                }
+
+                // Llamada AJAX para resetear la contraseña manualmente
+                const formData = new FormData();
+                formData.append('usuario', usuario);
+                formData.append('nueva_password', nuevaPassword);
+
+                fetch('ajax/reset_password_ajax.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ Contraseña restablecida exitosamente!\n\n' +
+                              'Usuario: ' + usuario + '\n' +
+                              'Su nueva contraseña ha sido guardada.\n\n' +
+                              'Ahora puede iniciar sesión con su nueva contraseña.');
+                        cerrarModal();
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('❌ Error al procesar la solicitud. Intente nuevamente.');
+                });
+            } else {
+                // Llamada AJAX para enviar contraseña temporal por correo
+                const formData = new FormData();
+                formData.append('usuario', usuario);
+
+                fetch('ajax/password_reset_email.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ ' + data.message + '\n\n' +
+                              'Por favor, revise su bandeja de entrada y siga las instrucciones para completar el proceso de recuperación de contraseña.');
+                        cerrarModal();
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('❌ Error al procesar la solicitud. Intente nuevamente.');
+                });
+            }
+        }
+        
+        // Toggle opciones de recuperación
+        document.querySelectorAll('input[name="metodoRecuperacion"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const opcionManual = document.getElementById('opcionManual');
+                if (this.value === 'manual') {
+                    opcionManual.style.display = 'block';
+                } else {
+                    opcionManual.style.display = 'none';
+                }
+            });
+        });
+        
         // Cerrar modal con click fuera
         window.onclick = function(event) {
             const modal = document.getElementById('modalRecuperacion');

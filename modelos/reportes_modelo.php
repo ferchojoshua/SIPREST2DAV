@@ -103,33 +103,12 @@ class ReportesModelo
     static public function mdlObtenerReporteMorosos()
     {
         try {
-            $stmt = Conexion::conectar()->prepare("
-                SELECT
-                    c.cliente_id,
-                    c.cliente_nombres as cliente_nombres,
-                    pc.nro_prestamo,
-                    pd.pdetalle_nro_cuota,
-                    pd.pdetalle_fecha,
-                    pd.pdetalle_monto_cuota,
-                    pd.pdetalle_saldo_cuota,
-                    DATEDIFF(CURDATE(), pd.pdetalle_fecha) AS dias_mora,
-                    m.moneda_simbolo
-                FROM prestamo_detalle pd
-                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
-                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                WHERE pd.pdetalle_estado_cuota = 'pendiente'
-                  AND pd.pdetalle_fecha < CURDATE()
-                ORDER BY dias_mora DESC
-            ");
-
+            $stmt = Conexion::conectar()->prepare('CALL SP_REPORTE_MOROSOS()');
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            return 'Excepción capturada: ' .  $e->getMessage() . "\n";
+            return ['error' => 'Excepción capturada: ' .  $e->getMessage()];
         }
-
-        $stmt = null;
     }
 
     /*===================================================================
@@ -200,73 +179,8 @@ class ReportesModelo
     static public function mdlObtenerReporteDiario($fecha)
     {
         try {
-            $stmt = Conexion::conectar()->prepare("
-                SELECT
-                    'PRÉSTAMOS' as tipo_operacion,
-                    COUNT(pc.pres_id) as cantidad,
-                    ROUND(IFNULL(SUM(pc.pres_monto),0),2) as monto_capital,
-                    ROUND(IFNULL(SUM(pc.pres_monto_interes),0),2) as monto_interes,
-                    ROUND(IFNULL(SUM(pc.pres_monto_total),0),2) as monto_total,
-                    m.moneda_simbolo,
-                    m.moneda_nombre
-                FROM prestamo_cabecera pc
-                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                WHERE DATE(pc.pres_fecha_registro) = :fecha
-                AND pc.pres_aprobacion IN ('aprobado', 'finalizado')
-                GROUP BY m.moneda_id, m.moneda_simbolo, m.moneda_nombre
-
-                UNION ALL
-
-                SELECT
-                    'PAGOS DE CUOTAS' as tipo_operacion,
-                    COUNT(pd.pdetalle_id) as cantidad,
-                    ROUND(IFNULL(SUM(pd.pdetalle_monto_cuota),0),2) as monto_capital,
-                    0 as monto_interes,
-                    ROUND(IFNULL(SUM(pd.pdetalle_monto_cuota),0),2) as monto_total,
-                    m.moneda_simbolo,
-                    m.moneda_nombre
-                FROM prestamo_detalle pd
-                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                WHERE DATE(pd.pdetalle_fecha_registro) = :fecha2
-                AND pd.pdetalle_estado_cuota = 'pagada'
-                GROUP BY m.moneda_id, m.moneda_simbolo, m.moneda_nombre
-
-                UNION ALL
-
-                SELECT
-                    'INGRESOS' as tipo_operacion,
-                    COUNT(mv.movimientos_id) as cantidad,
-                    ROUND(IFNULL(SUM(mv.movi_monto),0),2) as monto_capital,
-                    0 as monto_interes,
-                    ROUND(IFNULL(SUM(mv.movi_monto),0),2) as monto_total,
-                    '$' as moneda_simbolo,
-                    'Mixta' as moneda_nombre
-                FROM movimientos mv
-                WHERE DATE(mv.movi_fecha) = :fecha3
-                AND mv.movi_tipo = 'INGRESO'
-
-                UNION ALL
-
-                SELECT
-                    'EGRESOS' as tipo_operacion,
-                    COUNT(mv.movimientos_id) as cantidad,
-                    ROUND(IFNULL(SUM(mv.movi_monto),0),2) as monto_capital,
-                    0 as monto_interes,
-                    ROUND(IFNULL(SUM(mv.movi_monto),0),2) as monto_total,
-                    '$' as moneda_simbolo,
-                    'Mixta' as moneda_nombre
-                FROM movimientos mv
-                WHERE DATE(mv.movi_fecha) = :fecha4
-                AND mv.movi_tipo = 'EGRESO'
-
-                ORDER BY tipo_operacion
-            ");
-
+            $stmt = Conexion::conectar()->prepare('CALL SP_REPORTE_DIARIO(:fecha)');
             $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
-            $stmt->bindParam(":fecha2", $fecha, PDO::PARAM_STR);
-            $stmt->bindParam(":fecha3", $fecha, PDO::PARAM_STR);
-            $stmt->bindParam(":fecha4", $fecha, PDO::PARAM_STR);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -280,54 +194,7 @@ class ReportesModelo
     static public function mdlObtenerEstadoCuentaCliente($cliente_id)
     {
         try {
-            $stmt = Conexion::conectar()->prepare("
-                SELECT
-                    -- Información del préstamo
-                    pc.pres_id,
-                    pc.nro_prestamo,
-                    pc.cliente_id,
-                    c.cliente_nombres,
-                    c.cliente_dni,
-                    c.cliente_celular,
-                    c.cliente_direccion,
-                    
-                    -- Datos financieros del préstamo
-                    pc.pres_monto,
-                    pc.pres_interes,
-                    pc.pres_monto_interes,
-                    pc.pres_monto_total,
-                    pc.pres_monto_cuota,
-                    pc.pres_cuotas,
-                    pc.pres_cuotas_pagadas,
-                    
-                    -- Fechas importantes
-                    DATE_FORMAT(pc.pres_fecha_registro, '%d/%m/%Y') as fecha_registro,
-                    DATE_FORMAT(pc.pres_f_emision, '%d/%m/%Y') as fecha_emision,
-                    
-                    -- Estado y forma de pago
-                    pc.pres_aprobacion as estado,
-                    fp.fpago_descripcion,
-                    m.moneda_simbolo,
-                    m.moneda_nombre,
-                    u.usuario,
-                    
-                    -- Cálculos de saldo
-                    ROUND((pc.pres_monto_total - (pc.pres_cuotas_pagadas * pc.pres_monto_cuota)), 2) as saldo_pendiente,
-                    ROUND((pc.pres_cuotas_pagadas * pc.pres_monto_cuota), 2) as monto_pagado,
-                    (pc.pres_cuotas - pc.pres_cuotas_pagadas) as cuotas_pendientes,
-                    
-                    -- Porcentaje de avance
-                    ROUND((pc.pres_cuotas_pagadas / pc.pres_cuotas * 100), 2) as porcentaje_avance
-                    
-                FROM prestamo_cabecera pc
-                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
-                INNER JOIN forma_pago fp ON pc.fpago_id = fp.fpago_id
-                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                INNER JOIN usuarios u ON pc.id_usuario = u.id_usuario
-                WHERE pc.cliente_id = :cliente_id
-                ORDER BY pc.pres_fecha_registro DESC
-            ");
-
+            $stmt = Conexion::conectar()->prepare('CALL SP_ESTADO_CUENTA_CLIENTE(:cliente_id)');
             $stmt->bindParam(":cliente_id", $cliente_id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -385,4 +252,135 @@ class ReportesModelo
             return ['error' => 'Excepción capturada: ' .  $e->getMessage()];
         }
     }
+
+    /**
+     * Reporte de cobranza diaria: cuotas pendientes para una fecha, agrupadas por promotor
+     */
+    static public function mdlReporteCobranzaDiaria($fecha)
+    {
+        $stmt = Conexion::conectar()->prepare('
+            SELECT 
+                u.usuario AS promotor,
+                c.cliente_id,
+                c.cliente_nombres,
+                pc.nro_prestamo,
+                pd.pdetalle_nro_cuota,
+                DATE(pd.pdetalle_fecha) AS fecha,
+                pd.pdetalle_monto_cuota AS principal,
+                0 AS int_mora, -- Ajustar si hay campo de mora
+                0 AS int_cte,  -- Ajustar si hay campo de interés corriente
+                0 AS comision, -- Ajustar si hay campo de comisión
+                pd.pdetalle_monto_cuota AS total
+            FROM prestamo_detalle pd
+            INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+            INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+            INNER JOIN usuarios u ON pc.id_usuario = u.id_usuario
+            WHERE DATE(pd.pdetalle_fecha) = :fecha
+              AND pd.pdetalle_estado_cuota = "pendiente"
+            ORDER BY u.usuario, c.cliente_nombres
+        ');
+        $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Reporte de cuotas atrasadas por promotor: cuotas pendientes con fecha menor a hoy
+     */
+    static public function mdlReporteCuotasAtrasadas($fecha)
+    {
+        $stmt = Conexion::conectar()->prepare('
+            SELECT 
+                u.usuario AS promotor,
+                c.cliente_id,
+                c.cliente_nombres,
+                c.cliente_direccion,
+                c.cliente_celular,
+                pc.nro_prestamo,
+                pd.pdetalle_nro_cuota,
+                DATE(pd.pdetalle_fecha) AS fecha,
+                pd.pdetalle_monto_cuota AS principal,
+                0 AS interes, -- Ajustar si hay campo de interés
+                pd.pdetalle_monto_cuota AS total,
+                pd.pdetalle_monto_cuota AS cuota_segun,
+                DATEDIFF(:fecha, DATE(pd.pdetalle_fecha)) AS dias_atraso,
+                pc.pres_monto_restante AS saldo_total
+            FROM prestamo_detalle pd
+            INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+            INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+            INNER JOIN usuarios u ON pc.id_usuario = u.id_usuario
+            WHERE DATE(pd.pdetalle_fecha) < :fecha
+              AND pd.pdetalle_estado_cuota = "pendiente"
+            ORDER BY u.usuario, c.cliente_nombres
+        ');
+        $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /*===================================================================*/
+    // OBTENER KPIs PARA EL DASHBOARD GERENCIAL
+    /*===================================================================*/
+    static public function mdlObtenerKpisGerenciales($id_colector = null)
+    {
+        // Saldo total de cartera (capital pendiente de todos los préstamos aprobados)
+        $query_saldo_cartera = "
+            SELECT COALESCE(SUM(pres_monto_restante), 0) as saldo_cartera
+            FROM prestamo_cabecera
+            WHERE pres_aprobacion = 'aprobado'";
+        
+        // Clientes con préstamos activos
+        $query_clientes_activos = "
+            SELECT COUNT(DISTINCT cliente_id) as clientes_activos
+            FROM prestamo_cabecera
+            WHERE pres_aprobacion = 'aprobado'";
+
+        // Monto total en mora (cuotas vencidas y no pagadas)
+        $query_monto_mora = "
+            SELECT COALESCE(SUM(pdetalle_monto_cuota), 0) as monto_en_mora
+            FROM prestamo_detalle
+            WHERE pdetalle_estado_cuota = 'pendiente' AND pdetalle_fecha_programada < CURDATE()";
+
+        // Aplicar filtro por colector si se proporciona
+        if ($id_colector) {
+            $query_saldo_cartera .= " AND id_usuario = :id_colector";
+            $query_clientes_activos .= " AND id_usuario = :id_colector";
+            $query_monto_mora = "
+                SELECT COALESCE(SUM(pd.pdetalle_monto_cuota), 0) as monto_en_mora
+                FROM prestamo_detalle pd
+                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                WHERE pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha_programada < CURDATE()
+                AND pc.id_usuario = :id_colector";
+        }
+        
+        // Ejecutar consultas
+        $stmt_saldo = Conexion::conectar()->prepare($query_saldo_cartera);
+        $stmt_clientes = Conexion::conectar()->prepare($query_clientes_activos);
+        $stmt_mora = Conexion::conectar()->prepare($query_monto_mora);
+
+        if($id_colector){
+            $stmt_saldo->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
+            $stmt_clientes->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
+            $stmt_mora->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
+        }
+
+        $stmt_saldo->execute();
+        $stmt_clientes->execute();
+        $stmt_mora->execute();
+
+        $saldo_cartera = $stmt_saldo->fetch(PDO::FETCH_ASSOC)['saldo_cartera'];
+        $clientes_activos = $stmt_clientes->fetch(PDO::FETCH_ASSOC)['clientes_activos'];
+        $monto_en_mora = $stmt_mora->fetch(PDO::FETCH_ASSOC)['monto_en_mora'];
+        
+        // Calcular porcentaje de mora
+        $porcentaje_mora = ($saldo_cartera > 0) ? ($monto_en_mora / $saldo_cartera) * 100 : 0;
+        
+        return [
+            "saldo_cartera" => $saldo_cartera,
+            "clientes_activos" => $clientes_activos,
+            "monto_en_mora" => $monto_en_mora,
+            "porcentaje_mora" => $porcentaje_mora
+        ];
+    }
+
 }

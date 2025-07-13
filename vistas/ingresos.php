@@ -26,7 +26,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Ingresos / Egresos</h3>
                           <button class="btn btn-info btn-sm float-right" id="abrirmodal_movimientos"><i class="fas fa-plus"></i>
                               Nuevo</button>
@@ -48,7 +48,7 @@
                           </div><br> -->
                           <div class="col-12 table-responsive">
                               <table id="tbl_movimientos" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-info text-left">
+                                  <thead class="bg-gradient-info text-white">
                                       <tr>
                                           <th>Id movi</th>
                                           <th>Tipo Movi.</th>

@@ -65,27 +65,22 @@ class AjaxCliente
     /*=========================================================*/
     public function ajaxActualizarCliente($data)
     {
-        // $respuesta = ClienteControlador::ctrActualizarCliente(
-        //     $this->cliente_id,
-        //     $this->cliente_nombres,
-        //     $this->cliente_dni,
-        //     $this->cliente_cel,
-        //     $this->cliente_direccion,
-        //     $this->cliente_correo,
-        //     $this->refe_personal,
-        //     $this->refe_cel_per,
-        //     $this->refe_familiar,
-        //     $this->refe_cel_fami
+        try {
+            $table = "clientes"; //TABLA
+            $id = $_POST["cliente_id"]; //LO QUE VIENE DE PRODUCTOS.PHP
+            $nameId = "cliente_id"; //CAMPO DE LA BASE
 
-        // );
-        //echo json_encode($respuesta);
-        $table = "clientes"; //TABLA
-        $id = $_POST["cliente_id"]; //LO QUE VIENE DE PRODUCTOS.PHP
-        $nameId = "cliente_id"; //CAMPO DE LA BASE
+            // Debug: Log de los datos que se están enviando (comentado para producción)
+            // error_log("Datos para actualizar cliente: " . print_r($data, true));
+            // error_log("ID del cliente: " . $id);
 
-        $respuesta = ClienteControlador::ctrActualizarCliente($table, $data, $id, $nameId);
+            $respuesta = ClienteControlador::ctrActualizarCliente($table, $data, $id, $nameId);
 
-        echo json_encode($respuesta);
+            echo json_encode($respuesta);
+        } catch (Exception $e) {
+            // error_log("Error al actualizar cliente: " . $e->getMessage());
+            echo json_encode(array("error" => $e->getMessage()));
+        }
     }
 
 
@@ -212,24 +207,22 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR CLIENTE EN DATA
 } else if (isset($_POST['accion']) && $_POST['accion'] == 3) { //ACTUALIZAR CLIENTE
     $actualizarCliente = new AjaxCliente();
     $data = array(
-        // campo de tabla y la variable definida en el registrar
+        // Campos básicos del cliente
         "cliente_nombres" => $_POST["cliente_nombres"],
         "cliente_dni" => $_POST["cliente_dni"],
         "cliente_cel" => $_POST["cliente_cel"],
         "cliente_direccion" => $_POST["cliente_direccion"],
         "cliente_correo" => $_POST["cliente_correo"],
-        "cliente_refe" => $_POST["cliente_refe"],
-        "cliente_cel_refe" => $_POST["cliente_cel_refe"],
-        // Nuevos campos de Información Laboral
+        // Campos de Información Laboral
         "cliente_empresa_laboral" => $_POST['cliente_empresa_laboral'] ?? null,
         "cliente_cargo_laboral" => $_POST['cliente_cargo_laboral'] ?? null,
         "cliente_tel_laboral" => $_POST['cliente_tel_laboral'] ?? null,
         "cliente_dir_laboral" => $_POST['cliente_dir_laboral'] ?? null,
-        // Nuevos campos de Referencia Personal
+        // Campos de Referencia Personal
         "cliente_refe_per_nombre" => $_POST['cliente_refe_per_nombre'] ?? null,
         "cliente_refe_per_cel" => $_POST['cliente_refe_per_cel'] ?? null,
         "cliente_refe_per_dir" => $_POST['cliente_refe_per_dir'] ?? null,
-        // Nuevos campos de Referencia Familiar
+        // Campos de Referencia Familiar
         "cliente_refe_fami_nombre" => $_POST['cliente_refe_fami_nombre'] ?? null,
         "cliente_refe_fami_cel" => $_POST['cliente_refe_fami_cel'] ?? null,
         "cliente_refe_fami_dir" => $_POST['cliente_refe_fami_dir'] ?? null

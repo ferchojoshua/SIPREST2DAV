@@ -1,4 +1,5 @@
 <?php
+// No hay require en este archivo, solo aseguramos que si se agrega alguno, se use __DIR__
 
 class Conexion {
 
@@ -9,9 +10,11 @@ class Conexion {
                                   dbname=dbprestamo",
                                   "root",
                                   "",array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+           $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
            return $conn;
         } catch (PDOException $e) {
-            echo 'Fallo la conexion: '.$e->getMessage();
+            // En lugar de hacer echo, lanzamos la excepción para que pueda ser manejada más arriba.
+            throw new PDOException('Fallo la conexion: '.$e->getMessage());
         }
     }
 

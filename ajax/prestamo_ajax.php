@@ -99,6 +99,26 @@ if (isset($_POST["accion"]) && $_POST["accion"] == 1) { // GUARDAR PRESTAMO
             $_POST['fpago']
         );
         
+        // Si se solicita una página específica, paginar la tabla de amortización
+        if (isset($_POST['pagina'])) {
+            $pagina = intval($_POST['pagina']);
+            $porPagina = isset($_POST['por_pagina']) ? intval($_POST['por_pagina']) : 12;
+            
+            // Guardar la tabla completa para usar en paginación
+            $tablaCompleta = $resultado['tabla_amortizacion'];
+            
+            // Obtener solo la página solicitada
+            $paginacion = CalculadoraPrestamos::paginarTablaAmortizacion(
+                $tablaCompleta,
+                $pagina,
+                $porPagina
+            );
+            
+            // Reemplazar la tabla completa por la página solicitada y añadir info de paginación
+            $resultado['tabla_amortizacion'] = $paginacion['registros'];
+            $resultado['paginacion'] = $paginacion['paginacion'];
+        }
+        
         echo json_encode($resultado);
     } catch (Exception $e) {
         echo json_encode(['error' => $e->getMessage()]);

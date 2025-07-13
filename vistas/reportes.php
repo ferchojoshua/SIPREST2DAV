@@ -25,7 +25,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Pivot General Prestamos</h3>
 
                       </div>
@@ -47,7 +47,7 @@
                           </div><br> -->
                           <div class="col-12 table-responsive">
                               <table id="tbl_reporte_pivot" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-info text-left">
+                                  <thead class="bg-gradient-info text-white">
                                       <tr>
                                           <th>Año</th>
                                           <th>Enero</th>
@@ -86,7 +86,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Record Por usuario</h3>
 
                       </div>
@@ -120,7 +120,7 @@
 
                           <div class="col-12 table-responsive">
                               <table id="tbl_reporte_record_usu" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-info text-left">
+                                  <thead class="bg-gradient-info text-white">
                                       <tr>
                                           <th>Año</th>
                                           <th>Mes</th>

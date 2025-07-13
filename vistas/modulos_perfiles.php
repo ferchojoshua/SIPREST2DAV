@@ -60,7 +60,7 @@
 					<div class="col-md-12">
 						<div class="card card-info card-outline shadow">
 
-							<div class="card-header">
+							<div class="card-header bg-gradient-info">
 
 								<h3 class="card-title">Listado de Perfiles</h3>
 								<button class="btn btn-info btn-sm float-right" id="abrirmodalPerfil"><i class="fas fa-plus"></i>
@@ -72,7 +72,7 @@
 								<!-- <div class="table-responsive"> -->
 								<table id="tblPerfiles" class="table display table-hover text-nowrap compact  w-100  rounded ">
 
-									<thead class="bg-info text-left">
+									<thead class="bg-gradient-info text-white">
 										<th>Id</th>
 										<th>Perfil</th>
 										<th>Estado</th>
@@ -109,7 +109,7 @@
 
 						<div class="card card-info card-outline shadow">
 
-							<div class="card-header">
+							<div class="card-header bg-gradient-info">
 
 								<h3 class="card-title">Listado de Modulos</h3>
 								<button class="btn btn-info btn-sm float-right" id="abrirmodal"><i class="fas fa-plus"></i>
@@ -121,7 +121,7 @@
 								<!-- <div class="table-responsive"> -->
 								<table id="tblModulos" class="table display table-hover text-nowrap compact  w-100  rounded">
 
-									<thead class="bg-info text-left">
+									<thead class="bg-gradient-info text-white">
 										<th class="text-center">Acciones</th>
 										<th>id</th>
 										<th>orden</th>
@@ -154,7 +154,7 @@
 
 						<div class="card card-info card-outline shadow">
 
-							<div class="card-header">
+							<div class="card-header bg-gradient-info">
 
 								<h3 class="card-title"> Organizar Módulos</h3>
 
@@ -227,7 +227,7 @@
 
 						<div class="card card-info card-outline shadow">
 
-							<div class="card-header">
+							<div class="card-header bg-gradient-info">
 
 								<h3 class="card-title"></i> Listado de Perfiles</h3>
 
@@ -237,7 +237,7 @@
 								<div class=" table-responsive">
 									<table id="tbl_perfiles_asignar" class="table display table-hover text-nowrap compact  w-100  rounded">
 
-										<thead class="bg-info text-left">
+										<thead class="bg-gradient-info text-white">
 											<th>id Perfil</th>
 											<th>Perfil</th>
 											<th>Estado</th>
@@ -264,7 +264,7 @@
 
 						<div class="card card-info card-outline shadow" style="display:none" id="card-modulos">
 
-							<div class="card-header">
+							<div class="card-header bg-gradient-info">
 
 								<h3 class="card-title"></i> Modulos del Sistema</h3>
 

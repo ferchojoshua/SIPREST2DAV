@@ -22,7 +22,7 @@
         <div class="row p-0 m-0">
             <div class="col-md-12">
                 <div class="card card-info card-outline shadow ">
-                    <div class="card-header">
+                    <div class="card-header bg-gradient-info">
                         <h3 class="card-title">Listado de Prestamos por aprobar</h3>
 
                     </div>
@@ -57,7 +57,7 @@
 
                         <div class="table-responsive">
                             <table id="tbl_aprobacion_pres" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                <thead class="bg-info text-left">
+                                <thead class="bg-gradient-info text-white">
                                     <tr>
                                         <th>Id</th>
                                         <th>Nro Prestamo</th>
@@ -215,7 +215,7 @@
                 <div class="row">
                     <div class="table-responsive">
                         <table id="tbl_detalle_prestamo" class="table display table-hover text-nowrap compact  w-100  rounded" style="width:100%;">
-                            <thead class="bg-info text-left">
+                            <thead class="bg-gradient-info text-white">
                                 <tr>
                                     <th>Id</th>
                                     <th style="width:40%;">Nro prestamo</th>
@@ -583,6 +583,23 @@
                                 });
 
                                 tbl_aprobacion_pres.ajax.reload(); //recargamos el datatable
+                                
+                                // Imprimir contrato automáticamente después de aprobar
+                                Swal.fire({
+                                    title: '¿Desea imprimir el contrato ahora?',
+                                    text: "El contrato se abrirá en una nueva ventana",
+                                    icon: 'question',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#8FCE00',
+                                    cancelButtonColor: '#d50',
+                                    confirmButtonText: 'Sí, imprimir',
+                                    cancelButtonText: 'No, más tarde'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Abrir el contrato en una nueva ventana
+                                        window.open("MPDF/contrato.php?codigo=" + nro_prestamo + "#zoom=100", "Contrato", "scrollbars=NO,resizable=YES");
+                                    }
+                                });
 
                             } else {
                                 Toast.fire({
@@ -1193,21 +1210,49 @@
                     'nro_prestamo': nro_prestamo
                 }, //LISTAR 
             },
+            columns: [
+                { data: 'pdetalle_id' },
+                { data: 'nro_prestamo' },
+                { data: 'pdetalle_nro_cuota' },
+                { data: 'pdetalle_fecha' },
+                { data: 'pdetalle_monto_cuota' },
+                { data: 'pdetalle_saldo_cuota' },
+                { data: 'pdetalle_estado_cuota' },
+                { data: null }
+            ],
+            dataSrc: function(json) {
+                console.log("Datos recibidos para tbl_detalle_prestamo:", json);
+                return json;
+            },
             columnDefs: [{
-                    targets: 0,
+                    targets: [0, 1],
                     visible: false
 
                 }, {
-                    targets: 5,
-                    //sortable: false,
+                    targets: 4, // Monto
+                    render: function(data, type, row) {
+                        return row.moneda_simbolo + ' ' + data;
+                    }
+                }, {
+                    targets: 6, // Estado
                     createdCell: function(td, cellData, rowData, row, col) {
 
-                        if (rowData[5] == 'pagada') {
+                        if (rowData.pdetalle_estado_cuota == 'pagada') {
                             $(td).html("<span class='badge badge-success'>pagada</span>")
                         } else {
                             $(td).html("<span class='badge badge-danger'>pendiente</span>")
                         }
 
+                    }
+                },{
+                    targets: 7, // Opciones
+                    sortable: false, //no ordene
+                    render: function(data, type, row) {
+                        return "<center>" +
+                            "<span class='btnVerDetalle text-primary px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Ver Detalle'> " +
+                            "<i class='fa fa-eye fs-6'> </i> " +
+                            "</span>" +
+                            "</center>"
                     }
                 }
                 

@@ -1,6 +1,6 @@
 <?php
 
-require_once "conexion.php";
+require_once __DIR__ . '/conexion.php';
 
 
 
@@ -26,14 +26,14 @@ class AdminPrestamosModelo
                                                             fp.fpago_descripcion,
                                                             pc.id_usuario,
                                                             u.usuario,		
-                                                            -- DATE(pc.pres_fecha_registro) as fecha,
                                                             DATE_FORMAT(pc.pres_fecha_registro, '%d/%m/%Y') as fecha,
                                                             pc.pres_aprobacion as estado,
                                                             '' as opciones,
                                                             pc.pres_monto_cuota,
 															pc.pres_monto_interes,
 															pc.pres_monto_total,
-															pc.pres_cuotas_pagadas          
+															pc.pres_cuotas_pagadas,
+                                                            pc.reimpreso_admin          
                                                             from prestamo_cabecera pc
                                                             INNER JOIN clientes c on
                                                             pc.cliente_id = c.cliente_id
@@ -48,7 +48,7 @@ class AdminPrestamosModelo
 
             $stmt->execute();
 
-            return $stmt->fetchAll();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             return 'Excepción capturada: ' .  $e->getMessage() . "\n";
         }
@@ -61,30 +61,39 @@ class AdminPrestamosModelo
     /*===================================================================*/
     //VER DETALLE DL PRESTAMO EN MODAL
     /*===================================================================*/
-    static public function mdlDetallePrestamo($nro_prestamo)
-    {
+    static public function mdlDetallePrestamo($nro_prestamo){
+        
         // $stmt = Conexion::conectar()->prepare('call SP_VER_DETALLE_PRESTAMO(:nro_prestamo)');
         $stmt = Conexion::conectar()->prepare("SELECT
-                                                    pd.pdetalle_id,
-                                                    pd.nro_prestamo,
-                                                    pd.pdetalle_nro_cuota,
-                                                    DATE_FORMAT(pd.pdetalle_fecha, '%d/%m/%Y') AS pdetalle_fecha,
-                                                    pd.pdetalle_monto_cuota,
-                                                    pd.pdetalle_saldo_cuota,
-                                                    pd.pdetalle_estado_cuota,
-                                                    mo.moneda_simbolo,
-                                                    mo.moneda_nombre
-                                                FROM
-                                                    prestamo_detalle pd
-                                                INNER JOIN
-                                                    prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-                                                INNER JOIN
-                                                    moneda mo ON pc.moneda_id = mo.moneda_id
-                                                WHERE
-                                                    pd.nro_prestamo = :nro_prestamo");
+                                                pd.pdetalle_id,
+                                                pd.pdetalle_nro_cuota,
+                                                pd.pdetalle_fecha,
+                                                pd.pdetalle_monto_cuota,
+                                                pd.pdetalle_saldo_cuota,
+                                                pd.pdetalle_estado_cuota,
+                                                pd.pdetalle_fecha_registro,
+                                                pc.nro_prestamo,
+                                                pc.pres_monto,
+                                                pc.pres_monto_total,
+                                                pc.pres_interes,
+                                                pc.pres_cuotas,
+                                                pc.pres_f_emision,
+                                                c.cliente_nombres AS cliente_nombres,
+                                                c.cliente_dni,
+                                                fp.fpago_descripcion,
+                                                m.moneda_simbolo
+                                            FROM prestamo_cabecera pc
+                                            INNER JOIN prestamo_detalle pd ON pc.nro_prestamo = pd.nro_prestamo
+                                            INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+                                            INNER JOIN forma_pago fp ON pc.fpago_id = fp.fpago_id
+                                            INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
+                                            WHERE pc.nro_prestamo = :nro_prestamo");
+        
         $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $stmt = null;
     }
 
 
@@ -145,6 +154,35 @@ class AdminPrestamosModelo
         $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_OBJ);
+    }
+
+
+    /*===================================================================*/
+    // OBTENER INFORMACION PARA NOTIFICACION WHATSAPP
+    /*===================================================================*/
+    static public function mdlObtenerInfoParaWhatsApp($nro_prestamo, $pdetalle_nro_cuota)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT 
+                    c.cliente_nombres,
+                    c.cliente_celular,
+                    pc.pres_monto_restante,
+                    pd.pdetalle_monto_cuota,
+                    m.moneda_simbolo
+                FROM prestamo_cabecera pc
+                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+                INNER JOIN prestamo_detalle pd ON pc.nro_prestamo = pd.nro_prestamo
+                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
+                WHERE pc.nro_prestamo = :nro_prestamo AND pd.pdetalle_nro_cuota = :pdetalle_nro_cuota
+            ");
+            $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return null;
+        }
     }
 
 
@@ -729,5 +767,224 @@ class AdminPrestamosModelo
         } catch (Exception $e) {
             return [];
         }
+    }
+
+    /*===================================================================*/
+    // OBTENER ESTADO DE REIMPRESIÓN DEL CONTRATO
+    /*===================================================================*/
+    static public function mdlObtenerEstadoReimpresion($id_prestamo)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT reimpreso_admin 
+                FROM prestamo_cabecera 
+                WHERE pres_id = :id_prestamo
+            ");
+            $stmt->bindParam(":id_prestamo", $id_prestamo, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /*===================================================================*/
+    // ACTUALIZAR REIMPRESIÓN ADMIN
+    /*===================================================================*/
+    static public function mdlActualizarReimpresionAdmin($id_prestamo)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                UPDATE prestamo_cabecera 
+                SET reimpreso_admin = 1 
+                WHERE pres_id = :id_prestamo
+            ");
+            $stmt->bindParam(":id_prestamo", $id_prestamo, PDO::PARAM_INT);
+            
+            if ($stmt->execute()) {
+                return "ok";
+            } else {
+                return "error";
+            }
+        } catch (Exception $e) {
+            return "error";
+        }
+    }
+
+    /*===================================================================*/
+    // OBTENER INFORMACION COMPLETA DEL PRESTAMO
+    /*===================================================================*/
+    static public function mdlObtenerInfoPrestamo($nro_prestamo)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT 
+                    pc.pres_id,
+                    pc.nro_prestamo,
+                    pc.cliente_id,
+                    c.cliente_nombres,
+                    c.cliente_celular,
+                    c.cliente_email,
+                    c.cliente_dni,
+                    pc.pres_monto,
+                    pc.pres_interes,
+                    pc.pres_cuotas,
+                    pc.pres_monto_cuota,
+                    pc.pres_monto_interes,
+                    pc.pres_monto_total,
+                    pc.pres_monto_restante,
+                    pc.pres_cuotas_pagadas,
+                    DATE_FORMAT(pc.pres_fecha_registro, '%d/%m/%Y') as fecha_registro,
+                    pc.pres_aprobacion as estado,
+                    fp.fpago_descripcion,
+                    m.moneda_simbolo,
+                    m.moneda_nombre
+                FROM prestamo_cabecera pc
+                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+                INNER JOIN forma_pago fp ON pc.fpago_id = fp.fpago_id
+                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
+                WHERE pc.nro_prestamo = :nro_prestamo
+            ");
+            $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /*===================================================================*/
+    // ENVIAR TABLA DE PAGOS POR CORREO
+    /*===================================================================*/
+    static public function mdlEnviarTablaCorreo($infoPrestamo, $historialPagos, $cliente_nombres)
+    {
+        try {
+            // Verificar si el cliente tiene email
+            if (empty($infoPrestamo['cliente_email'])) {
+                return "El cliente no tiene email registrado.";
+            }
+
+            // Requerir PHPMailer
+            require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+            require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
+            require_once __DIR__ . '/../PHPMailer/src/Exception.php';
+
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+
+            // Configuración del servidor (ejemplo con Gmail)
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'siprestaitsolutions@gmail.com'; // Cambiar por tu email
+            $mail->Password   = 'Sipresta2025'; // Cambiar por tu password de aplicación
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+
+            // Remitente
+            $mail->setFrom('siprestaitsolutions@gmail.com', 'Sistema de Préstamos');
+            $mail->addAddress($infoPrestamo['cliente_email'], $cliente_nombres);
+
+            // Contenido del correo
+            $mail->isHTML(true);
+            $mail->Subject = 'Tabla de Pagos - Préstamo ' . $infoPrestamo['nro_prestamo'];
+            
+            // Generar HTML de la tabla
+            $html = self::generarHTMLTablaPagos($infoPrestamo, $historialPagos);
+            $mail->Body = $html;
+
+            $mail->send();
+            return "ok";
+        } catch (Exception $e) {
+            return "Error al enviar correo: " . $e->getMessage();
+        }
+    }
+
+    /*===================================================================*/
+    // GENERAR HTML DE LA TABLA DE PAGOS
+    /*===================================================================*/
+    private static function generarHTMLTablaPagos($infoPrestamo, $historialPagos)
+    {
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Tabla de Pagos</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .info-prestamo { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+                .tabla-pagos { width: 100%; border-collapse: collapse; }
+                .tabla-pagos th, .tabla-pagos td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                .tabla-pagos th { background-color: #007bff; color: white; }
+                .estado-pagada { color: green; font-weight: bold; }
+                .estado-pendiente { color: red; font-weight: bold; }
+                .estado-parcial { color: orange; font-weight: bold; }
+                .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>TABLA DE PAGOS</h2>
+                <h3>Préstamo N° ' . $infoPrestamo['nro_prestamo'] . '</h3>
+            </div>
+            
+            <div class="info-prestamo">
+                <h4>Información del Préstamo</h4>
+                <p><strong>Cliente:</strong> ' . $infoPrestamo['cliente_nombres'] . '</p>
+                <p><strong>DNI:</strong> ' . $infoPrestamo['cliente_dni'] . '</p>
+                <p><strong>Monto del Préstamo:</strong> ' . $infoPrestamo['moneda_simbolo'] . ' ' . number_format($infoPrestamo['pres_monto'], 2) . '</p>
+                <p><strong>Interés:</strong> ' . $infoPrestamo['pres_interes'] . '%</p>
+                <p><strong>Cuotas:</strong> ' . $infoPrestamo['pres_cuotas'] . '</p>
+                <p><strong>Monto por Cuota:</strong> ' . $infoPrestamo['moneda_simbolo'] . ' ' . number_format($infoPrestamo['pres_monto_cuota'], 2) . '</p>
+                <p><strong>Monto Total:</strong> ' . $infoPrestamo['moneda_simbolo'] . ' ' . number_format($infoPrestamo['pres_monto_total'], 2) . '</p>
+                <p><strong>Forma de Pago:</strong> ' . $infoPrestamo['fpago_descripcion'] . '</p>
+                <p><strong>Fecha de Registro:</strong> ' . $infoPrestamo['fecha_registro'] . '</p>
+            </div>
+            
+            <table class="tabla-pagos">
+                <thead>
+                    <tr>
+                        <th>Cuota N°</th>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Saldo Pendiente</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>';
+                
+        foreach ($historialPagos as $cuota) {
+            $estadoClase = '';
+            if ($cuota['pdetalle_estado_cuota'] == 'pagada') {
+                $estadoClase = 'estado-pagada';
+            } elseif ($cuota['pdetalle_estado_cuota'] == 'parcialmente_pagada') {
+                $estadoClase = 'estado-parcial';
+            } else {
+                $estadoClase = 'estado-pendiente';
+            }
+            
+            $html .= '
+                    <tr>
+                        <td>' . $cuota['pdetalle_nro_cuota'] . '</td>
+                        <td>' . $cuota['pdetalle_fecha'] . '</td>
+                        <td>' . $cuota['moneda_simbolo'] . ' ' . number_format($cuota['pdetalle_monto_cuota'], 2) . '</td>
+                        <td>' . $cuota['moneda_simbolo'] . ' ' . number_format($cuota['pdetalle_saldo_cuota'], 2) . '</td>
+                        <td class="' . $estadoClase . '">' . strtoupper($cuota['pdetalle_estado_cuota']) . '</td>
+                    </tr>';
+        }
+        
+        $html .= '
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Este documento fue generado automáticamente por el Sistema de Préstamos.</p>
+                <p>Fecha de generación: ' . date('d/m/Y H:i:s') . '</p>
+            </div>
+        </body>
+        </html>';
+        
+        return $html;
     }
 }

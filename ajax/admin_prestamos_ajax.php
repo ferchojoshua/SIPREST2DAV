@@ -1,7 +1,18 @@
 <?php
 
-require_once "../controladores/admin_prestamos_controlador.php";
-require_once "../modelos/admin_prestamos_modelo.php";
+// Blindaje completo para asegurar solo JSON válido
+if (ob_get_level()) {
+    ob_clean();
+}
+header('Content-Type: application/json');
+
+// Activar errores para depuración
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once __DIR__ . '/../controladores/admin_prestamos_controlador.php';
+require_once __DIR__ . '/../modelos/admin_prestamos_modelo.php';
 
 class AjaxAdminPrestamos
 {
@@ -11,8 +22,18 @@ class AjaxAdminPrestamos
     /*===================================================================*/
     public function ajaxListarPrestamoPorUsuario($id_usuario)
     {
-        $listPrestamosporUsuario = AdminPrestamosControlador::ctrListarPrestamoPorUsuario($id_usuario);
-        echo json_encode($listPrestamosporUsuario, JSON_UNESCAPED_UNICODE);
+        try {
+            $listPrestamosporUsuario = AdminPrestamosControlador::ctrListarPrestamoPorUsuario($id_usuario);
+            
+            // Verificar que no haya salida antes del json_encode
+            if (ob_get_length()) ob_clean();
+            
+            echo json_encode($listPrestamosporUsuario, JSON_UNESCAPED_UNICODE);
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(array("error" => $e->getMessage()));
+            exit;
+        }
     }
 
 
@@ -21,8 +42,21 @@ class AjaxAdminPrestamos
     /*===================================================================*/
     public function ajaxDetallePrestamo($nro_prestamo)
     {
-        $detallePrestamo = AdminPrestamosControlador::ctrDetallePrestamo($nro_prestamo);
-        echo json_encode($detallePrestamo, JSON_UNESCAPED_UNICODE);
+        try {
+            error_log("Solicitando detalle para préstamo: " . $nro_prestamo);
+            $detallePrestamo = AdminPrestamosControlador::ctrDetallePrestamo($nro_prestamo);
+            error_log("Resultado del detalle: " . print_r($detallePrestamo, true));
+            
+            // Verificar que no haya salida antes del json_encode
+            if (ob_get_length()) ob_clean();
+            
+            echo json_encode($detallePrestamo, JSON_UNESCAPED_UNICODE);
+            exit;
+        } catch (Exception $e) {
+            error_log("Error en ajaxDetallePrestamo: " . $e->getMessage());
+            echo json_encode(array("error" => $e->getMessage()));
+            exit;
+        }
     }
 
 
@@ -32,8 +66,18 @@ class AjaxAdminPrestamos
     /*===================================================================*/
     public function ajaxPagarCuota()
     {
-        $PagarCuota = AdminPrestamosControlador::ctrPagarCuota($this->nro_prestamo, $this->pdetalle_nro_cuota);
-        echo json_encode($PagarCuota);
+        try {
+            $PagarCuota = AdminPrestamosControlador::ctrPagarCuota($this->nro_prestamo, $this->pdetalle_nro_cuota);
+            
+            // Verificar que no haya salida antes del json_encode
+            if (ob_get_length()) ob_clean();
+            
+            echo json_encode($PagarCuota);
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(array("error" => $e->getMessage()));
+            exit;
+        }
     }
 
 
@@ -41,8 +85,18 @@ class AjaxAdminPrestamos
     //OBTENER CUOTAS PAGADAS
     /*===================================================================*/
     public function ajaxObtenerCuotasPagadas($nro_prestamo){
-        $CuotasPagadas = AdminPrestamosControlador::ctrObtenerCuotasPagadas($nro_prestamo);
-        echo json_encode($CuotasPagadas, JSON_UNESCAPED_UNICODE);
+        try {
+            $CuotasPagadas = AdminPrestamosControlador::ctrObtenerCuotasPagadas($nro_prestamo);
+            
+            // Verificar que no haya salida antes del json_encode
+            if (ob_get_length()) ob_clean();
+            
+            echo json_encode($CuotasPagadas, JSON_UNESCAPED_UNICODE);
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(array("error" => $e->getMessage()));
+            exit;
+        }
     }
 
 
@@ -51,9 +105,18 @@ class AjaxAdminPrestamos
      /*===================================================================*/
      public function ajaxLiquidarPrestamo($nro_prestamo, $pdetalle_nro_cuota)
      {   
-         $LiquidarPrestamo = AdminPrestamosControlador::ctrLiquidarPrestamo($nro_prestamo, $pdetalle_nro_cuota);
-         echo json_encode($LiquidarPrestamo);
-         //var_dump($LiquidarPrestamo);
+         try {
+             $LiquidarPrestamo = AdminPrestamosControlador::ctrLiquidarPrestamo($nro_prestamo, $pdetalle_nro_cuota);
+             
+             // Verificar que no haya salida antes del json_encode
+             if (ob_get_length()) ob_clean();
+             
+             echo json_encode($LiquidarPrestamo);
+             exit;
+         } catch (Exception $e) {
+             echo json_encode(array("error" => $e->getMessage()));
+             exit;
+         }
      }
 
      /*===================================================================*/
@@ -61,18 +124,66 @@ class AjaxAdminPrestamos
      /*===================================================================*/
      public function ajaxRegistrarAbono()
      {
-         $RegistrarAbono = AdminPrestamosControlador::ctrRegistrarAbono(
-             $this->nro_prestamo,
-             $this->pdetalle_nro_cuota,
-             $this->monto_a_abonar,
-             $this->tipo_abono
-         );
-         echo json_encode($RegistrarAbono);
+         try {
+             $RegistrarAbono = AdminPrestamosControlador::ctrRegistrarAbono(
+                 $this->nro_prestamo,
+                 $this->pdetalle_nro_cuota,
+                 $this->monto_a_abonar,
+                 $this->tipo_abono
+             );
+             
+             // Verificar que no haya salida antes del json_encode
+             if (ob_get_length()) ob_clean();
+             
+             echo json_encode($RegistrarAbono);
+             exit;
+         } catch (Exception $e) {
+             echo json_encode(array("error" => $e->getMessage()));
+             exit;
+         }
+     }
+
+     /*===================================================================*/
+     // REIMPRIMIR CONTRATO (ADMIN)
+     /*===================================================================*/
+     public function ajaxReimprimirContratoAdmin($id_prestamo)
+     {
+         try {
+             $ReimprimirContrato = AdminPrestamosControlador::ctrReimprimirContratoAdmin($id_prestamo);
+             
+             // Verificar que no haya salida antes del json_encode
+             if (ob_get_length()) ob_clean();
+             
+             echo json_encode($ReimprimirContrato);
+             exit;
+         } catch (Exception $e) {
+             echo json_encode(array("error" => $e->getMessage()));
+             exit;
+         }
+     }
+
+     /*===================================================================*/
+     // ENVIAR TABLA DE PAGOS POR CORREO
+     /*===================================================================*/
+     public function ajaxEnviarTablaCorreo($nro_prestamo, $cliente_nombres)
+     {
+         try {
+             $EnviarTablaCorreo = AdminPrestamosControlador::ctrEnviarTablaCorreo($nro_prestamo, $cliente_nombres);
+             
+             // Verificar que no haya salida antes del json_encode
+             if (ob_get_length()) ob_clean();
+             
+             echo json_encode($EnviarTablaCorreo);
+             exit;
+         } catch (Exception $e) {
+             echo json_encode(array("error" => $e->getMessage()));
+             exit;
+         }
      }
 }
 
-
-
+// Iniciar buffer de salida para capturar cualquier echo no deseado
+ob_start();
 
 if (isset($_POST["accion"]) && $_POST["accion"] == 1) {             //LISTAR PRESTAMOS POR ID DEL USUARIO
     $listPrestamosporUsuario = new AjaxAdminPrestamos();
@@ -109,4 +220,12 @@ if (isset($_POST["accion"]) && $_POST["accion"] == 1) {             //LISTAR PRE
     $RegistrarAbono->monto_a_abonar = $_POST["monto_a_abonar"];
     $RegistrarAbono->tipo_abono = $_POST["tipo_abono"] ?? 'normal';
     $RegistrarAbono->ajaxRegistrarAbono();
+
+} else if (isset($_POST["accion"]) && $_POST["accion"] == 7) { // REIMPRIMIR CONTRATO (ADMIN)
+    $ReimprimirContrato = new AjaxAdminPrestamos();
+    $ReimprimirContrato->ajaxReimprimirContratoAdmin($_POST["id_prestamo"]);
+
+} else if (isset($_POST["accion"]) && $_POST["accion"] == 8) { // ENVIAR TABLA DE PAGOS POR CORREO
+    $EnviarTablaCorreo = new AjaxAdminPrestamos();
+    $EnviarTablaCorreo->ajaxEnviarTablaCorreo($_POST["nro_prestamo"], $_POST["cliente_nombres"]);
 }

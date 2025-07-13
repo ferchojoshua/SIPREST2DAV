@@ -1,4 +1,8 @@
 <?php
+// Habilitar la visualización de todos los errores de PHP para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once __DIR__ . '/vendor/autoload.php';
 require '../conexion_reportes/r_conexion.php';
 require 'numeroletras/CifrasEnLetras.php';
@@ -28,6 +32,11 @@ WHERE pc.nro_prestamo = '$codigo'";
 
 $resultado = $mysqli->query($query);
 
+// Verificar si la consulta falló
+if ($resultado === false) {
+    die("Error en la consulta SQL: " . $mysqli->error);
+}
+
 if ($row1 = $resultado->fetch_assoc()) {
     $montoEnLetras = $v->convertirEurosEnLetras($row1['pres_monto_total']);
 
@@ -49,62 +58,62 @@ if ($row1 = $resultado->fetch_assoc()) {
             .header-empresa {
                 text-align: center;
                 border-bottom: 3px solid #2c3e50;
-                padding-bottom: 20px;
-                margin-bottom: 30px;
+                padding-bottom: 15px; /* Reducido de 20px */
+                margin-bottom: 25px; /* Reducido de 30px */
             }
             
             .logo-empresa {
-                width: 100px;
+                width: 90px; /* Ligeramente más pequeño */
                 height: auto;
-                margin-bottom: 15px;
+                margin-bottom: 10px; /* Ajustado */
             }
             
             .razon-social {
-                font-size: 24px;
+                font-size: 22px; /* Ligeramente más pequeño */
                 font-weight: bold;
                 color: #2c3e50;
-                margin: 10px 0;
+                margin: 8px 0;
             }
             
             .info-empresa {
-                font-size: 14px;
+                font-size: 13px; /* Ligeramente más pequeño */
                 color: #7f8c8d;
-                margin: 5px 0;
+                margin: 4px 0;
             }
             
             .titulo-documento {
-                font-size: 20px;
+                font-size: 18px; /* Ligeramente más pequeño */
                 font-weight: bold;
                 text-align: center;
                 color: #2c3e50;
-                margin: 30px 0;
-                padding: 15px;
+                margin: 25px 0; /* Ajustado */
+                padding: 12px; /* Ajustado */
                 background-color: #ecf0f1;
-                border-radius: 8px;
-                border-left: 5px solid #3498db;
+                border-radius: 6px; /* Ligeramente más pequeño */
+                border-left: 4px solid #3498db;
             }
             
             .info-prestamo {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 30px;
-                margin: 30px 0;
-                padding: 20px;
+                gap: 20px; /* Reducido de 30px */
+                margin: 25px 0; /* Ajustado */
+                padding: 15px; /* Ajustado */
                 background-color: #f8f9fa;
                 border-radius: 8px;
             }
             
             .info-item {
-                margin-bottom: 12px;
-                padding: 8px 0;
-                border-bottom: 1px solid #e9ecef;
+                margin-bottom: 10px; /* Ajustado */
+                padding: 6px 0;
+                border-bottom: 1px dashed #ced4da; /* Cambio a línea punteada */
             }
             
             .info-label {
                 font-weight: bold;
                 color: #2c3e50;
                 display: inline-block;
-                width: 140px;
+                width: 130px; /* Ligeramente más estrecho */
             }
             
             .info-valor {
@@ -113,23 +122,23 @@ if ($row1 = $resultado->fetch_assoc()) {
             
             .monto-letras {
                 background-color: #e8f5e8;
-                padding: 15px;
+                padding: 12px; /* Ajustado */
                 border-radius: 8px;
-                margin: 20px 0;
+                margin: 18px 0;
                 border-left: 4px solid #27ae60;
             }
             
             .tabla-cuotas {
                 width: 100%;
                 border-collapse: collapse;
-                margin: 30px 0;
+                margin: 25px 0; /* Ajustado */
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
             
             .tabla-cuotas th,
             .tabla-cuotas td {
-                border: 1px solid #bdc3c7;
-                padding: 12px 8px;
+                border: 1px solid #dcdcdc; /* Color de borde más suave */
+                padding: 10px 8px; /* Ajustado */
                 text-align: left;
             }
             
@@ -159,29 +168,29 @@ if ($row1 = $resultado->fetch_assoc()) {
             }
             
             .seccion-firmas {
-                margin-top: 60px;
+                margin-top: 50px; /* Ajustado */
                 text-align: center;
             }
             
             .firma-linea {
-                border-top: 2px solid #2c3e50;
-                width: 250px;
-                margin: 40px auto 15px;
+                border-top: 1px solid #7f8c8d; /* Borde más suave */
+                width: 200px; /* Más estrecho */
+                margin: 30px auto 10px;
             }
             
             .firma-texto {
-                font-size: 14px;
+                font-size: 13px; /* Ligeramente más pequeño */
                 color: #7f8c8d;
                 font-weight: bold;
             }
             
             .pie-documento {
-                margin-top: 40px;
+                margin-top: 30px; /* Ajustado */
                 text-align: center;
-                font-size: 10px;
+                font-size: 9px; /* Ligeramente más pequeño */
                 color: #95a5a6;
                 border-top: 1px solid #ecf0f1;
-                padding-top: 15px;
+                padding-top: 12px; /* Ajustado */
             }
             
             .text-right { text-align: right; }
@@ -320,9 +329,11 @@ if ($row1 = $resultado->fetch_assoc()) {
     </html>';
 
     $mpdf->WriteHTML($html);
-    $mpdf->Output();
+    $mpdf->Output('historial_prestamo.pdf', 'I'); // Enviar el PDF al navegador
 
 } else {
-    echo "No se encontró el préstamo.";
+    echo "Error: No se encontró el préstamo con código: " . htmlspecialchars($codigo);
 }
+
+$mysqli->close();
 ?>

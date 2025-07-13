@@ -77,6 +77,7 @@ $menuUsuario = UsuarioControlador::ctrObtenerMenuUsuario($_SESSION["usuario"]->i
                     </li>
                 <?php endforeach; ?>
 
+
                 <!-- <li class="nav-item">
                     <a href="http://localhost/siprest?cerrar_sesion=1" style="cursor:pointer;" class="nav-link">
                         <i class="nav-icon fas fa-sign-out-alt"></i>

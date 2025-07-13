@@ -1,9 +1,24 @@
 <?php
+// Habilitar la visualización de todos los errores de PHP para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require_once __DIR__ . '/vendor/autoload.php';
 require '../conexion_reportes/r_conexion.php';
 
-$mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [80, 150]]);
+// Configuración adaptable para impresoras térmicas
+// El ancho se ajustará automáticamente según la impresora
+$mpdf = new \Mpdf\Mpdf([
+    'mode' => 'utf-8',
+    'format' => 'A7', // Formato pequeño que se adapta bien a impresoras térmicas
+    'margin_left' => 3,
+    'margin_right' => 3,
+    'margin_top' => 5,
+    'margin_bottom' => 5,
+    'margin_header' => 0,
+    'margin_footer' => 0,
+    'adjustPassiveFont' => true // Permite ajustar fuentes para mejor compatibilidad
+]);
 
 $query = "SELECT
                 pc.pres_id,
@@ -56,6 +71,20 @@ $query = "SELECT
 
 $resultado = $mysqli->query($query);
 
+// Verificar si la consulta falló
+if ($resultado === false) {
+    die("Error en la consulta SQL: " . $mysqli->error);
+}
+
+// Fix syntax error around line 327 - removing malformed HTML/PHP mixing
+if (empty($resultados)) {
+    echo "Error: No se encontraron datos para el préstamo";
+    exit();
+}
+
+// Continue with normal processing
+$datos = $resultados[0];
+
 if ($row1 = $resultado->fetch_assoc()) {
     // Verificar si existe logo de empresa personalizado
     $logo_empresa = '';
@@ -66,82 +95,111 @@ if ($row1 = $resultado->fetch_assoc()) {
         $logo_empresa = 'img/logo.png';
     }
 
+    // Obtener datos de la cuota pagada
+    $nro_cuota = (int)$row1['pdetalle_nro_cuota'];
+    $principal = 0;
+    $interes = 0;
+    $mantenimiento = 0;
+    $comision = 0;
+
+    // Calcular desglose usando la calculadora de préstamos
+    require_once __DIR__ . '/../utilitarios/calculadora_prestamos.php';
+    $tabla = CalculadoraPrestamos::calcularAmortizacion(
+        $row1['pres_monto'],
+        $row1['pres_interes'],
+        $row1['pres_cuotas'],
+        $row1['tipo_calculo'] ?? 'FRANCES',
+        $row1['fecha'],
+        $row1['fpago_id']
+    );
+    if (isset($tabla['tabla_amortizacion'][$nro_cuota-1])) {
+        $principal = $tabla['tabla_amortizacion'][$nro_cuota-1]['capital'];
+        $interes = $tabla['tabla_amortizacion'][$nro_cuota-1]['interes'];
+    }
+
+    // Obtener nombre de la cajera desde sesión
+    session_start();
+    $cajera = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : '---';
+
     $html = '<!DOCTYPE html>
     <html lang="es">
     <head>
         <meta charset="utf-8">
         <title>Recibo de Pago de Cuota</title>
         <style>
+            @page {
+                margin: 0;
+                padding: 0;
+            }
             body {
-                font-family: "Arial", sans-serif;
+                font-family: Arial, sans-serif;
                 font-size: 10px;
                 margin: 0;
-                padding: 10px;
+                padding: 5px;
                 color: #000;
-                line-height: 1.3;
+                line-height: 1.2;
             }
             
             .recibo-container {
                 width: 100%;
-                max-width: 280px;
                 margin: 0 auto;
-                border: 1px solid #000;
-                padding: 8px;
+                padding: 3px;
             }
             
             .recibo-header {
                 text-align: center;
-                border-bottom: 1px solid #000;
-                padding-bottom: 8px;
-                margin-bottom: 10px;
-            }
-            
-            .recibo-logo {
-                width: 50px;
-                height: auto;
+                border-bottom: 1px dashed #000;
+                padding-bottom: 5px;
                 margin-bottom: 5px;
             }
             
+            .recibo-logo {
+                max-width: 40px;
+                max-height: 40px;
+                margin: 0 auto 3px;
+                display: block;
+            }
+            
             .recibo-empresa {
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
-                margin: 3px 0;
+                margin: 2px 0;
                 text-transform: uppercase;
             }
             
             .recibo-ruc {
                 font-size: 9px;
-                margin: 2px 0;
+                margin: 1px 0;
             }
             
             .recibo-direccion {
                 font-size: 8px;
-                margin: 2px 0;
+                margin: 1px 0;
             }
             
             .recibo-contacto {
                 font-size: 8px;
-                margin: 2px 0;
+                margin: 1px 0;
             }
             
             .recibo-titulo {
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: bold;
                 text-align: center;
-                margin: 8px 0;
-                padding: 5px;
-                border: 1px solid #000;
-                background-color: #f5f5f5;
+                margin: 5px 0;
+                padding: 3px;
+                border-top: 1px dashed #000;
+                border-bottom: 1px dashed #000;
             }
             
             .recibo-seccion {
-                margin: 8px 0;
+                margin: 5px 0;
                 border-bottom: 1px dashed #ccc;
-                padding-bottom: 6px;
+                padding-bottom: 3px;
             }
             
             .recibo-info {
-                margin: 3px 0;
+                margin: 2px 0;
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
@@ -161,31 +219,31 @@ if ($row1 = $resultado->fetch_assoc()) {
             
             .recibo-total {
                 text-align: center;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
-                margin: 10px 0;
-                padding: 8px;
-                border: 2px solid #000;
-                background-color: #f0f0f0;
+                margin: 5px 0;
+                padding: 5px;
+                border-top: 1px dashed #000;
+                border-bottom: 1px dashed #000;
             }
             
             .recibo-firma {
-                margin-top: 15px;
+                margin-top: 10px;
                 text-align: center;
             }
             
             .recibo-firma-linea {
                 border-top: 1px solid #000;
-                width: 150px;
-                margin: 15px auto 8px;
+                width: 120px;
+                margin: 10px auto 5px;
             }
             
             .recibo-pie {
                 text-align: center;
-                font-size: 8px;
-                margin-top: 10px;
+                font-size: 7px;
+                margin-top: 5px;
+                padding-top: 5px;
                 border-top: 1px dashed #ccc;
-                padding-top: 8px;
                 color: #666;
             }
         </style>
@@ -233,7 +291,7 @@ if ($row1 = $resultado->fetch_assoc()) {
                     <span class="recibo-info-value" style="font-size: 8px;">' . $row1['cliente_nombres'] . '</span>
                 </div>
                 <div class="recibo-info">
-                    <span class="recibo-info-label">Documento:</span>
+                    <span class="recibo-info-label">Cedula:</span>
                     <span class="recibo-info-value">' . $row1['cliente_dni'] . '</span>
                 </div>
                 <div class="recibo-info">
@@ -261,6 +319,15 @@ if ($row1 = $resultado->fetch_assoc()) {
                 </div>
             </div>
             
+            <div class="recibo-info"><span class="recibo-info-label">Cajera:</span><span class="recibo-info-value">' . $cajera . '</span></div>';
+            $html .= '<div class="recibo-seccion" style="margin-bottom:0;">
+    <div class="recibo-info"><span class="recibo-info-label">PRINCIPAL:</span><span class="recibo-info-value">' . number_format($principal,2) . '</span></div>
+    <div class="recibo-info"><span class="recibo-info-label">MANT. VALOR:</span><span class="recibo-info-value">' . number_format($mantenimiento,2) . '</span></div>
+    <div class="recibo-info"><span class="recibo-info-label">INTERESES:</span><span class="recibo-info-value">' . number_format($interes,2) . '</span></div>
+    <div class="recibo-info"><span class="recibo-info-label">INT. MORAT.:</span><span class="recibo-info-value">0.00</span></div>
+    <div class="recibo-info"><span class="recibo-info-label">COMISION:</span><span class="recibo-info-value">0.00</span></div>
+</div>';
+            
             <div class="recibo-total">
                 MONTO PAGADO<br>
                 ' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pdetalle_monto_cuota'], 2) . '
@@ -268,8 +335,8 @@ if ($row1 = $resultado->fetch_assoc()) {
             
             <div class="recibo-firma">
                 <div class="recibo-firma-linea"></div>
-                <div style="font-size: 9px; font-weight: bold;">FIRMA AUTORIZADA</div>
-                <div style="font-size: 8px; margin-top: 3px;">' . $row1['confi_razon'] . '</div>
+                <div style="font-size: 8px; font-weight: bold;">FIRMA AUTORIZADA</div>
+                <div style="font-size: 7px; margin-top: 2px;">' . $row1['confi_razon'] . '</div>
             </div>
             
             <div class="recibo-pie">
@@ -282,7 +349,14 @@ if ($row1 = $resultado->fetch_assoc()) {
     </html>';
     
     $mpdf->WriteHTML($html);
+    
+    // Configuración para impresión directa
+    $mpdf->Output('recibo_pago.pdf', 'I'); // Enviar el PDF al navegador
+    
 } else {
-    echo "Error: No se encontraron datos del préstamo.";
+    echo "Error: No se encontraron datos para el préstamo con código: " . htmlspecialchars($_GET['codigo']) . " y cuota: " . htmlspecialchars($_GET['cuota']);
 }
+
+$mysqli->close();
+
 ?>

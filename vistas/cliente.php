@@ -22,7 +22,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Listado de Clientes</h3>
                           <button class="btn btn-info btn-sm float-right" id="abrirmodal_cliente"><i class="fas fa-plus"></i>
                               Nuevo</button>
@@ -30,7 +30,7 @@
                       <div class=" card-body">
                           <div class="table-responsive">
                               <table id="tbl_clientes" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-info text-left">
+                                  <thead class="bg-gradient-info text-white">
                                       <tr>
                                           <th>Id</th>
                                           <th>Nombre</th>
@@ -264,7 +264,7 @@
   <div class="modal fade" id="modal_registro_referencia" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg" role="document">
           <div class="modal-content">
-              <div class="modal-header bg-success py-1 align-items-center">
+              <div class="modal-header bg-gray py-1 align-items-center">
                   <h5 class="modal-title" id="titulo_modal_referencia">Registrar Referencias</h5>
                   <button type="button" class="close text-white border-0 fs-5" id="btncerrarmodal_referencia" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
@@ -680,7 +680,7 @@
                                   processData: false,
                                   dataType: 'json',
                                   success: function(respuesta) {
-                                      console.log(respuesta);
+                                      console.log("Respuesta del servidor:", respuesta);
 
                                       if (respuesta == "ok") {
 
@@ -715,12 +715,33 @@
                                           $(".needs-validation").removeClass("was-validated");
 
                                       } else {
+                                          // Mostrar más información del error
+                                          var mensajeError = 'El Cliente no se pudo ' + (accion == 2 ? 'registrar' : 'actualizar');
+                                          
+                                          if (respuesta && respuesta.error) {
+                                              mensajeError += ': ' + respuesta.error;
+                                          } else if (Array.isArray(respuesta)) {
+                                              mensajeError += ': ' + respuesta.join(', ');
+                                          } else if (typeof respuesta === 'object') {
+                                              mensajeError += ': ' + JSON.stringify(respuesta);
+                                          }
+
                                           Toast.fire({
                                               icon: 'error',
-                                              title: 'El Cliente no se pudo registrar'
+                                              title: mensajeError
                                           });
                                       }
 
+                                  },
+                                  error: function(xhr, status, error) {
+                                      console.log("Error AJAX:", error);
+                                      console.log("Status:", status);
+                                      console.log("Response:", xhr.responseText);
+                                      
+                                      Toast.fire({
+                                          icon: 'error',
+                                          title: 'Error de comunicación con el servidor: ' + error
+                                      });
                                   }
                               });
                           }

@@ -71,34 +71,46 @@ class PrestamoModelo
     /*===================================================================*/
     static public function mdlRegistrarPrestamoDetalle($nro_prestamo, $array_cuota, $array_monto, $array_fecha)
     {
-        //print_r($nro_boleta);
         try {
-            //INSERTAMOS EL DETALLE
-            $stmt = Conexion::conectar()->prepare("INSERT INTO prestamo_detalle(nro_prestamo, pdetalle_nro_cuota, pdetalle_monto_cuota, pdetalle_fecha, pdetalle_estado_cuota, pdetalle_liquidar, pdetalle_caja, pdetalle_aprobacion, pdetalle_saldo_cuota) 
-                                                        VALUES(:nro_prestamo,:pdetalle_nro_cuota,:pdetalle_monto_cuota,:pdetalle_fecha, 'pendiente', '0', 'VIGENTE', 'pendiente', :pdetalle_saldo_cuota) ");
+            // Convertir las cadenas de arrays a arrays PHP si no lo están ya
+            $cuotas = explode(",", $array_cuota);
+            $montos = explode(",", $array_monto);
+            $fechas = explode(",", $array_fecha);
 
-            $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
-            $stmt->bindParam(":pdetalle_nro_cuota", $array_cuota, PDO::PARAM_INT);
-            $stmt->bindParam(":pdetalle_monto_cuota", $array_monto, PDO::PARAM_STR);
-            $stmt->bindParam(":pdetalle_fecha", $array_fecha, PDO::PARAM_STR);
-            $stmt->bindParam(":pdetalle_saldo_cuota", $array_monto, PDO::PARAM_STR); // Inicializar con el monto de la cuota
+            $conn = Conexion::conectar();
+            $conn->beginTransaction();
 
+            for ($i = 0; $i < count($cuotas); $i++) {
+                $pdetalle_nro_cuota = trim($cuotas[$i]);
+                $pdetalle_monto_cuota = trim($montos[$i]);
+                $pdetalle_fecha_cuota = trim($fechas[$i]);
 
+                $stmt = $conn->prepare("INSERT INTO prestamo_detalle(nro_prestamo, pdetalle_nro_cuota, pdetalle_monto_cuota, pdetalle_fecha, pdetalle_estado_cuota, pdetalle_liquidar, pdetalle_caja, pdetalle_aprobacion, pdetalle_saldo_cuota) 
+                                                    VALUES(:nro_prestamo,:pdetalle_nro_cuota,:pdetalle_monto_cuota,:pdetalle_fecha, 'pendiente', '0', 'VIGENTE', 'pendiente', :pdetalle_saldo_cuota)");
 
-            if ($stmt->execute()) {
+                $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+                $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
+                $stmt->bindParam(":pdetalle_monto_cuota", $pdetalle_monto_cuota, PDO::PARAM_STR);
+                $stmt->bindParam(":pdetalle_fecha", $pdetalle_fecha_cuota, PDO::PARAM_STR);
+                $stmt->bindParam(":pdetalle_saldo_cuota", $pdetalle_monto_cuota, PDO::PARAM_STR);
 
-
-                $resultado = "ok";
-            } else {
-                $resultado = "error al guardar";
+                if (!$stmt->execute()) {
+                    $conn->rollBack();
+                    return "error al guardar detalle";
+                }
             }
+
+            $conn->commit();
+            $resultado = "ok";
+
         } catch (Exception $e) {
-            $resultado = 'Excepcion capturada: ' .  $e->getMessage() . "\n";
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $resultado = 'Excepción capturada: ' .  $e->getMessage() . "\n";
         }
 
         return $resultado;
-        //var_dump($resultado, $array_fecha);
-        $stmt = null;
     }
 
 

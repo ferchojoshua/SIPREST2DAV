@@ -766,54 +766,64 @@
                       'nro_prestamo': nro_prestamo
                   }, //LISTAR 
               },
+              columns: [
+                  { data: 'pdetalle_id' },          // 0
+                  { data: 'nro_prestamo' },         // 1
+                  { data: 'pdetalle_nro_cuota' },   // 2 - Cuota
+                  { data: 'pdetalle_fecha' },       // 3 - Fecha
+                  { data: 'pdetalle_monto_cuota' }, // 4 - Monto
+                  { data: 'pdetalle_saldo_cuota' }, // 5 - Saldo Pendiente
+                  { data: 'pdetalle_estado_cuota' },// 6 - Estado
+                  { data: null }                    // 7 - Opciones
+              ],
               columnDefs: [{
-                      targets: 0,
+                      targets: [0, 1], // Ocultar pdetalle_id y nro_prestamo
                       visible: false
 
                   }, {
-                      targets: 4, // Columna de Monto
+                      targets: 4, // Columna de Monto (indice 4 -> pdetalle_monto_cuota)
                       render: function(data, type, row) {
-                          return row[6] + ' ' + data; // Combina el símbolo de la moneda (rowData[6]) con el monto (data)
+                          // Acceder a moneda_simbolo directamente de la fila (objeto row)
+                          return row.moneda_simbolo + ' ' + data; 
                       }
                   }, {
-                      targets: 5,
+                      targets: 6, // Columna de Estado (indice 6 -> pdetalle_estado_cuota)
                       //sortable: false,
                       createdCell: function(td, cellData, rowData, row, col) {
-
-                          if (rowData[5] == 'pagada') {
+                          if (rowData.pdetalle_estado_cuota == 'pagada') {
                               $(td).html("<span class='badge badge-success'>pagada</span>")
                           } else {
                               $(td).html("<span class='badge badge-danger'>pendiente</span>")
                           }
 
                       }
+                  },
+                  { 
+                      targets: 7, // Columna de Opciones (indice 7 -> data: null)
+                      sortable: false, 
+                      render: function(data, type, row) {
+                          // Usar row.pdetalle_estado_cuota para verificar el estado
+                          if (row.pdetalle_estado_cuota == 'pagada') {
+                              return "<center>" +
+                                  "<span class='text-secondary px-1 disabled'  data-bs-toggle='tooltip' data-bs-placement='top' > " +
+                                  "<i class='fas fa-hand-holding-usd fs-6'></i> " +
+                                  "</span> " +
+                                  "<span class='btnImprimirRecibo text-primary px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Imprimir Ticket'> " +
+                                  "<i class='far fa-file-alt fs-6'> </i> " +
+                                  "</span>" +
+                                  "</center>"
+                          } else {
+                              return "<center>" +
+                                  "<span class='btnPagarCuota text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Pagar Cuota'> " +
+                                  "<i class='fas fa-hand-holding-usd fs-6'></i> " +
+                                  "</span> " +
+                                  "<span class=' text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' > " +
+                                  "<i class='far fa-file-alt fs-6'> </i> " +
+                                  "</span>" +
+                                  "</center>"
+                          }
+                      }
                   }
-                  //   {
-                  //       targets: 6, //columna 2
-                  //       sortable: false, //no ordene
-                  //       render: function(td, cellData, rowData, row, col) {
-
-                  //           if (rowData[5] == 'pagada') {
-                  //               return "<center>" +
-                  //                   "<span class='text-secondary px-1 disabled'  data-bs-toggle='tooltip' data-bs-placement='top' > " +
-                  //                   "<i class='fas fa-hand-holding-usd fs-6'></i> " +
-                  //                   "</span> " +
-                  //                   "<span class='btnImprimirRecibo text-primary px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Imprimir Ticket'> " +
-                  //                   "<i class='far fa-file-alt fs-6'> </i> " +
-                  //                   "</span>" +
-                  //                   "</center>"
-                  //           } else {
-                  //               return "<center>" +
-                  //                   "<span class='btnPagarCuta text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Pagar Cuota'> " +
-                  //                   "<i class='fas fa-hand-holding-usd fs-6'></i> " +
-                  //                   "</span> " +
-                  //                   "<span class=' text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' > " +
-                  //                   "<i class='far fa-file-alt fs-6'> </i> " +
-                  //                   "</span>" +
-                  //                   "</center>"
-                  //           }
-                  //       }
-                  //   }
               ],
 
               "language": idioma_espanol,

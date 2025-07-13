@@ -14,8 +14,8 @@ class Email extends PHPMailer{
     
 
     //TODO: variable que contiene el correo del destinatario
-    protected $gCorreo = 'gmasiasdeveloper@gmail.com';
-    protected $gContrasena = 'sasiavmahljllpww';
+    protected $gCorreo = 'siprestaitsolutions@gmail.com';
+    protected $gContrasena = 'Sipresta2025';
     
      public function ctrCorreo ($caja_id){
 

@@ -2,7 +2,6 @@
 
 session_start();
 
-
 if (isset($_GET["cerrar_sesion"]) && $_GET["cerrar_sesion"] == 1) {
 
     session_destroy();
@@ -136,12 +135,30 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
     <script type="text/javascript" src="vistas/assets/plugins/select2/js/select2.full.min.js"></script>
 
-
+    <?php if (isset($_SESSION["usuario"]) && isset($_SESSION["usuario"]->id_usuario)) : ?>
+        <script>
+            const ID_USUARIO_GLOBAL = <?php echo json_encode($_SESSION["usuario"]->id_usuario); ?>;
+            console.log("ID_USUARIO_GLOBAL: ", ID_USUARIO_GLOBAL);
+        </script>
+    <?php endif; ?>
 </head>
 <!-- usuario campo de la base -->
-<?php if (isset($_SESSION["usuario"])) :  ?>
+<?php 
+    // CHEQUEO DE ROBUSTEZ: SI LA SESIÓN NO ES UN OBJETO, LA DESTRUIMOS PARA EVITAR ERRORES
+    if(isset($_SESSION["usuario"]) && !is_object($_SESSION["usuario"])){
+        session_destroy();
+        echo '
+            <script>
+                window.location = "http://localhost/siprest";
+            </script>        
+        ';
+        exit(); // DETENEMOS LA EJECUCIÓN
+    }
 
-    <body class="hold-transition sidebar-mini">
+    if (isset($_SESSION["usuario"])) :  
+?>
+
+    <body class="hold-transition sidebar-mini layout-fixed">
         <div class="wrapper">
 
             <?php

@@ -22,7 +22,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Configuracion de la empresa</h3>
 
                       </div>

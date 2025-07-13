@@ -34,6 +34,13 @@
                 <span class="badge badge-danger navbar-badge" id="lbl_contador">1</span>
             </a>
             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                <div class="dropdown-header">
+                    <span>Notificaciones</span>
+                    <button class="btn btn-sm btn-outline-danger float-right" onclick="cerrarTodasNotificaciones()" style="font-size: 10px; padding: 2px 6px;">
+                        <i class="fas fa-times"></i> Cerrar todas
+                    </button>
+                </div>
+                <div class="dropdown-divider"></div>
                 <div id="div_cuerpo">
 
                 </div>
@@ -103,12 +110,15 @@ $(document).ready(function() {
                 let llenardata = "";
                 if (respuesta.length > 0) {
                     for (let i = 0; i < respuesta.length; i++) {
-                        llenardata += '<a href="#" class="dropdown-item">' +
+                        llenardata += '<div class="notificacion-item" data-prestamo="' + respuesta[i][0] + '">' +
+                            '<a href="#" class="dropdown-item">' +
                             '<div class="media">' +
                             '<div class="media-body">' +
                             '<h4 class="dropdown-item-title">' +
                             '<b>Nro Prestamo: </b>' + respuesta[i][0] + '' +
-                            '<span class="float-right text-sm text-warning"><i class="fas fa-folder-minus"></i></i></span>' +
+                            '<span class="float-right text-sm text-danger cerrar-notificacion" style="cursor:pointer;" onclick="cerrarNotificacion(\'' + respuesta[i][0] + '\', this)" title="Cerrar notificación">' +
+                            '<i class="fas fa-times"></i>' +
+                            '</span>' +
                             '</h4>' +
                             '<p class="text-sm"><b>Cliente: </b>' + respuesta[i][2] + ' </p>' +
                             '<p class="text-sm"><b>Nro Cuota: ' + respuesta[i][3] + '</b> <b>| Monto: ' + respuesta[i][5] + '</b></p>' +
@@ -117,18 +127,72 @@ $(document).ready(function() {
                             '</div>' +
 
                             '</a>' +
-                            '<div class="dropdown-divider"></div>';
+                            '<div class="dropdown-divider"></div>' +
+                            '</div>';
                     }
                     document.getElementById('div_cuerpo').innerHTML = llenardata;
 
                 } else {
-                    llenardata += "<option value=''>No se encontraron datos</option>";
+                    llenardata += "<div class='dropdown-item text-center text-muted'>No se encontraron notificaciones</div>";
                     document.getElementById('div_cuerpo').innerHTML = llenardata;
-                    //  document.getElementById('select_rol_editar').innerHTML = llenardata;
-
+                    document.getElementById('lbl_contador').innerHTML = '0';
                 }
 
             }
         });
+    }
+
+    // Función para cerrar una notificación individual
+    function cerrarNotificacion(nroPrestamo, elemento) {
+        event.stopPropagation(); // Evitar que se cierre el dropdown
+        
+        // Buscar el elemento padre con clase 'notificacion-item'
+        var notificacionItem = elemento.closest('.notificacion-item');
+        
+        // Animación de cierre
+        notificacionItem.style.transition = 'opacity 0.3s ease';
+        notificacionItem.style.opacity = '0';
+        
+        setTimeout(function() {
+            notificacionItem.remove();
+            
+            // Actualizar contador
+            var contador = parseInt(document.getElementById('lbl_contador').innerHTML);
+            contador = contador - 1;
+            document.getElementById('lbl_contador').innerHTML = contador;
+            
+            // Si no quedan notificaciones, mostrar mensaje
+            if (contador === 0) {
+                document.getElementById('div_cuerpo').innerHTML = 
+                    "<div class='dropdown-item text-center text-muted'>No se encontraron notificaciones</div>";
+            }
+        }, 300);
+    }
+
+    // Función para cerrar todas las notificaciones
+    function cerrarTodasNotificaciones() {
+        event.stopPropagation(); // Evitar que se cierre el dropdown
+        
+        // Confirmar acción
+        if (confirm('¿Está seguro que desea cerrar todas las notificaciones?')) {
+            // Cerrar todas las notificaciones con animación
+            var notificaciones = document.querySelectorAll('.notificacion-item');
+            
+            notificaciones.forEach(function(notificacion, index) {
+                notificacion.style.transition = 'opacity 0.3s ease';
+                notificacion.style.opacity = '0';
+                
+                setTimeout(function() {
+                    notificacion.remove();
+                }, 300 + (index * 100)); // Escalonar las animaciones
+            });
+            
+            // Actualizar contador y mensaje
+            setTimeout(function() {
+                document.getElementById('lbl_contador').innerHTML = '0';
+                document.getElementById('div_cuerpo').innerHTML = 
+                    "<div class='dropdown-item text-center text-muted'>No se encontraron notificaciones</div>";
+            }, 300 + (notificaciones.length * 100));
+        }
     }
 </script>

@@ -23,7 +23,7 @@
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info ">
-                      <div class="card-header">
+                      <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Registrar Prestamo</h3>
 
                       </div>
@@ -33,7 +33,7 @@
                               <div class="col-md-8">
                                   <div class="card ">
                                       <div class="card-header">
-                                          <h6 class="card-title">INFORMACION DEL CREDITO</h6>
+                                          <h6 class="card-title">SOLICITUD DEL CREDITO</h6>
                                       </div>
                                       <div class=" card-body">
 
@@ -216,25 +216,17 @@
                                                       <input type="text" class="form-control form-control-sm" id="text_total_resultado" readonly>
                                                   </div>
                                               </div>
-                                              <div class="col-12 text-center mt-3">
-                                                  <button type="button" class="btn btn-info" id="btnCalcular">
+                                              <div class="col-12 d-flex justify-content-end mt-3">
+                                                  <button type="button" class="btn btn-info mr-2" id="btnCalcular">
                                                       <i class="fas fa-calculator"></i> CALCULAR
                                                   </button>
                                                   <button type="button" class="btn btn-danger" id="btnLimpiarCampos" hidden>
                                                       <i class="fas fa-broom"></i> LIMPIAR
                                                   </button>
+                                                  <button class="btn btn-success" id="btnRegistrar">
+                                                      <i class="fas fa-save"></i> REGISTRAR
+                                                  </button>
                                               </div>
-                                              <div class="col-md-12">
-                                                  <div class="form-group mb-2">
-                                                      <label for="">&nbsp;</label><br>
-
-                                                      <button class="btn btn-info btn-sm float-right"
-                                                          id="btnRegistrar">Registrar</button>
-                                                  </div>
-                                              </div>
-
-
-
                                         </div>
                                          
                                           <br>
@@ -244,7 +236,7 @@
                                               <div class="table-responsive">
                                                   <table id="tbl_prestamo" class="table-bordered display compact"
                                                       style="width: 100%">
-                                                      <thead class="bg-info">
+                                                      <thead class="bg-gradient-info text-white">
                                                           <tr>
                                                               <th>Nro. C</th>
                                                               <th>Fecha</th>
@@ -260,7 +252,22 @@
 
                                                       </tbody>
                                                   </table>
-
+                                              </div>
+                                              
+                                              <!-- Paginación para la tabla de amortización -->
+                                              <div class="paginacion-container mt-3" style="display: none;">
+                                                  <div class="d-flex justify-content-between align-items-center">
+                                                      <div class="pagination-info">
+                                                          Mostrando <span id="desde">0</span> a <span id="hasta">0</span> de <span id="total">0</span> cuotas
+                                                      </div>
+                                                      <div>
+                                                          <nav aria-label="Navegación de tabla de amortización">
+                                                              <ul class="pagination pagination-sm" id="paginacion-tabla">
+                                                                  <!-- Los enlaces de paginación se generarán dinámicamente -->
+                                                              </ul>
+                                                          </nav>
+                                                      </div>
+                                                  </div>
                                               </div>
                                          </div>
 
@@ -287,7 +294,7 @@
   <!-- MODAL LISTAR CLIENTES-->
   <div class="modal fade" id="modal_listar_cliente" role="dialog" aria-labelledby="exampleModalLabel"
       aria-hidden="true">
-      <div class="modal-dialog " role="document">
+      <div class="modal-dialog modal-xl" role="document">
           <div class="modal-content">
               <div class="modal-header bg-gray py-1 align-items-center">
                   <h6 class="modal-title" id="titulo_modal_categorias">Lista de Clientes</h6>&nbsp;&nbsp;
@@ -301,7 +308,7 @@
               <div class="modal-body">
                   <div class="table-responsive">
                       <table id="tbl_lista_cliente" class="display table-sm nowrap table-striped  w-100 ">
-                          <thead class="bg-info text-left">
+                          <thead class="bg-gradient-info text-white">
                               <tr>
                                   <th>Id</th>
                                   <th>Nombres</th>
@@ -327,20 +334,19 @@
   </div>
   <!-- fin Modal -->
 
-  <!-- MODAL REGISTRAR CLIENTES-->
-  <div class="modal fade" id="modal_registro_cliente" role="dialog" aria-labelledby="exampleModalLabel"
-      aria-hidden="true">
+  <!-- MODAL REGISTRAR CLIENTE-->
+  <div class="modal fade" id="modal_registro_cliente" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog " role="document">
           <div class="modal-content">
               <div class="modal-header bg-gray py-1 align-items-center">
                   <h5 class="modal-title" id="titulo_modal_cliente">Registro de Usuarios</h5>
-                  <button type="button" class="close  text-white border-0 fs-5" id="btncerrarmodal_cliente"
-                      data-bs-dismiss="modal" aria-label="Close">
+                  <button type="button" class="close  text-white border-0 fs-5" id="btncerrarmodal_cliente" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                   </button>
               </div>
               <div class="modal-body">
                   <form class="needs-validation" novalidate>
+                      <!-- FORMULARIO CLIENTE -->
                       <div class="row">
                           <div class="col-lg-12">
                               <div class="form-group mb-2">
@@ -348,8 +354,7 @@
                                       <input type="text" id="id_cliente" hidden>
                                       <span class="small"> Nombres</span><span class="text-danger">*</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_nombres"
-                                      name="text_nombres" placeholder="Nombres" required>
+                                  <input type="text" class=" form-control form-control-sm" id="text_nombres" name="text_nombres" placeholder="Nombres" required>
                                   <div class="invalid-feedback">Debe ingresar un nonbres del cliente</div>
 
                               </div>
@@ -359,8 +364,7 @@
                                   <label for="" class="">
                                       <span class="small"> Documento</span><span class="text-danger">*</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_documento"
-                                      name="text_documento" placeholder="Documento" required>
+                                  <input type="text" class=" form-control form-control-sm" id="text_documento" name="text_documento" placeholder="Documento" required>
                                   <div class="invalid-feedback">Debe ingresar el documento del cliente</div>
 
                               </div>
@@ -371,10 +375,14 @@
                                   <label for="" class="">
                                       <span class="small"> Celular</span><span class="text-danger">*</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_cel" name="text_cel"
-                                      placeholder="Celular / telefono" required>
-                                  <div class="invalid-feedback">Debe ingresar el celular </div>
-
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-success text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_cel" name="text_cel" placeholder="87654321" maxlength="8" pattern="[0-9]{8}" required>
+                                  </div>
+                                  <div class="invalid-feedback">Debe ingresar un celular válido (8 dígitos)</div>
+                                  <small class="text-muted">Formato: 8 dígitos sin espacios ni guiones</small>
                               </div>
                           </div>
 
@@ -383,8 +391,7 @@
                                   <label for="ipclave" class="">
                                       <span class="small"> Direccion</span><span class="text-danger">*</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_direccion"
-                                      name="text_direccion" placeholder="Direccion" required>
+                                  <input type="text" class=" form-control form-control-sm" id="text_direccion" name="text_direccion" placeholder="Direccion" required>
                                   <div class="invalid-feedback">Debe ingresar una direccion</div>
 
                               </div>
@@ -394,13 +401,128 @@
                                   <label for="ipclave" class="">
                                       <span class="small"> Correo</span>
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_correo"
-                                      name="text_correo" placeholder="Direccion">
+                                  <input type="text" class=" form-control form-control-sm" id="text_correo" name="text_correo" placeholder="Correo">
 
 
                               </div>
                           </div>
 
+                      </div>
+                    
+                      <!-- FORMULARIO DATOS LABORALES -->
+                      <div class="row">
+                          <div class="col-lg-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Empresa Laboral</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_empresa_laboral" name="text_empresa_laboral" placeholder="Empresa Laboral">
+                              </div>
+                          </div>
+                          <div class="col-lg-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Cargo</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_cargo_laboral" name="text_cargo_laboral" placeholder="Cargo">
+                              </div>
+                          </div>
+                           <div class="col-lg-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Telefono Laboral</span>
+                                  </label>
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-info text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_tel_laboral" name="text_tel_laboral" placeholder="22345678" maxlength="8" pattern="[0-9]{8}">
+                                  </div>
+                                  <small class="text-muted">8 dígitos (opcional)</small>
+                              </div>
+                          </div>
+                          <div class="col-lg-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Direccion Laboral</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_dir_laboral" name="text_dir_laboral" placeholder="Direccion Laboral">
+                              </div>
+                          </div>
+                      </div>
+                      <br>
+                      <h5 style="text-align:center;">Informacion de las Referencias</h5>
+                      <br>
+                      <!-- FORMULARIO REFERENCIAS -->
+                      <div class="row">
+
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+
+                                      <span class="small"> Referencia Personal</span><span class="text-danger"> *</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_refe_per_e" placeholder="Referencia Personal">
+                                  <!-- <div class="invalid-feedback">Debe ingresar un nonbre de la referencia personal</div> -->
+
+                              </div>
+                          </div>
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Nro. Celular</span><span class="text-danger"> *</span>
+                                  </label>
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-success text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_nro_cel_per_e" placeholder="87654321" maxlength="8" pattern="[0-9]{8}">
+                                  </div>
+                                  <small class="text-muted">8 dígitos</small>
+                              </div>
+                          </div>
+                          <div class="col-md-12">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Dirección Referencia Personal</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_refe_per_dir" placeholder="Dirección Referencia Personal">
+                              </div>
+                          </div>
+
+                          <div class="col-md-6">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Referencia Familiar</span><span class="text-danger"> *</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_refe_fami_e" placeholder="Referencia Familiar">
+                                  <div class="invalid-feedback">Debe ingresar un nonbre de la referencia familiar </div>
+
+                              </div>
+                          </div>
+
+                          <div class="col-md-6">
+                              <div class="form-group mb-2" id="iptclave">
+                                  <label for="ipclave" class="">
+                                      <span class="small"> Nro. Celular Familiar</span><span class="text-danger"> *</span>
+                                  </label>
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text bg-secondary text-white font-weight-bold">+505</span>
+                                      </div>
+                                      <input type="tel" class="form-control form-control-sm telefono-format" id="text_nro_cel_fami_e" placeholder="87654321" maxlength="8" pattern="[0-9]{8}">
+                                  </div>
+                                  <small class="text-muted">8 dígitos</small>
+                              </div>
+                          </div>
+                          <div class="col-md-12">
+                              <div class="form-group mb-2">
+                                  <label for="" class="">
+                                      <span class="small"> Dirección Referencia Familiar</span>
+                                  </label>
+                                  <input type="text" class=" form-control form-control-sm" id="text_refe_fami_dir" placeholder="Dirección Referencia Familiar">
+                              </div>
+                          </div>
                       </div>
                   </form>
               </div>
@@ -546,6 +668,11 @@ $(document).ready(function() {
     /*===================================================================*/
     $("#abrirmodal_registrar_cliente").on('click', function() {
         AbrirModalRegistroCliente();
+        // Asegurarse de que los campos estén habilitados y el botón visible al abrir para registro
+        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
+        $("#btnregistrar_cliente").show();
+        $("#titulo_modal_cliente").html('Registro de Usuarios');
+        $("#btnregistrar_cliente").html('Registrar');
     })
 
     /*===================================================================*/
@@ -654,14 +781,14 @@ $(document).ready(function() {
 
             });
             $("#select_moneda").focus();
-        } else if (cliente == "") {
+        } /* else if (cliente == "") {
             Toast.fire({
                 icon: 'warning',
                 title: 'Debe ingresar un Cliente'
 
             });
             $("#text_doc_dn").focus();
-        } else if (fecha == 0) {
+        } */ else if (fecha == 0) {
             Toast.fire({
                 icon: 'warning',
                 title: 'Debe ingresar una fecha'
@@ -891,7 +1018,7 @@ $(document).ready(function() {
             if (form.checkValidity() === true) {
 
                 Swal.fire({
-                    title: 'Esta seguro de Registrar el Cliente?',
+                    title: 'Esta seguro de ' + titulo_modal + ' el Cliente?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
@@ -906,14 +1033,39 @@ $(document).ready(function() {
 
                         datos.append("accion", accion);
                         datos.append("cliente_id", $("#id_cliente").val()); //id
-                        datos.append("cliente_nombres", $("#text_nombres")
-                    .val()); //modulo
+                        datos.append("cliente_nombres", $("#text_nombres").val()); //modulo
                         datos.append("cliente_dni", $("#text_documento").val());
-                        datos.append("cliente_cel", $("#text_cel").val());
+                        // Enviar teléfonos con código de país completo
+                        datos.append("cliente_cel", obtenerTelefonoCompleto("#text_cel"));
                         datos.append("cliente_direccion", $("#text_direccion").val());
                         datos.append("cliente_correo", $("#text_correo").val());
 
+                        // Nuevos campos de Información Laboral
+                        datos.append("cliente_empresa_laboral", $("#text_empresa_laboral").val());
+                        datos.append("cliente_cargo_laboral", $("#text_cargo_laboral").val());
+                        datos.append("cliente_tel_laboral", obtenerTelefonoCompleto("#text_tel_laboral"));
+                        datos.append("cliente_dir_laboral", $("#text_dir_laboral").val());
 
+                        // Nuevos campos de Referencia Personal
+                        datos.append("cliente_refe_per_nombre", $("#text_refe_per_e").val());
+                        datos.append("cliente_refe_per_cel", obtenerTelefonoCompleto("#text_nro_cel_per_e"));
+                        datos.append("cliente_refe_per_dir", $("#text_refe_per_dir").val());
+
+                        // Nuevos campos de Referencia Familiar
+                        datos.append("cliente_refe_fami_nombre", $("#text_refe_fami_e").val());
+                        datos.append("cliente_refe_fami_cel", obtenerTelefonoCompleto("#text_nro_cel_fami_e"));
+                        datos.append("cliente_refe_fami_dir", $("#text_refe_fami_dir").val());
+
+
+                        if (accion == 2) {
+                            var titulo_msj = "El Cliente  se registro correctamente"
+
+                        }
+
+                        if (accion == 3) {
+                            var titulo_msj = "El Cliente se actualizo correctamente"
+
+                        }
                         $.ajax({
                             url: "ajax/clientes_ajax.php",
                             method: "POST",
@@ -923,31 +1075,39 @@ $(document).ready(function() {
                             processData: false,
                             dataType: 'json',
                             success: function(respuesta) {
+                                console.log(respuesta);
 
                                 if (respuesta == "ok") {
 
                                     Toast.fire({
                                         icon: 'success',
-                                        title: 'El Cliente se registro de forma correcta'
-
+                                        //title: 'El Cliente se registro de forma correcta'
+                                        title: titulo_msj
                                     });
 
-                                    tbl_lista_cliente.ajax
-                                .reload(); //recargamos el datatable 
+                                    // tbl_clientes.ajax.reload(); //recargamos el datatable 
 
-                                    $("#modal_registro_cliente").modal(
-                                        'hide');
+                                    $("#modal_registro_cliente").modal('hide');
 
+                                    // Limpiar todos los campos del formulario
                                     $("#id_cliente").val("");
                                     $("#text_nombres").val("");
                                     $("#text_documento").val("");
                                     $("#text_cel").val("");
                                     $("#text_direccion").val("");
                                     $("#text_correo").val("");
+                                    $("#text_empresa_laboral").val("");
+                                    $("#text_cargo_laboral").val("");
+                                    $("#text_tel_laboral").val("");
+                                    $("#text_dir_laboral").val("");
+                                    $("#text_refe_per_e").val("");
+                                    $("#text_nro_cel_per_e").val("");
+                                    $("#text_refe_per_dir").val("");
+                                    $("#text_refe_fami_e").val("");
+                                    $("#text_nro_cel_fami_e").val("");
+                                    $("#text_refe_fami_dir").val("");
 
-
-                                    $(".needs-validation").removeClass(
-                                        "was-validated");
+                                    $(".needs-validation").removeClass("was-validated");
 
                                 } else {
                                     Toast.fire({
@@ -977,15 +1137,44 @@ $(document).ready(function() {
     /*===================================================================*/
     //DUPLICADO DE DOCUMENTOS
     /*===================================================================*/
-    $("#text_monto").change(function() {
-        CargarMontoaPrestar();
+    $("#text_documento").change(function() {
+
+        var document = $("#text_documento").val();
+
+        // console.log(codBarra);
+        $.ajax({
+            async: false,
+            url: "ajax/clientes_ajax.php",
+            method: "POST",
+            data: {
+                'accion': 5,
+                'cliente_dni': document
+                //  'cantidad_a_comprar': cantidad
+            },
+
+            dataType: 'json',
+            success: function(respuesta) {
+                //console.log(respuesta);
+                if (parseInt(respuesta['ex']) > 0) {
+                    Toast.fire({
+                        icon: 'error',
+                        title: ' El Documento ' + document + '  ya se encuentra registrado'
+                    })
+
+                    $("#text_documento").val("");
+                    $("#text_documento").focus();
+
+                } else {
+                    //  console.log('dfgdfgdfg');
+                }
+            }
+        });
+
     })
 
-
-
-    /*======================================================================================
-    // LIMPIAR CAJAS DE TEXTO AL CERRAR LA VENTANA MODAL DEL REGISTRO
-    /* =========================================================================================*/
+    /*===================================================================*/
+    //EVENTO QUE LIMPIA EL INPUT  AL CERRAR LA VENTANA MODAL
+    /*===================================================================*/
     $("#btncerrarmodal_cliente, #btncerrar_cliente").on('click', function() {
         $("#id_cliente").val("");
         $("#text_nombres").val("");
@@ -993,20 +1182,46 @@ $(document).ready(function() {
         $("#text_cel").val("");
         $("#text_direccion").val("");
         $("#text_correo").val("");
+        $("#text_refe_per_e").val("");
+        $("#text_nro_cel_per_e").val("");
+        $("#text_empresa_laboral").val("");
+        $("#text_cargo_laboral").val("");
+        $("#text_tel_laboral").val("");
+        $("#text_dir_laboral").val("");
+        $("#text_refe_per_dir").val("");
+        $("#text_refe_fami_e").val("");
+        $("#text_nro_cel_fami_e").val("");
+        $("#text_refe_fami_dir").val("");
+        $(".needs-validation").removeClass("was-validated");
+        // Volver a habilitar los campos y mostrar el botón al cerrar, en caso de que se haya visto un cliente
+        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
+        $("#btnregistrar_cliente").show();
     })
-
-    /*===================================================================*/
-    //LIMPIA LOS MENSAJES DE ALERTA DE INGRESO DE DATOS DE CADA INPUT AL CANCELAR LA VENTANA MODAL
-    /*===================================================================*/
     document.getElementById("btncerrar_cliente").addEventListener("click", function() {
         $(".needs-validation").removeClass("was-validated");
+        // Volver a habilitar los campos y mostrar el botón al cerrar, en caso de que se haya visto un cliente
+        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
+        $("#btnregistrar_cliente").show();
     })
     document.getElementById("btncerrarmodal_cliente").addEventListener("click", function() {
         $(".needs-validation").removeClass("was-validated");
+        // Volver a habilitar los campos y mostrar el botón al cerrar, en caso de que se haya visto un cliente
+        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
+        $("#btnregistrar_cliente").show();
     })
 
     //REGISTRAR PRESTAMO
     $("#btnRegistrar").on('click', function() {
+        var clienteId = $("#cliente_id").val();
+
+        if (clienteId === "" || clienteId === null) {
+            Toast.fire({
+                icon: 'error',
+                title: 'Debe seleccionar un cliente para poder registrar el préstamo.'
+            });
+            return; // Detener la ejecución si no hay cliente seleccionado
+        }
+
         RegistarPrestamo()
         $("#btnLimpiarCampos").attr('hidden', true);
         $("#btnCalcular").attr('hidden', false);
@@ -1136,7 +1351,7 @@ $(document).ready(function() {
 
 
 
-function recalcularPrestamo() {
+function recalcularPrestamo(pagina = 1) {
     var montoPresta = parseFloat($("#text_monto").val()) || 0;
     var cuota = parseInt($("#text_cuotas").val()) || 0;
     var interes = parseFloat($("#text_interes").val()) || 0;
@@ -1159,7 +1374,9 @@ function recalcularPrestamo() {
             'interes': interes,
             'fpago': fpago,
             'tipo_calculo': tipoCalculo,
-            'fecha_inicio': fechaInicio
+            'fecha_inicio': fechaInicio,
+            'pagina': pagina,
+            'por_pagina': 12
         },
         dataType: 'json',
         success: function(respuesta) {
@@ -1186,10 +1403,81 @@ function recalcularPrestamo() {
                 </tr>`;
                 $("#tbody_tabla_detalle_pro").append(tr);
             });
+            
+            // Actualizar paginación si está disponible
+            if (respuesta.paginacion) {
+                actualizarPaginacion(respuesta.paginacion);
+                $(".paginacion-container").show();
+            } else {
+                $(".paginacion-container").hide();
+            }
         },
         error: function(xhr, status, error) {
             console.error("Error al calcular amortización:", error);
             Swal.fire("Error", "No se pudo calcular la amortización", "error");
+        }
+    });
+}
+
+// Función para actualizar la paginación
+function actualizarPaginacion(paginacion) {
+    var paginacionContainer = $("#paginacion-tabla");
+    paginacionContainer.empty();
+    
+    // Actualizar información de registros mostrados
+    $("#desde").text((paginacion.pagina_actual - 1) * paginacion.por_pagina + 1);
+    $("#hasta").text(Math.min(paginacion.pagina_actual * paginacion.por_pagina, paginacion.total_registros));
+    $("#total").text(paginacion.total_registros);
+    
+    // Botón "Anterior"
+    var btnAnterior = $('<li class="page-item' + (paginacion.pagina_actual <= 1 ? ' disabled' : '') + '"><a class="page-link" href="#" data-pagina="' + (paginacion.pagina_actual - 1) + '">Anterior</a></li>');
+    paginacionContainer.append(btnAnterior);
+    
+    // Determinar qué números de página mostrar
+    var inicio = Math.max(1, paginacion.pagina_actual - 2);
+    var fin = Math.min(paginacion.total_paginas, paginacion.pagina_actual + 2);
+    
+    // Asegurarse de mostrar al menos 5 páginas si están disponibles
+    if (fin - inicio + 1 < 5 && paginacion.total_paginas >= 5) {
+        if (inicio === 1) {
+            fin = Math.min(5, paginacion.total_paginas);
+        } else if (fin === paginacion.total_paginas) {
+            inicio = Math.max(1, paginacion.total_paginas - 4);
+        }
+    }
+    
+    // Si no estamos en la primera página, mostrar "..."
+    if (inicio > 1) {
+        paginacionContainer.append('<li class="page-item"><a class="page-link" href="#" data-pagina="1">1</a></li>');
+        if (inicio > 2) {
+            paginacionContainer.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+        }
+    }
+    
+    // Números de página
+    for (var i = inicio; i <= fin; i++) {
+        var btnPagina = $('<li class="page-item' + (i === paginacion.pagina_actual ? ' active' : '') + '"><a class="page-link" href="#" data-pagina="' + i + '">' + i + '</a></li>');
+        paginacionContainer.append(btnPagina);
+    }
+    
+    // Si no estamos en la última página, mostrar "..."
+    if (fin < paginacion.total_paginas) {
+        if (fin < paginacion.total_paginas - 1) {
+            paginacionContainer.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+        }
+        paginacionContainer.append('<li class="page-item"><a class="page-link" href="#" data-pagina="' + paginacion.total_paginas + '">' + paginacion.total_paginas + '</a></li>');
+    }
+    
+    // Botón "Siguiente"
+    var btnSiguiente = $('<li class="page-item' + (paginacion.pagina_actual >= paginacion.total_paginas ? ' disabled' : '') + '"><a class="page-link" href="#" data-pagina="' + (paginacion.pagina_actual + 1) + '">Siguiente</a></li>');
+    paginacionContainer.append(btnSiguiente);
+    
+    // Agregar evento de clic a los botones de paginación
+    $(".page-link").on("click", function(e) {
+        e.preventDefault();
+        var pagina = $(this).data("pagina");
+        if (!isNaN(pagina) && pagina > 0) {
+            recalcularPrestamo(pagina);
         }
     });
 }
@@ -1377,8 +1665,7 @@ function RegistrarDetalle() {
     var pdetalle_monto_cuota = arreglo_monto.toString();
     var pdetalle_fecha = arreglo_fecha.toString();
 
-    // console.log(arreglo_fecha);
-
+    console.log("pdetalle_fecha enviado:", pdetalle_fecha);
 
     $.ajax({
         url: "ajax/prestamo_ajax.php",
@@ -1442,7 +1729,14 @@ function AbrirModalRegistroCliente() {
     $("#titulo_modal_cliente").html('Registrar Cliente');
     $("#btnregistrar_cliente").html('Registrar');
     accion = 2; // guardar
-    //titulo_modal = "Registrar";
+    titulo_modal = "Registrar";
+
+
+}
+
+function obtenerTelefonoCompleto(campoId) {
+    var numero = $(campoId).val();
+    return numero ? '+505' + numero : '';
 }
 
 /*===================================================================*/

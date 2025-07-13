@@ -151,3 +151,25 @@ if (isset($_POST['accion'])) {
             break;
     }
 }
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'reporte_cobranza_diaria') {
+    $fecha = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
+    $reporte = ReportesControlador::ctrReporteCobranzaDiaria($fecha);
+    echo json_encode($reporte, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'reporte_cuotas_atrasadas') {
+    $fecha = isset($_POST['fecha']) ? $_POST['fecha'] : date('Y-m-d');
+    $reporte = ReportesControlador::ctrReporteCuotasAtrasadas($fecha);
+    echo json_encode($reporte, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'get_dashboard_kpis') {
+    require_once "../controladores/reportes_controlador.php";
+    $id_colector = isset($_POST['id_colector']) && !empty($_POST['id_colector']) ? $_POST['id_colector'] : null;
+    $kpis = ReportesControlador::ctrGetDashboardKpis($id_colector);
+    echo json_encode($kpis, JSON_UNESCAPED_UNICODE);
+    exit;
+}

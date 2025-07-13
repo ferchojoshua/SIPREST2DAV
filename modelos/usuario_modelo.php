@@ -377,4 +377,24 @@ class UsuarioModelo
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    /*===================================================================*/
+    // OBTENER TODOS LOS USUARIOS CON PERFIL "COLECTOR"
+    /*===================================================================*/
+    static public function mdlObtenerColectores()
+    {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT u.id_usuario, u.nombre_usuario
+            FROM usuarios u
+            INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+            WHERE p.descripcion = 'COLECTOR'
+            ORDER BY u.nombre_usuario ASC
+        ");
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt->close();
+        $stmt = null;
+    }
 }

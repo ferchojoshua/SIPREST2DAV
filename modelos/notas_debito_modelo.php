@@ -49,7 +49,7 @@ class NotasDebitoModelo {
                     nd.nro_nota_debito as nro_nota,
                     nd.fecha_registro,
                     nd.nro_prestamo,
-                    CONCAT(c.cliente_nombres, ' ', c.cliente_apellidos) as cliente,
+                    c.cliente_nombres as cliente,
                     pc.pres_monto_total as monto_original,
                     nd.monto_total_nuevo as nuevo_monto,
                     nd.motivo,
@@ -92,7 +92,7 @@ class NotasDebitoModelo {
             $stmt = Conexion::conectar()->prepare("
                 SELECT 
                     nd.*,
-                    CONCAT(c.cliente_nombres, ' ', c.cliente_apellidos) as cliente,
+                    c.cliente_nombres as cliente,
                     pc.pres_monto_total as monto_original,
                     u.nombre_usuario as usuario
                 FROM notas_debito nd

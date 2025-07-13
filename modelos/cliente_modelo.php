@@ -115,28 +115,40 @@ class ClienteModelo
     =============================================*/
     static public function mdlActualizarCliente($table, $data, $id, $nameId)
     {
+        try {
+            $set = "";
 
-        $set = "";
+            foreach ($data as $key => $value) {
+                $set .= $key . " = :" . $key . ","; //DEPENDE DEL ARRAY QUE VIENE DEL AJAX
+            }
 
-        foreach ($data as $key => $value) {
-            $set .= $key . " = :" . $key . ","; //DEPENDE DEL ARRAY QUE VIENE DEL AJAX
-        }
+            $set = substr($set, 0, -1); //QUITA LA COMA
 
-        $set = substr($set, 0, -1); //QUITA LA COMA
+            $sql = "UPDATE $table SET $set WHERE $nameId = :$nameId";
+            
+            // Debug: Log de la consulta SQL (comentado para producción)
+            // error_log("SQL Query: " . $sql);
+            // error_log("Data: " . print_r($data, true));
+            // error_log("ID: " . $id);
 
-        $stmt = Conexion::conectar()->prepare("UPDATE $table SET $set WHERE $nameId = :$nameId");
+            $stmt = Conexion::conectar()->prepare($sql);
 
-        foreach ($data as $key => $value) {
-            $stmt->bindParam(":" . $key, $data[$key], PDO::PARAM_STR);
-        }
+            foreach ($data as $key => $value) {
+                $stmt->bindParam(":" . $key, $data[$key], PDO::PARAM_STR);
+            }
 
-        $stmt->bindParam(":" . $nameId, $id, PDO::PARAM_INT);
+            $stmt->bindParam(":" . $nameId, $id, PDO::PARAM_INT);
 
-        if ($stmt->execute()) {
-            return "ok";
-        } else {
-
-            return Conexion::conectar()->errorInfo();
+            if ($stmt->execute()) {
+                return "ok";
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                // error_log("Error en actualización: " . print_r($errorInfo, true));
+                return array("error" => $errorInfo[2], "code" => $errorInfo[0]);
+            }
+        } catch (Exception $e) {
+            // error_log("Excepción en actualización: " . $e->getMessage());
+            return array("error" => $e->getMessage());
         }
     }
 
