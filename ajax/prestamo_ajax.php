@@ -27,8 +27,10 @@ register_shutdown_function(function () {
 
 ob_start(); // Iniciar buffer de salida
 
-require_once "../controladores/prestamo_controlador.php";
-require_once "../modelos/prestamo_modelo.php";
+// Determinar la ruta base correcta
+$basePath = dirname(__DIR__);
+require_once $basePath . "/controladores/prestamo_controlador.php";
+require_once $basePath . "/modelos/prestamo_modelo.php";
 
 class AjaxPrestamo
 {
