@@ -215,7 +215,7 @@ class ReportesModelo
                     pd.nro_prestamo,
                     pd.pdetalle_nro_cuota,
                     pd.pdetalle_monto_cuota,
-                    DATE_FORMAT(pd.pdetalle_fecha_programada, '%d/%m/%Y') as fecha_programada,
+                    DATE_FORMAT(pd.pdetalle_fecha, '%d/%m/%Y') as fecha_programada,
                     DATE_FORMAT(pd.pdetalle_fecha_registro, '%d/%m/%Y %H:%i:%s') as fecha_pago,
                     pd.pdetalle_estado_cuota,
                     
@@ -225,15 +225,15 @@ class ReportesModelo
                     
                     -- Días de mora (si aplica)
                     CASE 
-                        WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha_programada < CURDATE() 
-                        THEN DATEDIFF(CURDATE(), pd.pdetalle_fecha_programada)
+                                        WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha < CURDATE()
+                THEN DATEDIFF(CURDATE(), pd.pdetalle_fecha)
                         ELSE 0 
                     END as dias_mora,
                     
                     -- Estado visual
                     CASE 
                         WHEN pd.pdetalle_estado_cuota = 'pagada' THEN 'success'
-                        WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha_programada < CURDATE() THEN 'danger'
+                        WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha < CURDATE() THEN 'danger'
                         WHEN pd.pdetalle_estado_cuota = 'pendiente' THEN 'warning'
                         ELSE 'secondary'
                     END as estado_visual
@@ -340,7 +340,7 @@ class ReportesModelo
             $query_monto_mora = "
                 SELECT COALESCE(SUM(pdetalle_monto_cuota), 0) as monto_en_mora
                 FROM prestamo_detalle
-                WHERE pdetalle_estado_cuota = 'pendiente' AND pdetalle_fecha_programada < CURDATE()";
+                WHERE pdetalle_estado_cuota = 'pendiente' AND pdetalle_fecha < CURDATE()";
 
             // Aplicar filtro por colector si se proporciona
             if ($id_colector) {
@@ -350,7 +350,7 @@ class ReportesModelo
                     SELECT COALESCE(SUM(pd.pdetalle_monto_cuota), 0) as monto_en_mora
                     FROM prestamo_detalle pd
                     INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-                    WHERE pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha_programada < CURDATE()
+                    WHERE pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha < CURDATE()
                     AND pc.id_usuario = :id_colector";
             }
             

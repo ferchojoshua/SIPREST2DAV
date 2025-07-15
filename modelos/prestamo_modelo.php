@@ -138,11 +138,11 @@ class PrestamoModelo
         }
 
         if ($tabla == 'forma_pago') {
-            $stmt = Conexion::conectar()->prepare("SELECT fpago_id, fpago_descripcion FROM forma_pago WHERE fpago_estado = 1 ORDER BY fpago_id");
+            $stmt = Conexion::conectar()->prepare("SELECT fpago_id, fpago_descripcion FROM forma_pago ORDER BY fpago_id");
         }
 
         if ($tabla == 'moneda') {
-            $stmt = Conexion::conectar()->prepare("SELECT moneda_id, moneda_descripcion, moneda_simbolo FROM moneda WHERE moneda_estado = 1 ORDER BY moneda_id");
+            $stmt = Conexion::conectar()->prepare("SELECT moneda_id, moneda_Descripcion as moneda_descripcion, moneda_simbolo FROM moneda ORDER BY moneda_id");
         }
 
         $stmt->execute();
