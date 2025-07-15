@@ -136,4 +136,40 @@ class ReportesControlador
         $reporte = ReportesModelo::mdlReporteCuotasAtrasadas($fecha);
         return $reporte;
     }
+
+    /*===================================================================*/
+    // REPORTE DE SALDOS ARRASTRADOS
+    /*===================================================================*/
+    static public function ctrReporteSaldosArrastrados($fecha_inicio, $fecha_fin)
+    {
+        $reporte = ReportesModelo::mdlReporteSaldosArrastrados($fecha_inicio, $fecha_fin);
+        return $reporte;
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER KPIs GERENCIALES DEL DASHBOARD
+    ====================================================================*/
+    static public function ctrObtenerKpisGerenciales($id_colector = null)
+    {
+        try {
+            $kpis = ReportesModelo::mdlObtenerKpisGerenciales($id_colector);
+            return $kpis;
+        } catch (Exception $e) {
+            error_log("Error en ctrObtenerKpisGerenciales: " . $e->getMessage());
+            return [
+                'saldo_cartera' => 0,
+                'clientes_activos' => 0,
+                'monto_en_mora' => 0,
+                'porcentaje_mora' => 0
+            ];
+        }
+    }
+
+    /*===================================================================
+    LLAMAR AL MODELO PARA OBTENER KPIs DEL DASHBOARD (LEGACY COMPATIBILITY)
+    ====================================================================*/
+    static public function ctrGetDashboardKpis($id_colector = null)
+    {
+        return self::ctrObtenerKpisGerenciales($id_colector);
+    }
 }

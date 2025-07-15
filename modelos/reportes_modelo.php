@@ -323,64 +323,96 @@ class ReportesModelo
     /*===================================================================*/
     static public function mdlObtenerKpisGerenciales($id_colector = null)
     {
-        // Saldo total de cartera (capital pendiente de todos los préstamos aprobados)
-        $query_saldo_cartera = "
-            SELECT COALESCE(SUM(pres_monto_restante), 0) as saldo_cartera
-            FROM prestamo_cabecera
-            WHERE pres_aprobacion = 'aprobado'";
-        
-        // Clientes con préstamos activos
-        $query_clientes_activos = "
-            SELECT COUNT(DISTINCT cliente_id) as clientes_activos
-            FROM prestamo_cabecera
-            WHERE pres_aprobacion = 'aprobado'";
+        try {
+            // Saldo total de cartera (capital pendiente de todos los préstamos aprobados)
+            $query_saldo_cartera = "
+                SELECT COALESCE(SUM(pres_monto_restante), 0) as saldo_cartera
+                FROM prestamo_cabecera
+                WHERE pres_aprobacion = 'aprobado'";
+            
+            // Clientes con préstamos activos
+            $query_clientes_activos = "
+                SELECT COUNT(DISTINCT cliente_id) as clientes_activos
+                FROM prestamo_cabecera
+                WHERE pres_aprobacion = 'aprobado'";
 
-        // Monto total en mora (cuotas vencidas y no pagadas)
-        $query_monto_mora = "
-            SELECT COALESCE(SUM(pdetalle_monto_cuota), 0) as monto_en_mora
-            FROM prestamo_detalle
-            WHERE pdetalle_estado_cuota = 'pendiente' AND pdetalle_fecha_programada < CURDATE()";
-
-        // Aplicar filtro por colector si se proporciona
-        if ($id_colector) {
-            $query_saldo_cartera .= " AND id_usuario = :id_colector";
-            $query_clientes_activos .= " AND id_usuario = :id_colector";
+            // Monto total en mora (cuotas vencidas y no pagadas)
             $query_monto_mora = "
-                SELECT COALESCE(SUM(pd.pdetalle_monto_cuota), 0) as monto_en_mora
-                FROM prestamo_detalle pd
-                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-                WHERE pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha_programada < CURDATE()
-                AND pc.id_usuario = :id_colector";
+                SELECT COALESCE(SUM(pdetalle_monto_cuota), 0) as monto_en_mora
+                FROM prestamo_detalle
+                WHERE pdetalle_estado_cuota = 'pendiente' AND pdetalle_fecha_programada < CURDATE()";
+
+            // Aplicar filtro por colector si se proporciona
+            if ($id_colector) {
+                $query_saldo_cartera .= " AND id_usuario = :id_colector";
+                $query_clientes_activos .= " AND id_usuario = :id_colector";
+                $query_monto_mora = "
+                    SELECT COALESCE(SUM(pd.pdetalle_monto_cuota), 0) as monto_en_mora
+                    FROM prestamo_detalle pd
+                    INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                    WHERE pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha_programada < CURDATE()
+                    AND pc.id_usuario = :id_colector";
+            }
+            
+            // Ejecutar consultas
+            $stmt_saldo = Conexion::conectar()->prepare($query_saldo_cartera);
+            $stmt_clientes = Conexion::conectar()->prepare($query_clientes_activos);
+            $stmt_mora = Conexion::conectar()->prepare($query_monto_mora);
+
+            if($id_colector){
+                $stmt_saldo->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
+                $stmt_clientes->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
+                $stmt_mora->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
+            }
+
+            $stmt_saldo->execute();
+            $stmt_clientes->execute();
+            $stmt_mora->execute();
+
+            $result_saldo = $stmt_saldo->fetch(PDO::FETCH_ASSOC);
+            $result_clientes = $stmt_clientes->fetch(PDO::FETCH_ASSOC);
+            $result_mora = $stmt_mora->fetch(PDO::FETCH_ASSOC);
+
+            $saldo_cartera = $result_saldo ? (float)$result_saldo['saldo_cartera'] : 0;
+            $clientes_activos = $result_clientes ? (int)$result_clientes['clientes_activos'] : 0;
+            $monto_en_mora = $result_mora ? (float)$result_mora['monto_en_mora'] : 0;
+            
+            // Calcular porcentaje de mora
+            $porcentaje_mora = ($saldo_cartera > 0) ? ($monto_en_mora / $saldo_cartera) * 100 : 0;
+            
+            return [
+                "saldo_cartera" => $saldo_cartera,
+                "clientes_activos" => $clientes_activos,
+                "monto_en_mora" => $monto_en_mora,
+                "porcentaje_mora" => $porcentaje_mora
+            ];
+        } catch (PDOException $e) {
+            error_log("Error de base de datos en mdlObtenerKpisGerenciales: " . $e->getMessage());
+            // Devolver una estructura válida en caso de error de BD
+            return [
+                "saldo_cartera" => 0,
+                "clientes_activos" => 0,
+                "monto_en_mora" => 0,
+                "porcentaje_mora" => 0,
+                "error" => "DB_ERROR",
+                "mensaje" => $e->getMessage()
+            ];
         }
-        
-        // Ejecutar consultas
-        $stmt_saldo = Conexion::conectar()->prepare($query_saldo_cartera);
-        $stmt_clientes = Conexion::conectar()->prepare($query_clientes_activos);
-        $stmt_mora = Conexion::conectar()->prepare($query_monto_mora);
-
-        if($id_colector){
-            $stmt_saldo->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
-            $stmt_clientes->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
-            $stmt_mora->bindParam(":id_colector", $id_colector, PDO::PARAM_INT);
-        }
-
-        $stmt_saldo->execute();
-        $stmt_clientes->execute();
-        $stmt_mora->execute();
-
-        $saldo_cartera = $stmt_saldo->fetch(PDO::FETCH_ASSOC)['saldo_cartera'];
-        $clientes_activos = $stmt_clientes->fetch(PDO::FETCH_ASSOC)['clientes_activos'];
-        $monto_en_mora = $stmt_mora->fetch(PDO::FETCH_ASSOC)['monto_en_mora'];
-        
-        // Calcular porcentaje de mora
-        $porcentaje_mora = ($saldo_cartera > 0) ? ($monto_en_mora / $saldo_cartera) * 100 : 0;
-        
-        return [
-            "saldo_cartera" => $saldo_cartera,
-            "clientes_activos" => $clientes_activos,
-            "monto_en_mora" => $monto_en_mora,
-            "porcentaje_mora" => $porcentaje_mora
-        ];
     }
 
+    /*===================================================================*/
+    // REPORTE DE SALDOS ARRASTRADOS
+    /*===================================================================*/
+    static public function mdlReporteSaldosArrastrados($fecha_inicio, $fecha_fin)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("CALL SP_REPORTE_SALDOS_ARRASTRADOS(:fecha_inicio, :fecha_fin)");
+            $stmt->bindParam(":fecha_inicio", $fecha_inicio, PDO::PARAM_STR);
+            $stmt->bindParam(":fecha_fin", $fecha_fin, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_NUM);
+        } catch (Exception $e) {
+            return 'Excepción capturada: ' .  $e->getMessage() . "\n";
+        }
+    }
 }

@@ -1264,15 +1264,33 @@ $(document).ready(function() {
             url: "ajax/prestamo_ajax.php",
             method: "POST",
             data: {
-                'accion': 4
+                'accion': 'obtener_tipos_calculo'
             },
             dataType: 'json',
             success: function(respuesta) {
+                console.log('Tipos de cálculo cargados:', respuesta);
                 var options = '<option value="">Seleccione un tipo de cálculo</option>';
-                respuesta.forEach(function(tipo) {
-                    options += '<option value="' + tipo.nombre + '" title="' + tipo.descripcion + '">' + 
-                              tipo.nombre + '</option>';
-                });
+                
+                if (Array.isArray(respuesta)) {
+                    respuesta.forEach(function(tipo) {
+                        options += '<option value="' + tipo.nombre + '" title="' + tipo.descripcion + '">' + 
+                                  tipo.descripcion + '</option>';
+                    });
+                } else {
+                    console.error('Respuesta no es un array:', respuesta);
+                }
+                
+                $("#select_tipo_calculo").html(options);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al cargar tipos de cálculo:', error);
+                console.error('Respuesta del servidor:', xhr.responseText);
+                
+                // Fallback con opciones básicas
+                var options = '<option value="">Seleccione un tipo de cálculo</option>' +
+                             '<option value="FRANCES">Sistema Francés - Cuotas fijas</option>' +
+                             '<option value="ALEMAN">Sistema Alemán - Capital fijo</option>' +
+                             '<option value="AMERICANO">Sistema Americano - Solo intereses</option>';
                 $("#select_tipo_calculo").html(options);
             }
         });
@@ -1296,12 +1314,13 @@ $(document).ready(function() {
             url: 'ajax/prestamo_ajax.php',
             type: 'POST',
             data: {
-                funcion: 'calcular_amortizacion',
+                accion: 'calcular_amortizacion',
                 monto: monto,
-                tasa: tasa,
-                plazo: plazo,
-                sistema: sistema,
-                fecha: fecha
+                interes: tasa,
+                cuotas: plazo,
+                tipo_calculo: sistema,
+                fecha_inicio: fecha,
+                fpago: $('#select_f_pago').val() || '4' // Default mensual
             },
             dataType: 'json',
             success: function(response) {
@@ -1341,6 +1360,45 @@ $(document).ready(function() {
         calcularAmortizacion();
     });
 
+    /* =======================================================
+    SOLICITUD AJAX PARA CARGAR SELECT DE FORMA DE PAGO
+    =======================================================*/
+    $.ajax({
+        url: "ajax/prestamo_ajax.php",
+        method: 'POST',
+        data: {
+            'accion': 'cargar_forma_pago' // ACCIÓN CORREGIDA
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            var opciones = '<option value="">Seleccione f. pago</option>';
+            for (let i = 0; i < respuesta.length; i++) {
+                opciones += '<option value="' + respuesta[i][0] + '">' + respuesta[i][1] + '</option>';
+            }
+            $("#select_f_pago").html(opciones);
+        }
+    });
+
+    /* =======================================================
+    SOLICITUD AJAX PARA CARGAR SELECT DE MONEDA
+    =======================================================*/
+    $.ajax({
+        url: "ajax/prestamo_ajax.php",
+        method: 'POST',
+        data: {
+            'accion': 'cargar_moneda' // ACCIÓN CORREGIDA
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            var opciones = '<option value="">Seleccione Moneda</option>';
+            for (let i = 0; i < respuesta.length; i++) {
+                // Asumiendo que el formato es [id, descripcion, simbolo]
+                opciones += '<option value="' + respuesta[i][0] + '" data-simbolo="' + respuesta[i][2] + '">' + respuesta[i][1] + ' (' + respuesta[i][2] + ')</option>';
+            }
+            $("#select_moneda").html(opciones);
+        }
+    });
+
 }) /// FIN DOCUMENT READY         
 
 
@@ -1368,7 +1426,7 @@ function recalcularPrestamo(pagina = 1) {
         url: "ajax/prestamo_ajax.php",
         method: "POST",
         data: {
-            'accion': 5,
+            'accion': 'calcular_amortizacion',
             'monto': montoPresta,
             'cuotas': cuota,
             'interes': interes,

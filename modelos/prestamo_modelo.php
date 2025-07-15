@@ -127,17 +127,71 @@ class PrestamoModelo
     }
 
     /*===================================================================*/
-    //OBTENER TIPOS DE CALCULO
+    // CARGAR SELECTS DINÁMICOS (Forma Pago, Moneda)
+    /*===================================================================*/
+    static public function mdlCargarSelect($tabla)
+    {
+        // Whitelist de tablas permitidas para evitar inyección SQL
+        $tablasPermitidas = ['forma_pago', 'moneda'];
+        if (!in_array($tabla, $tablasPermitidas)) {
+            return "error: tabla no permitida";
+        }
+
+        if ($tabla == 'forma_pago') {
+            $stmt = Conexion::conectar()->prepare("SELECT fpago_id, fpago_descripcion FROM forma_pago WHERE fpago_estado = 1 ORDER BY fpago_id");
+        }
+
+        if ($tabla == 'moneda') {
+            $stmt = Conexion::conectar()->prepare("SELECT moneda_id, moneda_descripcion, moneda_simbolo FROM moneda WHERE moneda_estado = 1 ORDER BY moneda_id");
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_NUM); // Usar FETCH_NUM para que coincida con el JS
+    }
+
+    /*===================================================================*/
+    // OBTENER TIPOS DE CÁLCULO (Amortización)
     /*===================================================================*/
     static public function mdlObtenerTiposCalculo()
     {
-        $stmt = Conexion::conectar()->prepare("SELECT tipo_calculo_id as id, 
-                                                    tipo_calculo_nombre as nombre, 
-                                                    tipo_calculo_descripcion as descripcion 
-                                             FROM tipos_calculo_interes 
-                                             WHERE tipo_calculo_estado = '1' 
-                                             ORDER BY tipo_calculo_id");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            // Verificar si la tabla existe
+            $stmt = Conexion::conectar()->prepare("SHOW TABLES LIKE 'tipos_calculo_interes'");
+            $stmt->execute();
+            $tablaExiste = $stmt->fetch();
+            
+            if ($tablaExiste) {
+                // Si existe la tabla, usarla con los nombres correctos de columnas
+                $stmt = Conexion::conectar()->prepare("SELECT 
+                    tipo_calculo_id as id,
+                    tipo_calculo_nombre as nombre, 
+                    tipo_calculo_descripcion as descripcion 
+                    FROM tipos_calculo_interes 
+                    WHERE tipo_calculo_estado = 1 
+                    ORDER BY tipo_calculo_id");
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                // Si no existe, devolver tipos hardcodeados
+                return [
+                    ['id' => '1', 'nombre' => 'FRANCES', 'descripcion' => 'Sistema Francés - Cuotas fijas'],
+                    ['id' => '2', 'nombre' => 'ALEMAN', 'descripcion' => 'Sistema Alemán - Capital fijo'],
+                    ['id' => '3', 'nombre' => 'AMERICANO', 'descripcion' => 'Sistema Americano - Solo intereses'],
+                    ['id' => '4', 'nombre' => 'SIMPLE', 'descripcion' => 'Sistema Simple - Interés fijo'],
+                    ['id' => '5', 'nombre' => 'COMPUESTO', 'descripcion' => 'Sistema Compuesto - Interés sobre interés']
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerTiposCalculo: " . $e->getMessage());
+            // Fallback con tipos estándar
+            return [
+                ['id' => '1', 'nombre' => 'FRANCES', 'descripcion' => 'Sistema Francés - Cuotas fijas'],
+                ['id' => '2', 'nombre' => 'ALEMAN', 'descripcion' => 'Sistema Alemán - Capital fijo'],
+                ['id' => '3', 'nombre' => 'AMERICANO', 'descripcion' => 'Sistema Americano - Solo intereses'],
+                ['id' => '4', 'nombre' => 'SIMPLE', 'descripcion' => 'Sistema Simple - Interés fijo'],
+                ['id' => '5', 'nombre' => 'COMPUESTO', 'descripcion' => 'Sistema Compuesto - Interés sobre interés']
+            ];
+        }
     }
-}
+
+} // FIN DE LA CLASE

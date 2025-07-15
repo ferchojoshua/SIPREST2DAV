@@ -84,6 +84,32 @@ class AjaxReportes
         $reportepoRecord = Reportescontrolador::ctrReporteRecordUsu($id_usuario, $anio);
         echo json_encode($reportepoRecord);
     }
+
+    /*===================================================================*/
+    // REPORTE DE SALDOS ARRASTRADOS
+    /*===================================================================*/
+    public function ajaxReporteSaldosArrastrados()
+    {
+        if (isset($_POST["fecha_inicio"]) && isset($_POST["fecha_fin"])) {
+            $fecha_inicio = $_POST["fecha_inicio"];
+            $fecha_fin = $_POST["fecha_fin"];
+
+            $reporte = ReportesControlador::ctrReporteSaldosArrastrados($fecha_inicio, $fecha_fin);
+
+            // Datatables espera un array 'data'
+            $response = [
+                "data" => $reporte
+            ];
+
+            echo json_encode($response["data"]);
+        }
+    }
+}
+
+if (isset($_POST['accion']) && $_POST['accion'] == 'reporte_saldos_arrastrados') {
+    $reporte = new AjaxReportes();
+    $reporte->ajaxReporteSaldosArrastrados();
+    return; // Añadido para evitar que continue al switch
 }
 
 if (isset($_POST['accion'])) {
@@ -171,5 +197,24 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'get_dashboard_kpis') {
     $id_colector = isset($_POST['id_colector']) && !empty($_POST['id_colector']) ? $_POST['id_colector'] : null;
     $kpis = ReportesControlador::ctrGetDashboardKpis($id_colector);
     echo json_encode($kpis, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// Handler for obtener_kpis_gerenciales action (dashboard compatibility)
+if (isset($_POST['accion']) && $_POST['accion'] === 'obtener_kpis_gerenciales') {
+    require_once "../controladores/reportes_controlador.php";
+    
+    try {
+        $kpis = ReportesControlador::ctrObtenerKpisGerenciales();
+        echo json_encode($kpis, JSON_UNESCAPED_UNICODE);
+    } catch (Exception $e) {
+        error_log("Error en obtener_kpis_gerenciales: " . $e->getMessage());
+        echo json_encode([
+            'saldo_cartera' => 0,
+            'clientes_activos' => 0,
+            'monto_en_mora' => 0,
+            'porcentaje_mora' => 0
+        ], JSON_UNESCAPED_UNICODE);
+    }
     exit;
 }

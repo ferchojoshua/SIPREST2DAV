@@ -63,7 +63,7 @@
       <div class="modal-dialog " role="document">
           <div class="modal-content">
               <div class="modal-header bg-gray py-1 align-items-center">
-                  <h5 class="modal-title" id="titulo_modal_cliente">Registro de Usuarios</h5>
+                  <h5 class="modal-title" id="titulo_modal_cliente">Registro de Clientes</h5>
                   <button type="button" class="close  text-white border-0 fs-5" id="btncerrarmodal_cliente" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                   </button>
@@ -508,7 +508,30 @@
                   data: {
                       'accion': 1
                   }, //LISTAR 
+                  error: function(xhr, error, thrown) {
+                      console.error('Error en DataTable AJAX:', error);
+                      console.error('Respuesta del servidor:', xhr.responseText);
+                      console.error('Estado HTTP:', xhr.status);
+                      
+                      // Mostrar mensaje de error al usuario
+                      Swal.fire({
+                          icon: 'error',
+                          title: 'Error al cargar clientes',
+                          text: 'No se pudieron cargar los datos. Revise la consola para más detalles.',
+                      });
+                  }
               },
+              columns: [
+                  { data: 'cliente_id' },
+                  { data: 'cliente_nombres' },
+                  { data: 'cliente_dni' },
+                  { data: 'cliente_cel' },
+                  { data: 'cliente_estado_prestamo' },
+                  { data: 'cliente_estatus' },
+                  { data: 'cliente_direccion' },
+                  { data: 'cliente_correo' },
+                  { data: 'opciones' } // Columna de opciones
+              ],
               columnDefs: [{
                       targets: 0,
                       visible: false
@@ -524,7 +547,7 @@
                   },
                   {
                       targets: 7,
-                      visible: false
+                      visible: true
 
                   },
                   {
@@ -784,28 +807,31 @@
                   var data = tbl_clientes.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
               }
 
-              $("#id_cliente").val(data[0]);
-              $("#text_nombres").val(data[1]);
-              $("#text_documento").val(data[2]);
+              $("#id_cliente").val(data.cliente_id);
+              $("#text_nombres").val(data.cliente_nombres);
+              $("#text_documento").val(data.cliente_dni);
               
               // Formatear teléfonos para edición (remover +505 para mostrar solo 8 dígitos)
-              establecerTelefono("#text_cel", data[3]);
+              establecerTelefono("#text_cel", data.cliente_cel);
               
-              $("#text_direccion").val(data[6]);
-              $("#text_correo").val(data[7]);
+              $("#text_direccion").val(data.cliente_direccion);
+              $("#text_correo").val(data.cliente_correo);
 
-              $("#text_empresa_laboral").val(data[11]);
-              $("#text_cargo_laboral").val(data[12]);
-              establecerTelefono("#text_tel_laboral", data[13]);
-              $("#text_dir_laboral").val(data[14]);
+              // Limpiar campos laborales (no disponibles en el SP actual)
+              $("#text_empresa_laboral").val('');
+              $("#text_cargo_laboral").val('');
+              $("#text_tel_laboral").val('');
+              $("#text_dir_laboral").val('');
 
-              $("#text_refe_per_e").val(data[9]); 
-              establecerTelefono("#text_nro_cel_per_e", data[10]);
-              $("#text_refe_per_dir").val(data[15]);
+              // Usar los campos de referencia disponibles
+              $("#text_refe_per_e").val(data.cliente_refe || ''); 
+              establecerTelefono("#text_nro_cel_per_e", data.cliente_cel_refe);
+              $("#text_refe_per_dir").val(''); // No disponible
 
-              $("#text_refe_fami_e").val(data[16]);
-              establecerTelefono("#text_nro_cel_fami_e", data[17]);
-              $("#text_refe_fami_dir").val(data[18]);
+              // Limpiar campos familiares (no disponibles en el SP actual)
+              $("#text_refe_fami_e").val('');
+              $("#text_nro_cel_fami_e").val('');
+              $("#text_refe_fami_dir").val('');
 
           })
 
@@ -834,28 +860,31 @@
                   var data = tbl_clientes.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
               }
 
-              $("#id_cliente").val(data[0]);
-              $("#text_nombres").val(data[1]);
-              $("#text_documento").val(data[2]);
+              $("#id_cliente").val(data.cliente_id);
+              $("#text_nombres").val(data.cliente_nombres);
+              $("#text_documento").val(data.cliente_dni);
               
               // Formatear teléfonos para visualización (remover +505 para mostrar solo 8 dígitos)
-              establecerTelefono("#text_cel", data[3]);
+              establecerTelefono("#text_cel", data.cliente_cel);
               
-              $("#text_direccion").val(data[6]);
-              $("#text_correo").val(data[7]);
+              $("#text_direccion").val(data.cliente_direccion);
+              $("#text_correo").val(data.cliente_correo);
 
-              $("#text_empresa_laboral").val(data[11]);
-              $("#text_cargo_laboral").val(data[12]);
-              establecerTelefono("#text_tel_laboral", data[13]);
-              $("#text_dir_laboral").val(data[14]);
+              // Limpiar campos laborales (no disponibles en el SP actual)
+              $("#text_empresa_laboral").val('');
+              $("#text_cargo_laboral").val('');
+              $("#text_tel_laboral").val('');
+              $("#text_dir_laboral").val('');
 
-              $("#text_refe_per_e").val(data[9]); 
-              establecerTelefono("#text_nro_cel_per_e", data[10]);
-              $("#text_refe_per_dir").val(data[15]);
+              // Usar los campos de referencia disponibles
+              $("#text_refe_per_e").val(data.cliente_refe || ''); 
+              establecerTelefono("#text_nro_cel_per_e", data.cliente_cel_refe);
+              $("#text_refe_per_dir").val(''); // No disponible
 
-              $("#text_refe_fami_e").val(data[16]); 
-              establecerTelefono("#text_nro_cel_fami_e", data[17]);
-              $("#text_refe_fami_dir").val(data[18]); 
+              // Limpiar campos familiares (no disponibles en el SP actual)
+              $("#text_refe_fami_e").val('');
+              $("#text_nro_cel_fami_e").val('');
+              $("#text_refe_fami_dir").val('');
 
           })
 
@@ -873,10 +902,10 @@
                   var data = tbl_clientes.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
               }
 
-              var cliente_id = data[0];
+              var cliente_id = data.cliente_id;
 
               Swal.fire({
-                  title: 'Desea Eliminar el Cliente "' + data[1] + '" ?',
+                  title: 'Desea Eliminar el Cliente "' + data.cliente_nombres + '" ?',
                   icon: 'warning',
                   showCancelButton: true,
                   confirmButtonColor: '#3085d6',
@@ -948,8 +977,8 @@
               } else {
                   var data = tbl_clientes.row($(this).parents('tr')).data(); 
               }
-              var cliente_id = data[0];
-              var cliente_nombre = data[1];
+              var cliente_id = data.cliente_id;
+              var cliente_nombre = data.cliente_nombres;
               $("#id_refe").val(cliente_id);
 
               // Limpiar campos del modal
