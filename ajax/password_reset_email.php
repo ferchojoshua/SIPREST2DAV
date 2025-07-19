@@ -1,70 +1,75 @@
 <?php
-require_once "../controladores/usuario_controlador.php";
-require_once "../modelos/usuario_modelo.php";
-require_once "../PHPMailer/src/Exception.php";
-require_once "../PHPMailer/src/PHPMailer.php";
-require_once "../PHPMailer/src/SMTP.php";
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Requerir archivos necesarios, incluyendo la configuración central de correo
+require_once __DIR__ . '/../utilitarios/email_config.php';
+require_once __DIR__ . '/../PHPMailer/src/Exception.php';
+require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../modelos/conexion.php';
+require_once __DIR__ . '/../controladores/configuracion_controlador.php';
+require_once __DIR__ . '/../modelos/configuracion_modelo.php';
+
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-class AjaxPasswordResetEmail {
+class PasswordResetEmail {
+    
+    public function handleRequest() {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['usuario_o_correo'])) {
+            $this->sendPasswordResetEmail($_POST['usuario_o_correo']);
+        }
+    }
 
-    public $usuario;
+    private function sendPasswordResetEmail($userOrEmail) {
+        // ... (código existente para buscar usuario y generar contraseña)
+        // 1. Validar que el campo no esté vacío
+        if (empty($userOrEmail)) {
+            echo json_encode(['error' => 'Por favor, ingrese su usuario o correo electrónico.']);
+            return;
+        }
 
-    public function enviarCorreoRestablecimiento() {
-        // 1. Verificar que el usuario existe y obtener sus datos
-        $user_data = UsuarioModelo::mdlVerificarUsuarioExiste($this->usuario);
+        // 2. Buscar al usuario en la base de datos
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM usuarios WHERE nombre_usuario = :user OR correo = :email");
+        $stmt->bindParam(':user', $userOrEmail, PDO::PARAM_STR);
+        $stmt->bindParam(':email', $userOrEmail, PDO::PARAM_STR);
+        $stmt->execute();
+        $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user_data) {
-            echo json_encode(['success' => false, 'message' => 'El usuario proporcionado no existe.']);
+            echo json_encode(['error' => 'El usuario o correo electrónico no se encuentra registrado.']);
             return;
         }
 
-        // Verificar que el usuario tenga un correo electrónico
-        if (empty($user_data['correo'])) {
-            echo json_encode(['success' => false, 'message' => 'El usuario no tiene un correo electrónico registrado.']);
-            return;
-        }
+        // 3. Generar una contraseña temporal segura
+        $temporal_password = bin2hex(random_bytes(5)); // 10 caracteres
 
-        // 2. Generar una contraseña temporal aleatoria
-        $temp_password = $this->generarClaveAleatoria();
+        // 4. Actualizar la contraseña en la base de datos (hasheada)
+        $hashed_password = password_hash($temporal_password, PASSWORD_DEFAULT);
+        $stmt_update = Conexion::conectar()->prepare("UPDATE usuarios SET password = :password WHERE id_usuario = :id");
+        $stmt_update->bindParam(':password', $hashed_password, PDO::PARAM_STR);
+        $stmt_update->bindParam(':id', $user_data['id_usuario'], PDO::PARAM_INT);
+        $stmt_update->execute();
         
-        // 3. Encriptar la contraseña temporal
-        $password_encriptada = crypt($temp_password, '$2a$07$azybxcags23425sdg23sdfhsd$');
-        
-        // 4. Actualizar la contraseña en la base de datos
-        $tabla = "usuarios";
-        $data = ["clave" => $password_encriptada];
-        $id = $user_data['id_usuario'];
-        $nameId = "id_usuario";
-        
-        $respuesta = UsuarioModelo::mdlActualizarClaveUsuario($tabla, $data, $id, $nameId);
-
-        if ($respuesta != "ok") {
-            echo json_encode([
-                'success' => false, 
-                'message' => 'Error al actualizar la contraseña en la base de datos.'
-            ]);
-            return;
-        }
-
         // 5. Enviar correo electrónico con la contraseña temporal
         $mail = new PHPMailer(true);
         
         try {
-            // Configuración del servidor
+            // Usar la configuración central
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com'; // Cambiar según tu servidor SMTP
-            $mail->SMTPAuth = true;
-            $mail->Username = 'siprestaitsolutions@gmail.com'; // Cambiar por tu correo
-            $mail->Password = 'Sipresta2025'; // Cambiar por tu contraseña de aplicación
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
+            $mail->Host       = SMTP_HOST;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = SMTP_USERNAME;
+            $mail->Password   = SMTP_PASSWORD;
+            $mail->SMTPSecure = SMTP_SECURE;
+            $mail->Port       = SMTP_PORT;
             
             // Configuración de remitente y destinatario
-            $mail->setFrom('tu_correo@gmail.com', 'SIPREST - Sistema de Préstamos');
-            $mail->addAddress($user_data['correo'], $user_data['nombre_usuario'] . ' ' . $user_data['apellido_usuario']);
+            $mail->setFrom(EMAIL_FROM_ADDRESS, EMAIL_FROM_NAME);
+            $mail->addAddress($user_data['correo'], $user_data['nombre_usuario']);
             
             // Contenido del correo
             $mail->isHTML(true);
@@ -74,90 +79,34 @@ class AjaxPasswordResetEmail {
             $empresa = $this->obtenerDatosEmpresa();
             
             $mail->Body = '
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="color: #3498db;">Restablecimiento de Contraseña</h2>
-                    <p style="font-size: 16px;">' . $empresa['nombre'] . '</p>
-                </div>
-                
-                <p>Estimado/a <strong>' . $user_data['nombre_usuario'] . ' ' . $user_data['apellido_usuario'] . '</strong>,</p>
-                
-                <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta en el sistema SIPREST.</p>
-                
-                <p>Su nueva contraseña temporal es: <strong style="background-color: #f8f9fa; padding: 5px 10px; border-radius: 3px;">' . $temp_password . '</strong></p>
-                
-                <p>Por favor, inicie sesión con esta contraseña temporal y cámbiela inmediatamente por una contraseña segura de su elección.</p>
-                
-                <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
-                    <p style="margin: 0; color: #555;">
-                        <strong>Nota de seguridad:</strong> Si usted no solicitó este cambio de contraseña, por favor contacte al administrador del sistema inmediatamente.
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                    <h2 style="color: #333;">Restablecimiento de Contraseña para ' . htmlspecialchars($empresa['nombre']) . '</h2>
+                    <p>Hola ' . htmlspecialchars($user_data['nombre_usuario']) . ',</p>
+                    <p>Has solicitado restablecer tu contraseña. A continuación, te proporcionamos una nueva contraseña temporal:</p>
+                    <p style="text-align: center; font-size: 20px; font-weight: bold; background-color: #f2f2f2; padding: 10px; border-radius: 5px;">
+                        ' . $temporal_password . '
                     </p>
+                    <p>Te recomendamos encarecidamente que inicies sesión con esta contraseña y la cambies de inmediato en la sección de tu perfil.</p>
+                    <hr>
+                    <p style="font-size: 12px; color: #777;">Si no solicitaste este cambio, puedes ignorar este correo electrónico de forma segura.</p>
                 </div>
-                
-                <p>Saludos cordiales,</p>
-                <p><strong>' . $empresa['nombre'] . '</strong><br>Sistema de Préstamos</p>
-                
-                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #777; font-size: 12px;">
-                    <p>Este es un correo automático, por favor no responda a este mensaje.</p>
-                </div>
-            </div>';
+            ';
             
             $mail->send();
-            
-            echo json_encode([
-                'success' => true, 
-                'message' => 'Se ha enviado una contraseña temporal a su correo electrónico.'
-            ]);
+            echo json_encode(['exito' => 'Se ha enviado una nueva contraseña a tu correo electrónico.']);
             
         } catch (Exception $e) {
-            echo json_encode([
-                'success' => false, 
-                'message' => 'Error al enviar el correo: ' . $mail->ErrorInfo
-            ]);
+            echo json_encode(['error' => 'No se pudo enviar el correo. Por favor, contacta al administrador. Mailer Error: ' . $mail->ErrorInfo]);
         }
     }
-    
-    /**
-     * Genera una contraseña aleatoria segura
-     */
-    private function generarClaveAleatoria($longitud = 8) {
-        $caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
-        $clave = '';
-        $max = strlen($caracteres) - 1;
-        
-        for ($i = 0; $i < $longitud; $i++) {
-            $clave .= $caracteres[random_int(0, $max)];
-        }
-        
-        return $clave;
-    }
-    
-    /**
-     * Obtiene los datos de la empresa para el correo
-     */
+
     private function obtenerDatosEmpresa() {
-        $mysqli = new mysqli('localhost', 'root', '', 'dbprestamo');
-        
-        if ($mysqli->connect_error) {
-            return ['nombre' => 'SIPREST'];
-        }
-        
-        $query = "SELECT confi_razon FROM empresa WHERE confi_id = 1";
-        $resultado = $mysqli->query($query);
-        
-        if ($resultado && $row = $resultado->fetch_assoc()) {
-            return ['nombre' => $row['confi_razon']];
-        }
-        
-        return ['nombre' => 'SIPREST'];
+        $empresa = ConfiguracionControlador::ctrObtenerDataEmpresa();
+        return [
+            'nombre' => $empresa->confi_razon ?? 'Sistema de Préstamos'
+        ];
     }
 }
 
-// Procesar la solicitud
-if (isset($_POST['usuario'])) {
-    $reset = new AjaxPasswordResetEmail();
-    $reset->usuario = $_POST['usuario'];
-    $reset->enviarCorreoRestablecimiento();
-} else {
-    echo json_encode(['success' => false, 'message' => 'Falta el parámetro de usuario.']);
-} 
+$passwordReset = new PasswordResetEmail();
+$passwordReset->handleRequest(); 

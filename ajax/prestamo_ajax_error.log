@@ -1,0 +1,244 @@
+[15-Jul-2025 07:33:44 Europe/Berlin] PHP Warning:  require_once(../controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 10
+[15-Jul-2025 07:33:44 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php:10
+Stack trace:
+#0 C:\xampp\htdocs\siprest\debug_amortizacion_ajax.php(18): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 10
+[15-Jul-2025 07:34:08 Europe/Berlin] PHP Warning:  require_once(../controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 10
+[15-Jul-2025 07:34:08 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php:10
+Stack trace:
+#0 C:\xampp\htdocs\siprest\debug_amortizacion_ajax.php(40): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 10
+[15-Jul-2025 08:42:46 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:42:47 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:42:47 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:42:47 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:44:14 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:44:14 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:44:14 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:44:14 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:45:16 Europe/Berlin] Acción no reconocida en prestamo_ajax.php: 1. POST data: Array
+(
+    [accion] => 1
+    [nro_prestamo] => 00000001
+    [cliente_id] => 10
+    [pres_monto] => 20000
+    [pres_cuotas] => 12
+    [pres_interes] => 4
+    [fpago_id] => 4
+    [moneda_id] => 1
+    [pres_f_emision] => 2025-07-30
+    [pres_monto_cuota] => 1733.33
+    [pres_monto_interes] => 800
+    [pres_monto_total] => 20800
+    [id_usuario] => 1
+    [caja_id] => 4
+    [tipo_calculo] => FLAT
+)
+
+[15-Jul-2025 08:45:16 Europe/Berlin] Acción no reconocida en prestamo_ajax.php: 2. POST data: Array
+(
+    [accion] => 2
+    [nro_prestamo] => 00000001
+    [pdetalle_nro_cuota] => 1,2,3,4,5,6,7,8,9,10,11,12
+    [pdetalle_monto_cuota] => 1733.33,1733.33,1733.33,1733.33,1733.33,1733.33,1733.33,1733.33,1733.33,1733.33,1733.33,1733.33
+    [pdetalle_fecha] => 2025-07-30,2025-08-30,2025-09-30,2025-10-30,2025-11-30,2025-12-30,2026-01-30,2026-03-02,2026-03-30,2026-04-30,2026-05-30,2026-06-30
+)
+
+[15-Jul-2025 08:45:31 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:45:31 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:45:31 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:45:31 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:45:49 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:45:49 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:45:49 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:45:49 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:46:16 Europe/Berlin] Acción no reconocida en prestamo_ajax.php: 1. POST data: Array
+(
+    [accion] => 1
+    [nro_prestamo] => 00000001
+    [cliente_id] => 10
+    [pres_monto] => 200000
+    [pres_cuotas] => 12
+    [pres_interes] => 4.5
+    [fpago_id] => 4
+    [moneda_id] => 1
+    [pres_f_emision] => 2025-07-31
+    [pres_monto_cuota] => 17075.7
+    [pres_monto_interes] => 4908.45
+    [pres_monto_total] => 204908.45
+    [id_usuario] => 1
+    [caja_id] => 4
+    [tipo_calculo] => FRANCES
+)
+
+[15-Jul-2025 08:46:16 Europe/Berlin] Acción no reconocida en prestamo_ajax.php: 2. POST data: Array
+(
+    [accion] => 2
+    [nro_prestamo] => 00000001
+    [pdetalle_nro_cuota] => 1,2,3,4,5,6,7,8,9,10,11,12
+    [pdetalle_monto_cuota] => 17075.70,17075.70,17075.70,17075.70,17075.70,17075.70,17075.70,17075.70,17075.70,17075.70,17075.70,17075.70
+    [pdetalle_fecha] => 2025-07-31,2025-08-31,2025-10-01,2025-10-31,2025-12-01,2025-12-31,2026-01-31,2026-03-03,2026-03-31,2026-05-01,2026-05-31,2026-07-01
+)
+
+[15-Jul-2025 08:48:42 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:48:42 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:48:42 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:48:42 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:49:46 Europe/Berlin] Acción no reconocida en prestamo_ajax.php: 1. POST data: Array
+(
+    [accion] => 1
+    [nro_prestamo] => 00000001
+    [cliente_id] => 10
+    [pres_monto] => 20000
+    [pres_cuotas] => 12
+    [pres_interes] => 4.5
+    [fpago_id] => 4
+    [moneda_id] => 1
+    [pres_f_emision] => 2025-07-30
+    [pres_monto_cuota] => 1741.67
+    [pres_monto_interes] => 900
+    [pres_monto_total] => 20900
+    [id_usuario] => 1
+    [caja_id] => 4
+    [tipo_calculo] => FLAT
+)
+
+[15-Jul-2025 08:49:47 Europe/Berlin] Acción no reconocida en prestamo_ajax.php: 2. POST data: Array
+(
+    [accion] => 2
+    [nro_prestamo] => 00000001
+    [pdetalle_nro_cuota] => 1,2,3,4,5,6,7,8,9,10,11,12
+    [pdetalle_monto_cuota] => 1741.67,1741.67,1741.67,1741.67,1741.67,1741.67,1741.67,1741.67,1741.67,1741.67,1741.67,1741.67
+    [pdetalle_fecha] => 2025-07-30,2025-08-30,2025-09-30,2025-10-30,2025-11-30,2025-12-30,2026-01-30,2026-03-02,2026-03-30,2026-04-30,2026-05-30,2026-06-30
+)
+
+[15-Jul-2025 08:51:23 Europe/Berlin] DEBUG: Inicia ajaxRegistrarPrestamo
+[15-Jul-2025 08:51:24 Europe/Berlin] DEBUG: Finaliza ajaxRegistrarPrestamo
+[15-Jul-2025 08:51:24 Europe/Berlin] DEBUG: Inicia ajaxRegistrarPrestamoDetalle
+[15-Jul-2025 08:51:24 Europe/Berlin] DEBUG: Finaliza ajaxRegistrarPrestamoDetalle
+[15-Jul-2025 20:04:09 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 20:04:09 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 20:04:09 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 20:04:09 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 23:42:07 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 23:42:07 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 23:42:07 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 23:42:07 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 08:23:35 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 08:23:35 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 08:23:35 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 08:23:35 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 08:26:03 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 08:26:03 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 08:26:03 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 08:26:03 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 08:27:06 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 08:27:06 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 08:27:06 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 08:27:06 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 19:16:57 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 19:16:57 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 19:16:57 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 19:16:57 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:22:53 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:22:53 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:22:53 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 20:22:53 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:31:38 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:31:38 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:31:38 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:31:38 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 20:32:18 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:32:18 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:32:18 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:32:18 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 20:34:54 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:34:54 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:34:54 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 20:34:54 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:35:57 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:35:57 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:35:57 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:35:57 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 20:42:25 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:42:25 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:42:25 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:42:25 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 20:44:09 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 20:44:09 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 20:44:09 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 20:44:09 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 22:53:51 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 22:53:51 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 22:53:51 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 22:53:51 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 22:54:37 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 22:54:37 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 22:54:37 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[16-Jul-2025 22:54:37 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 23:00:43 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[16-Jul-2025 23:00:43 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[16-Jul-2025 23:00:43 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[16-Jul-2025 23:00:43 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 18:41:21 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 18:41:21 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 18:41:21 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 18:41:21 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 19:24:00 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 19:24:00 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 19:24:00 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 19:24:00 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 19:24:03 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 19:24:03 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 19:24:03 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 19:24:03 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 19:24:52 Europe/Berlin] DEBUG: Inicia ajaxRegistrarPrestamo
+[18-Jul-2025 19:24:52 Europe/Berlin] DEBUG: Finaliza ajaxRegistrarPrestamo
+[18-Jul-2025 19:24:52 Europe/Berlin] DEBUG: Inicia ajaxRegistrarPrestamoDetalle
+[18-Jul-2025 19:24:52 Europe/Berlin] DEBUG: Finaliza ajaxRegistrarPrestamoDetalle
+[18-Jul-2025 19:44:19 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 19:44:19 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 19:44:19 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 19:44:19 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 20:46:30 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 20:46:30 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 20:46:30 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 20:46:30 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 20:56:35 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 20:56:35 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 20:56:35 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 20:56:35 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 20:59:45 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 20:59:45 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 20:59:45 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 20:59:45 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 20:59:49 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 20:59:49 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 20:59:49 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 20:59:49 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 23:05:00 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 23:05:00 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 23:05:00 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 23:05:00 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 23:09:40 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 23:09:40 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 23:09:40 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 23:09:40 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 23:24:55 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 23:24:55 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 23:24:55 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 23:24:55 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 23:40:18 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[18-Jul-2025 23:40:18 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[18-Jul-2025 23:40:18 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[18-Jul-2025 23:40:18 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[18-Jul-2025 23:42:34 Europe/Berlin] DEBUG: Inicia ajaxRegistrarPrestamo
+[18-Jul-2025 23:42:34 Europe/Berlin] DEBUG: Finaliza ajaxRegistrarPrestamo
+[18-Jul-2025 23:42:34 Europe/Berlin] DEBUG: Inicia ajaxRegistrarPrestamoDetalle
+[18-Jul-2025 23:42:34 Europe/Berlin] DEBUG: Finaliza ajaxRegistrarPrestamoDetalle
+[19-Jul-2025 00:15:34 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[19-Jul-2025 00:15:34 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[19-Jul-2025 00:15:34 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[19-Jul-2025 00:15:34 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago

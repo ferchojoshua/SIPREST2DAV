@@ -265,43 +265,53 @@ if ($row1 = $resultado->fetch_assoc()) {
             <strong>Monto en Letras:</strong> ' . $montoEnLetras . '
         </div>
         
-        <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Detalle de Cuotas</h3>
-        
         <table class="tabla-cuotas">
             <thead>
                 <tr>
-                    <th>N° CUOTA</th>
-                    <th>FECHA VENCIMIENTO</th>
-                    <th>MONTO CUOTA</th>
-                    <th>ESTADO</th>
+                    <th>Nro Cuota</th>
+                    <th>Fecha</th>
+                    <th>Monto Original</th>
+                    <th>Cargos Adicionales</th>
+                    <th>Total a Pagar</th>
+                    <th>Estado</th>
+                    <th>Fecha de Pago</th>
                 </tr>
             </thead>
             <tbody>';
+    
+    // Consulta para el detalle de cuotas
+    $query_cuotas = "SELECT *, DATE_FORMAT(pdetalle_fecha, '%d/%m/%Y') AS fecha_cuota, DATE_FORMAT(pdetalle_fecha_registro, '%d/%m/%Y') AS fecha_pago FROM prestamo_detalle WHERE nro_prestamo = '$codigo' ORDER BY pdetalle_nro_cuota ASC";
+    $resultado_cuotas = $mysqli->query($query_cuotas);
+    
+    while ($row_cuota = $resultado_cuotas->fetch_assoc()) {
+        // Aseguramos que pdetalle_monto_original_cuota exista, si no, usamos pdetalle_monto_cuota
+        $monto_original = (float)($row_cuota['pdetalle_monto_original_cuota'] ?? $row_cuota['pdetalle_monto_cuota']);
+        $total_pagar = (float)($row_cuota['pdetalle_estado_cuota'] == 'pagada' ? $monto_original : $row_cuota['pdetalle_saldo_cuota']);
+        $cargos_adicionales = $total_pagar - $monto_original;
 
-    $query2 = "SELECT 
-                    pdetalle_nro_cuota, 
-                    DATE_FORMAT(pdetalle_fecha, '%d/%m/%Y') as fecha, 
-                    pdetalle_monto_cuota, 
-                    pdetalle_estado_cuota 
-                FROM prestamo_detalle 
-                WHERE nro_prestamo = '$codigo' 
-                ORDER BY pdetalle_nro_cuota";
-    $resultado2 = $mysqli->query($query2);
+        if ($cargos_adicionales < 0) {
+            $cargos_adicionales = 0;
+        }
 
-    while ($row2 = $resultado2->fetch_assoc()) {
-        $estadoClass = $row2['pdetalle_estado_cuota'] == 'pagado' ? 'estado-pagado' : 'estado-pendiente';
-        $html .= "
-        <tr>
-            <td class='text-center'>{$row2['pdetalle_nro_cuota']}</td>
-            <td class='text-center'>{$row2['fecha']}</td>
-            <td class='text-right'>" . number_format($row2['pdetalle_monto_cuota'], 2) . "</td>
-            <td class='text-center $estadoClass'>" . strtoupper($row2['pdetalle_estado_cuota']) . "</td>
-        </tr>";
+        if ($row_cuota['pdetalle_estado_cuota'] != 'pagada') {
+             $total_pagar = $row_cuota['pdetalle_saldo_cuota'];
+        }
+
+        $estado_clase = $row_cuota['pdetalle_estado_cuota'] == 'pagada' ? 'estado-pagado' : 'estado-pendiente';
+        $fecha_pago_display = $row_cuota['fecha_pago'] ? $row_cuota['fecha_pago'] : 'Pendiente';
+        
+        $html .= '<tr>
+                    <td class="text-center">' . $row_cuota['pdetalle_nro_cuota'] . '</td>
+                    <td class="text-center">' . $row_cuota['fecha_cuota'] . '</td>
+                    <td class="text-right">' . number_format($monto_original, 2) . '</td>
+                    <td class="text-right">' . number_format($cargos_adicionales, 2) . '</td>
+                    <td class="text-right">' . number_format($total_pagar, 2) . '</td>
+                    <td class="text-center ' . $estado_clase . '">' . ucwords(str_replace('_', ' ', $row_cuota['pdetalle_estado_cuota'])) . '</td>
+                    <td class="text-center">' . $fecha_pago_display . '</td>
+                </tr>';
     }
-
-    $html .= '
-            </tbody>
-        </table>
+    
+    $html .= '</tbody></table>
         
         <div class="seccion-firmas">
             <div class="firma-linea"></div>

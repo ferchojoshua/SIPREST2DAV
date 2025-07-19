@@ -34,12 +34,39 @@ class AdminPrestamosControlador
         $pagoExitoso = AdminPrestamosModelo::mdlPagarCuota($nro_prestamo, $pdetalle_nro_cuota);
 
         if ($pagoExitoso == "ok") {
+            // Intentar enviar notificación por WhatsApp
             $infoWhatsApp = AdminPrestamosModelo::mdlObtenerInfoParaWhatsApp($nro_prestamo, $pdetalle_nro_cuota);
+            
             if ($infoWhatsApp) {
-                // Para un pago completo, el monto pagado es el de la cuota.
-                $infoWhatsApp['monto_pagado'] = $infoWhatsApp['pdetalle_monto_cuota'];
+                try {
+                    // Usar la nueva API de WhatsApp Business
+                    require_once __DIR__ . '/../utilitarios/whatsapp_business_config.php';
+                    $config = validarConfigWhatsAppBusiness();
+                    
+                    if ($config['valido']) {
+                        require_once __DIR__ . '/../utilitarios/WhatsAppBusinessAPI.php';
+                        $whatsapp = new WhatsAppBusinessAPI();
+                        
+                        $mensaje = $whatsapp->crearMensajePago(
+                            $infoWhatsApp['cliente_nombres'],
+                            $nro_prestamo,
+                            $pdetalle_nro_cuota,
+                            $infoWhatsApp['pdetalle_monto_cuota'],
+                            $infoWhatsApp['pres_monto_restante'],
+                            $infoWhatsApp['moneda_simbolo']
+                        );
+                        
+                        $whatsapp->enviarMensajeTexto($infoWhatsApp['cliente_celular'], $mensaje);
+                    } else {
+                        // Opcional: registrar que la configuración no es válida si se desea
+                        error_log("WhatsApp Business API no configurado o inactivo: " . $config['mensaje']);
+                    }
+                } catch (Exception $e) {
+                    error_log("Error al procesar envío de WhatsApp: " . $e->getMessage());
+                }
             }
-            return array("status" => "ok", "whatsapp_data" => $infoWhatsApp);
+
+            return array("status" => "ok");
         } else {
             return array("status" => "error", "message" => $pagoExitoso);
         }
@@ -91,10 +118,74 @@ class AdminPrestamosControlador
             if ($infoWhatsApp) {
                 // Para un abono, el monto pagado es el que se envía como parámetro.
                 $infoWhatsApp['monto_pagado'] = $monto_a_abonar;
+                
+                // Generar mensaje de WhatsApp para abono solo si hay datos completos
+                try {
+                    // Verificar qué API de WhatsApp usar (Business API o Twilio)
+                    if (file_exists(__DIR__ . '/../utilitarios/whatsapp_business_config.php')) {
+                        require_once __DIR__ . '/../utilitarios/whatsapp_business_config.php';
+                        $config_business = validarConfigWhatsAppBusiness();
+                        
+                        if ($config_business['valido']) {
+                            // Usar WhatsApp Business API (oficial)
+                            require_once __DIR__ . '/../utilitarios/WhatsAppBusinessAPI.php';
+                            $whatsapp = new WhatsAppBusinessAPI();
+                            $mensaje = $whatsapp->crearMensajeAbono(
+                                $infoWhatsApp['cliente_nombres'],
+                                $nro_prestamo,
+                                $pdetalle_nro_cuota,
+                                $monto_a_abonar,
+                                $infoWhatsApp['pres_monto_restante'],
+                                $infoWhatsApp['moneda_simbolo']
+                            );
+                            
+                            // Enviar usando API oficial
+                            $enviado = $whatsapp->enviarMensajeTexto(
+                                $infoWhatsApp['cliente_celular'],
+                                $mensaje
+                            );
+                            
+                            $infoWhatsApp['mensaje'] = $mensaje;
+                            $infoWhatsApp['telefono'] = $infoWhatsApp['cliente_celular'];
+                            $infoWhatsApp['api_usada'] = 'WhatsApp Business API';
+                            $infoWhatsApp['enviado'] = $enviado;
+                        } else {
+                            error_log("WhatsApp Business API no configurado: " . $config_business['mensaje']);
+                            $infoWhatsApp['error'] = "WhatsApp Business API no configurado";
+                        }
+                    } else {
+                        // Fallback a Twilio si no existe configuración Business
+                        require_once __DIR__ . '/../utilitarios/WhatsAppAPI.php';
+                        $whatsapp = new WhatsAppAPI();
+                        $mensaje = $whatsapp->crearMensajeAbono(
+                            $infoWhatsApp['cliente_nombres'],
+                            $nro_prestamo,
+                            $pdetalle_nro_cuota,
+                            $monto_a_abonar,
+                            $infoWhatsApp['pres_monto_restante'],
+                            $infoWhatsApp['moneda_simbolo']
+                        );
+                        
+                        $infoWhatsApp['mensaje'] = $mensaje;
+                        $infoWhatsApp['telefono'] = $infoWhatsApp['cliente_celular'];
+                        $infoWhatsApp['api_usada'] = 'Twilio (fallback)';
+                    }
+                } catch (Exception $e) {
+                    error_log("Error al generar mensaje WhatsApp: " . $e->getMessage());
+                    $infoWhatsApp['error'] = $e->getMessage();
+                }
             }
             return array("status" => "ok", "whatsapp_data" => $infoWhatsApp);
         } else {
-            return array("status" => "error", "message" => $RegistrarAbono);
+            // Convertir códigos de error a mensajes amigables
+            $mensajes_error = [
+                "error_cuota_no_encontrada" => "No se encontró la cuota especificada. Verifique el número de préstamo y cuota.",
+                "error_prestamo_no_existe" => "El préstamo especificado no existe en el sistema.",
+                "error_no_cuotas_pendientes" => "No hay cuotas pendientes para este préstamo."
+            ];
+            
+            $mensaje = isset($mensajes_error[$RegistrarAbono]) ? $mensajes_error[$RegistrarAbono] : $RegistrarAbono;
+            return array("status" => "error", "message" => $mensaje);
         }
     }
 
@@ -129,7 +220,7 @@ class AdminPrestamosControlador
     static public function ctrEnviarTablaCorreo($nro_prestamo, $cliente_nombres) {
         try {
             // Obtener información del préstamo y cliente
-            $infoPrestamo = AdminPrestamosModelo::mdlObtenerInfoPrestamo($nro_prestamo);
+            $infoPrestamo = AdminPrestamosModelo::  mdlObtenerInfoPrestamo($nro_prestamo);
             if (!$infoPrestamo) {
                 return array("status" => "error", "message" => "No se encontró información del préstamo.");
             }

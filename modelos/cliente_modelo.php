@@ -10,17 +10,26 @@ class ClienteModelo
     /*===================================================================*/
     static public function mdlListarSelectClientes()
     {
-        $stmt = Conexion::conectar()->prepare("SELECT   pc.cliente_id ,
-                                                        c.cliente_nombres
-                                                    FROM
-                                                        prestamo_cabecera pc INNER JOIN clientes c
-                                                        on pc.cliente_id = c.cliente_id
-                                                        GROUP BY pc.cliente_id			
-                                                        ORDER BY c.cliente_nombres asc");
-
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                                                    cliente_id,
+                                                    CONCAT(COALESCE(cliente_nombres, ''), ' - ', COALESCE(cliente_dni, '')) as cliente_nombres
+                                                FROM 
+                                                    clientes 
+                                                WHERE 
+                                                    cliente_estatus = '1'
+                                                ORDER BY 
+                                                    cliente_nombres ASC");
+            
+            $stmt->execute();
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $resultado;
+            
+        } catch (PDOException $e) {
+            error_log("Error en mdlListarSelectClientes: " . $e->getMessage());
+            return false;
+        }
     }
 
 
@@ -28,11 +37,22 @@ class ClienteModelo
     /*=============================================
     Peticion LISTAR PARA MOSTRAR DATOS EN DATATABLE CON PROCEDURE
     =============================================*/
-    static public function mdlListarClientes()
+    static public function mdlListarClientes($sucursal_id)
+    {
+        // Por ahora usar SP_LISTAR_CLIENTES_TABLE hasta que se resuelva el tema de sucursales
+        $smt = Conexion::conectar()->prepare('call SP_LISTAR_CLIENTES_TABLE()');
+        $smt->execute();
+        return $smt->fetchAll(PDO::FETCH_NUM);
+    }
+
+    /*=============================================
+    Peticion LISTAR PARA MOSTRAR DATOS EN DATATABLE CON PROCEDURE (ASOCIATIVO)
+    =============================================*/
+    static public function mdlListarClientesForDataTableAssoc($sucursal_id)
     {
         $smt = Conexion::conectar()->prepare('call SP_LISTAR_CLIENTES_TABLE()');
         $smt->execute();
-        return $smt->fetchAll();
+        return $smt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 
@@ -41,13 +61,13 @@ class ClienteModelo
     /*=============================================
     REGISTRAR CLIENTE
     =============================================*/
-    static public function mdlRegistrarCliente($cliente_nombres, $cliente_dni, $cliente_cel, $cliente_direccion, $cliente_correo,
+    static public function mdlRegistrarCliente($sucursal_id, $cliente_nombres, $cliente_dni, $cliente_cel, $cliente_direccion, $cliente_correo,
                                                  $cliente_empresa_laboral, $cliente_cargo_laboral, $cliente_tel_laboral, $cliente_dir_laboral,
                                                  $cliente_refe_per_nombre, $cliente_refe_per_cel, $cliente_refe_per_dir,
                                                  $cliente_refe_fami_nombre, $cliente_refe_fami_cel, $cliente_refe_fami_dir)
     {
         try {
-            $stmt = Conexion::conectar()->prepare("INSERT INTO clientes  (cliente_nombres, 
+            $stmt = Conexion::conectar()->prepare("INSERT INTO clientes  (sucursal_id, cliente_nombres, 
                                                                           cliente_dni,
                                                                           cliente_cel,
                                                                           cliente_direccion ,
@@ -63,7 +83,7 @@ class ClienteModelo
                                                                           cliente_refe_fami_nombre,
                                                                           cliente_refe_fami_cel,
                                                                           cliente_refe_fami_dir)
-                                                                VALUES (:cliente_nombres, 
+                                                                VALUES (:sucursal_id, :cliente_nombres, 
                                                                         :cliente_dni,
                                                                         :cliente_cel,
                                                                         :cliente_direccion,
@@ -79,6 +99,7 @@ class ClienteModelo
                                                                         :cliente_refe_fami_cel,
                                                                         :cliente_refe_fami_dir)");
 
+            $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
             $stmt->bindParam(":cliente_nombres", $cliente_nombres, PDO::PARAM_STR);
             $stmt->bindParam(":cliente_dni", $cliente_dni, PDO::PARAM_STR);
             $stmt->bindParam(":cliente_cel", $cliente_cel, PDO::PARAM_STR);
@@ -289,6 +310,38 @@ class ClienteModelo
         return $stmt->fetch(PDO::FETCH_OBJ);
     }
 
-
+    /*===================================================================*/
+    //BUSCAR CLIENTES PARA SELECT2
+    /*===================================================================*/
+    static public function mdlBuscarClientesParaSelect($busqueda)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                                                    cliente_id,
+                                                    cliente_nombres,
+                                                    cliente_dni
+                                                FROM 
+                                                    clientes 
+                                                WHERE 
+                                                    cliente_estatus = '1'
+                                                    AND (
+                                                        cliente_nombres LIKE :busqueda 
+                                                        OR cliente_dni LIKE :busqueda
+                                                    )
+                                                ORDER BY 
+                                                    cliente_nombres ASC
+                                                LIMIT 10");
+            
+            $busqueda_param = "%" . $busqueda . "%";
+            $stmt->bindParam(":busqueda", $busqueda_param, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Error en mdlBuscarClientesParaSelect: " . $e->getMessage());
+            return false;
+        }
+    }
 
 }

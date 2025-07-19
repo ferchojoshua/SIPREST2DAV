@@ -620,6 +620,7 @@
                 data: data,
                 processData: false,
                 contentType: false,
+                dataType: 'json',
                 beforeSend: function() {
                     $("#btnIngresar").html(
                         '<i class="fas fa-spinner fa-spin"></i> Ingresando...');
@@ -632,24 +633,25 @@
 
                     console.log("Respuesta del servidor:", respuesta);
                     
-                    try {
-                        var response = JSON.parse(respuesta);
-                        if (response.status == "success") {
-                            window.location.href = "./";
-                        } else {
-                            fncSweetAlert("error", "Usuario y/o password inválido");
-                        }
-                    } catch (e) {
-                        console.error("Error al parsear JSON:", e);
-                        console.error("Respuesta recibida:", respuesta);
-                        alert("Respuesta del servidor:\n\n" + respuesta);
-                        fncSweetAlert("error", "Error inesperado en la respuesta del servidor.");
+                    // No necesitamos JSON.parse() porque dataType: 'json' ya parsea automáticamente
+                    if (respuesta.status == "success") {
+                        window.location.href = "./";
+                    } else {
+                        fncSweetAlert("error", "Usuario y/o password inválido");
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     $("#btnIngresar").html('INICIAR SESIÓN');
                     $("#btnIngresar").attr("disabled", false);
-                    fncSweetAlert("error", "Error en la solicitud: " + textStatus);
+                    
+                    // Manejo mejorado de errores de parsing JSON
+                    if (textStatus === "parsererror") {
+                        console.error("Error de parsing JSON en respuesta del servidor");
+                        console.error("Respuesta recibida:", jqXHR.responseText);
+                        fncSweetAlert("error", "La respuesta del servidor no es válida. Contacte al administrador.");
+                    } else {
+                        fncSweetAlert("error", "Error en la solicitud: " + textStatus);
+                    }
                 }
             });
 

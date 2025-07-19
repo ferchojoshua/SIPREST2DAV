@@ -1,0 +1,74 @@
+/* Fix para corregir el espaciado del dashboard */
+.content-wrapper {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.content-header {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+/* Asegurar que no haya doble navbar */
+.main-header.navbar {
+    position: fixed;
+    top: 0;
+    z-index: 1030;
+}
+
+/* Evitar espacios duplicados */
+body:not(.sidebar-mini-xs) .content-wrapper {
+    margin-left: 250px;
+}
+
+body.sidebar-collapse .content-wrapper {
+    margin-left: 0;
+}
+
+/* Padding superior para compensar navbar fijo */
+.wrapper .content-wrapper {
+    padding-top: 57px; /* Altura del navbar */
+}
+
+/* Remover cualquier margen superior duplicado */
+.content-wrapper > .content-header:first-child {
+    margin-top: 0 !important;
+}
+
+/* Responsive para móviles */
+@media (max-width: 767.98px) {
+    .wrapper .content-wrapper {
+        margin-left: 0 !important;
+        padding-top: 57px;
+    }
+}
+
+/* ========================================
+   CORRECCIONES ESPECÍFICAS DASHBOARD COBRADORES
+   ======================================== */
+
+/* Corregir content-wrapper duplicado en dashboard_cobradores.php */
+.content-wrapper .content-wrapper {
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    min-height: auto !important;
+    padding-top: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Ajustar espaciado del header en dashboard anidado */
+.content-wrapper .content-wrapper .content-header {
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Eliminar espaciado extra en dashboard anidado */
+.content-wrapper .content-wrapper .content {
+    padding: 0 1rem 1rem 1rem;
+}
+
+/* Corregir altura mínima en dashboard anidado */
+.content-wrapper .content-wrapper {
+    min-height: auto !important;
+}

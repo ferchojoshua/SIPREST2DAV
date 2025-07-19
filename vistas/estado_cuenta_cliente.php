@@ -1,3 +1,11 @@
+<?php
+// Estas inclusiones no son necesarias cuando se carga como vista parcial
+// require_once "modulos/header.php";
+// require_once "modulos/navbar.php";
+// require_once "modulos/aside.php";
+?>
+
+<div class="content-wrapper">
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
@@ -14,59 +22,31 @@
     </div>
 </div>
 
-<div class="content pb-2">
+    <div class="content">
     <div class="container-fluid">
-        <div class="row p-0 m-0">
-            <div class="col-md-12">
-                <div class="card card-info card-outline shadow ">
-                    <div class="card-header bg-gradient-info">
-                        <h3 class="card-title">Estado de Cuenta Detallado</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="selectClientesEstadoCuenta">Seleccionar Cliente:</label>
-                                    <select class="form-control form-control-sm" id="selectClientesEstadoCuenta" style="width: 100%;"></select>
-                                </div>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <div class="form-group">
-                                    <button class="btn btn-primary btn-sm" id="btnFiltrarEstadoCuenta">Filtrar</button>
-                                </div>
-                            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#modalEstadoCuenta">
+                                <i class="fas fa-search"></i> Buscar Cliente
+                            </button>
                         </div>
-
-                        <div class="col-12 table-responsive">
-                            <table id="tbl_estado_cuenta_cliente" class="table display table-hover text-nowrap compact w-100 rounded">
-                                <thead class="bg-gradient-info text-white">
-                                    <tr>
-                                        <th>Nro. Préstamo</th>
-                                        <th>Cliente</th>
-                                        <th>DNI</th>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="tbl_estado_cuenta_cliente" class="table table-striped table-bordered table-hover w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Descripción</th>
                                         <th>Monto</th>
-                                        <th>Interés (%)</th>
-                                        <th>Monto Interés</th>
-                                        <th>Monto Total</th>
-                                        <th>Monto Cuota</th>
-                                        <th>Cuotas</th>
-                                        <th>Cuotas Pagadas</th>
-                                        <th>Fecha Registro</th>
-                                        <th>Fecha Emisión</th>
                                         <th>Estado</th>
-                                        <th>Forma Pago</th>
-                                        <th>Símbolo Moneda</th>
-                                        <th>Nombre Moneda</th>
-                                        <th>Usuario</th>
-                                        <th>Saldo Pendiente</th>
-                                        <th>Monto Pagado</th>
-                                        <th>Cuotas Pendientes</th>
-                                        <th>% Avance</th>
                                     </tr>
                                 </thead>
-                                <tbody class="small text-left">
+                                    <tbody>
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -75,126 +55,195 @@
     </div>
 </div>
 
+<!-- Modal Estado de Cuenta -->
+<div class="modal fade" id="modalEstadoCuenta" tabindex="-1" role="dialog" aria-labelledby="modalEstadoCuentaLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title" id="modalEstadoCuentaLabel">
+                    <i class="fas fa-file-invoice"></i> Estado de Cuenta por Cliente
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="selectClientesEstadoCuenta">Seleccionar Cliente:</label>
+                    <select class="form-control select2bs4" id="selectClientesEstadoCuenta" style="width: 100%;">
+                        <option value="">Seleccione un cliente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGenerarEstadoCuenta">
+                    <i class="fas fa-file-alt"></i> Generar Estado de Cuenta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php require_once "modulos/footer.php"; ?>
+
+<!-- REQUIRED SCRIPTS -->
+<script src="vistas/assets/plugins/jquery/jquery.min.js"></script>
+<script src="vistas/assets/plugins/select2/js/select2.full.min.js"></script>
+<script src="vistas/assets/plugins/select2/js/i18n/es.js"></script>
+
 <script>
 $(document).ready(function() {
-    var tablaEstadoCuentaCliente;
-
-    // Cargar clientes en el select2
+    console.log("Documento listo - Inicializando estado de cuenta");
+    
+    // Variable para la tabla
+    var tablaEstadoCuenta;
+    
+    // Función para cargar clientes
+    function cargarClientes() {
+        console.log("Iniciando carga de clientes...");
+        
     $.ajax({
         url: "ajax/clientes_ajax.php",
         type: "POST",
-        data: { 'accion': 4 }, // Acción para listar clientes en select2
-        dataType: 'json',
-        success: function(respuesta) {
-            var opciones = '<option value="">Seleccione un Cliente</option>';
-            $.each(respuesta, function(index, cliente) {
-                opciones += '<option value="' + cliente.cliente_id + '">' + cliente.cliente_nombres + '</option>';
-            });
-            $('#selectClientesEstadoCuenta').html(opciones).select2();
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log("Error al cargar clientes:", textStatus, errorThrown, jqXHR.responseText);
-        }
-    });
-
-    function cargarEstadoCuenta(cliente_id) {
-        if (tablaEstadoCuentaCliente) {
-            tablaEstadoCuentaCliente.destroy();
-        }
-
-        var data = new FormData();
-        data.append('accion', 11); // ID para Estado de Cuenta por Cliente en ajax/reportes_ajax.php
-        data.append('cliente_id', cliente_id);
-
-        $.ajax({
-            url: "ajax/reportes_ajax.php",
-            method: "POST",
-            data: data,
-            cache: false,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            success: function(respuesta) {
-                console.log("Respuesta Estado de Cuenta:", respuesta);
-                var dataSet = [];
-                if (respuesta && !respuesta.error) {
-                    $.each(respuesta, function(index, item) {
-                        dataSet.push([
-                            item.nro_prestamo,
-                            item.cliente_nombres,
-                            item.cliente_dni,
-                            parseFloat(item.pres_monto).toFixed(2),
-                            parseFloat(item.pres_interes).toFixed(2),
-                            parseFloat(item.pres_monto_interes).toFixed(2),
-                            parseFloat(item.pres_monto_total).toFixed(2),
-                            parseFloat(item.pres_monto_cuota).toFixed(2),
-                            item.pres_cuotas,
-                            item.pres_cuotas_pagadas,
-                            item.fecha_registro,
-                            item.fecha_emision,
-                            item.estado,
-                            item.fpago_descripcion,
-                            item.moneda_simbolo,
-                            item.moneda_nombre,
-                            item.usuario,
-                            parseFloat(item.saldo_pendiente).toFixed(2),
-                            parseFloat(item.monto_pagado).toFixed(2),
-                            item.cuotas_pendientes,
-                            parseFloat(item.porcentaje_avance).toFixed(2)
-                        ]);
-                    });
-                } else if (respuesta.error) {
+            dataType: "json",
+            data: {
+                accion: "ListarSelectClientes"
+            },
+            beforeSend: function() {
+                console.log("Enviando petición AJAX...");
+                $('#selectClientesEstadoCuenta').html('<option value="">Cargando clientes...</option>');
+            },
+            success: function(response) {
+                console.log("Respuesta recibida:", response);
+                
+                if (response.error) {
+                    console.error("Error en respuesta:", response.message);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: respuesta.error,
+                        text: 'Error al cargar clientes: ' + response.message
                     });
+                    return;
                 }
-
-                tablaEstadoCuentaCliente = $('#tbl_estado_cuenta_cliente').DataTable({
-                    data: dataSet,
-                    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
-                    "responsive": true,
-                    "autoWidth": false,
-                    "deferRender": true,
-                    "retrieve": true,
-                    "dom": '<"row"<"col-sm-5"l><"col-sm-7"f>>' +
-                           '<"row"<"col-sm-12"tr>>' +
-                           '<"row"<"col-sm-6"i><"col-sm-6"p>>' +
-                           'Bfrtip',
-                    "buttons": [
-                        'copy', 'csv', 'excel', 'print'
-                    ],
-                    "language": {
-                        "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
-                    }
+                
+                var select = $('#selectClientesEstadoCuenta');
+                select.empty();
+                select.append('<option value="">Seleccione un cliente</option>');
+                
+                if (Array.isArray(response) && response.length > 0) {
+                    console.log("Agregando " + response.length + " clientes al select");
+                    response.forEach(function(cliente) {
+                        console.log("Agregando cliente:", cliente.cliente_id, cliente.cliente_nombres);
+                        select.append(new Option(cliente.cliente_nombres, cliente.cliente_id));
+                    });
+                } else {
+                    console.log("No se encontraron clientes o respuesta no es array");
+                    select.append('<option value="">No hay clientes disponibles</option>');
+                }
+                
+                // Reinicializar Select2 después de agregar opciones
+                select.select2('destroy').select2({
+                    theme: 'bootstrap4',
+                    placeholder: "Seleccione un cliente",
+                    allowClear: true,
+                    width: '100%'
                 });
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log("Error en la solicitud AJAX:", textStatus, errorThrown, jqXHR.responseText);
+            error: function(xhr, status, error) {
+                console.error("Error en petición AJAX:");
+                console.error("Status:", status);
+                console.error("Error:", error);
+                console.error("Respuesta del servidor:", xhr.responseText);
+                
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error de Conexión',
-                    text: 'No se pudo cargar el estado de cuenta. Intenta de nuevo más tarde.',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor para cargar los clientes.'
                 });
             }
         });
     }
 
-    $('#btnFiltrarEstadoCuenta').on('click', function() {
-        var clienteSeleccionado = $('#selectClientesEstadoCuenta').val();
-        if (clienteSeleccionado) {
-            cargarEstadoCuenta(clienteSeleccionado);
-        } else {
+    // Inicializar Select2 básico
+    $('#selectClientesEstadoCuenta').select2({
+        theme: 'bootstrap4',
+        placeholder: "Seleccione un cliente",
+        allowClear: true,
+        width: '100%'
+    });
+    
+    // Cargar clientes cuando se abre el modal
+    $('#modalEstadoCuenta').on('show.bs.modal', function() {
+        console.log("Modal abierto - Cargando clientes...");
+        cargarClientes();
+    });
+    
+    // Manejar clic en botón generar
+    $('#btnGenerarEstadoCuenta').on('click', function() {
+        var clienteId = $('#selectClientesEstadoCuenta').val();
+        var clienteNombre = $('#selectClientesEstadoCuenta option:selected').text();
+        
+        console.log("Cliente seleccionado:", clienteId, clienteNombre);
+        
+        if (!clienteId) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Atención',
-                text: 'Por favor, seleccione un cliente para generar el estado de cuenta.',
+                text: 'Por favor, seleccione un cliente'
             });
+            return;
         }
+
+        // Cerrar el modal
+        $('#modalEstadoCuenta').modal('hide');
+        
+        // Cargar el estado de cuenta
+        cargarEstadoCuenta(clienteId);
     });
 
-    // Cambiar el estilo de los botones de DataTables
-    $('.dt-buttons').addClass('btn-group-sm'); // Agrega la clase 'btn-group-sm' al contenedor de botones
+    function cargarEstadoCuenta(clienteId) {
+        console.log("Cargando estado de cuenta para cliente:", clienteId);
+        
+        if ($.fn.DataTable.isDataTable('#tbl_estado_cuenta_cliente')) {
+            $('#tbl_estado_cuenta_cliente').DataTable().destroy();
+        }
+
+        // Por ahora, solo mostrar un mensaje de que la funcionalidad está en desarrollo
+        Swal.fire({
+            icon: 'info',
+            title: 'Funcionalidad en desarrollo',
+            text: 'La carga del estado de cuenta está en desarrollo. Cliente seleccionado: ' + clienteId
+        });
+        
+        // Aquí iría el código para cargar el estado de cuenta real
+        /*
+        tablaEstadoCuenta = $('#tbl_estado_cuenta_cliente').DataTable({
+            ajax: {
+                url: "ajax/estado_cuenta_ajax.php",
+                type: "POST",
+                data: {
+                    accion: "obtener_estado_cuenta",
+                    cliente_id: clienteId
+                },
+                dataSrc: ""
+            },
+            columns: [
+                { data: "fecha" },
+                { data: "descripcion" },
+                { data: "monto" },
+                { data: "estado" }
+            ],
+            order: [[0, "desc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+            },
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        });
+        */
+    }
 });
 </script> 

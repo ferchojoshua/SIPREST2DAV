@@ -1,0 +1,192 @@
+[15-Jul-2025 07:35:24 Europe/Berlin] PHP Warning:  require_once(../controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 30
+[15-Jul-2025 07:35:24 Europe/Berlin] UNCAUGHT EXCEPTION in ajax/prestamo_ajax.php: Failed opening required '../controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') on line 30 in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:46:11 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:53:45 Europe/Berlin] PHP Warning:  require_once(../controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 30
+[15-Jul-2025 07:53:45 Europe/Berlin] UNCAUGHT EXCEPTION in ajax/prestamo_ajax.php: Failed opening required '../controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') on line 30 in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php
+[15-Jul-2025 07:54:23 Europe/Berlin] PHP Warning:  require_once(controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 30
+[15-Jul-2025 07:54:23 Europe/Berlin] UNCAUGHT EXCEPTION in ajax/prestamo_ajax.php: Failed opening required 'controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') on line 30 in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php
+[15-Jul-2025 07:54:23 Europe/Berlin] PHP Warning:  require_once(controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 30
+[15-Jul-2025 07:54:23 Europe/Berlin] UNCAUGHT EXCEPTION in ajax/prestamo_ajax.php: Failed opening required 'controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') on line 30 in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php
+[15-Jul-2025 07:54:23 Europe/Berlin] PHP Warning:  require_once(controladores/prestamo_controlador.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php on line 30
+[15-Jul-2025 07:54:23 Europe/Berlin] UNCAUGHT EXCEPTION in ajax/prestamo_ajax.php: Failed opening required 'controladores/prestamo_controlador.php' (include_path='C:\xampp\php\PEAR') on line 30 in C:\xampp\htdocs\siprest\ajax\prestamo_ajax.php
+[15-Jul-2025 07:54:38 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:54:38 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:54:38 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:54:38 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:54:38 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:54:58 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:55:19 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:55:52 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:56:21 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:56:22 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:56:22 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:56:41 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:57:46 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:57:47 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 07:58:28 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 07:59:17 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:00:49 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:00:49 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:00:49 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:04:14 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:04:14 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:04:14 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:11:43 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:11:43 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:11:43 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:11:43 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:11:44 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:11:44 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:11:45 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:11:45 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:11:45 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:12:37 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:13:27 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:14:53 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo exitosamente
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:16:16 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:17:14 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo exitosamente
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Inicia ajaxObtenerTiposCalculo
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Finaliza ajaxObtenerTiposCalculo exitosamente
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:18:31 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:26:13 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:26:13 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:26:13 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:26:13 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:26:14 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:26:14 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:26:14 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:26:47 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:27:57 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_forma_pago
+[15-Jul-2025 08:27:57 Europe/Berlin] DEBUG: Inicia ajaxCargarFormaPago
+[15-Jul-2025 08:27:57 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: cargar_moneda
+[15-Jul-2025 08:27:57 Europe/Berlin] DEBUG: Inicia ajaxCargarMoneda
+[15-Jul-2025 08:27:57 Europe/Berlin] DEBUG: Finaliza ajaxCargarMoneda
+[15-Jul-2025 08:27:57 Europe/Berlin] DEBUG: Finaliza ajaxCargarFormaPago
+[15-Jul-2025 08:29:43 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: calcular_amortizacion
+[15-Jul-2025 08:29:43 Europe/Berlin] DEBUG: Inicia ajaxCalcularAmortizacion con monto: 20000, interes: 4.7, cuotas: 12, tipo_calculo: FLAT, fecha_inicio: 2025-07-16, fpago: 4
+[15-Jul-2025 08:29:43 Europe/Berlin] DEBUG: ajaxCalcularAmortizacion finalizada exitosamente. Resultado: {"cuota_inicial":1745,"total_pagar":20940,"total_intereses":940,"tabla_amortizacion":[{"nro_cuota":1,"fecha":"2025-07-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":18333.33},{"nro_cuota":2,"fecha":"2025-08-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":16666.67},{"nro_cuota":3,"fecha":"2025-09-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":15000},{"nro_cuota":4,"fecha":"2025-10-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":13333.33},{"nro_cuota":5,"fecha":"2025-11-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":11666.67},{"nro_cuota":6,"fecha":"2025-12-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":10000},{"nro_cuota":7,"fecha":"2026-01-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":8333.33},{"nro_cuota":8,"fecha":"2026-02-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":6666.67},{"nro_cuota":9,"fecha":"2026-03-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":5000},{"nro_cuota":10,"fecha":"2026-04-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":3333.33},{"nro_cuota":11,"fecha":"2026-05-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":1666.67},{"nro_cuota":12,"fecha":"2026-06-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":0}]}
+[15-Jul-2025 08:29:45 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: calcular_amortizacion
+[15-Jul-2025 08:29:45 Europe/Berlin] DEBUG: Inicia ajaxCalcularAmortizacion con monto: 20000, interes: 4.7, cuotas: 12, tipo_calculo: FLAT, fecha_inicio: 2025-07-16, fpago: 4
+[15-Jul-2025 08:29:45 Europe/Berlin] DEBUG: ajaxCalcularAmortizacion finalizada exitosamente. Resultado: {"cuota_inicial":1745,"total_pagar":20940,"total_intereses":940,"tabla_amortizacion":[{"nro_cuota":1,"fecha":"2025-07-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":18333.33},{"nro_cuota":2,"fecha":"2025-08-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":16666.67},{"nro_cuota":3,"fecha":"2025-09-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":15000},{"nro_cuota":4,"fecha":"2025-10-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":13333.33},{"nro_cuota":5,"fecha":"2025-11-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":11666.67},{"nro_cuota":6,"fecha":"2025-12-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":10000},{"nro_cuota":7,"fecha":"2026-01-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":8333.33},{"nro_cuota":8,"fecha":"2026-02-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":6666.67},{"nro_cuota":9,"fecha":"2026-03-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":5000},{"nro_cuota":10,"fecha":"2026-04-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":3333.33},{"nro_cuota":11,"fecha":"2026-05-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":1666.67},{"nro_cuota":12,"fecha":"2026-06-16","monto":1745,"capital":1666.67,"interes":78.33,"saldo":0}],"paginacion":{"pagina_actual":1,"total_paginas":1,"por_pagina":12,"total_registros":12}}
+[15-Jul-2025 08:36:36 Europe/Berlin] DEBUG: Acción recibida en prestamo_ajax.php: obtener_tipos_calculo

@@ -1,277 +1,144 @@
 <?php
+ob_start(); // Iniciar buffer de salida
+
+// Desactivar la visualización de errores directos en la salida para evitar romper el JSON
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
+// Asegurar que la respuesta sea JSON
+header('Content-Type: application/json; charset=utf-8');
+
+// Manejador de excepciones para capturar cualquier error no detectado
+set_exception_handler(function($exception) {
+    ob_end_clean(); // Limpiar cualquier salida antes del error
+    echo json_encode([
+        'error' => true,
+        'message' => 'Error de servidor: ' . $exception->getMessage(),
+        'code' => $exception->getCode(),
+        'file' => $exception->getFile(),
+        'line' => $exception->getLine(),
+        'trace' => $exception->getTraceAsString()
+    ]);
+    exit();
+});
+
+// Manejador de errores fatales de PHP
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== NULL && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        ob_end_clean(); // Limpiar cualquier salida antes del error
+        echo json_encode([
+            'error' => true,
+            'message' => 'Error fatal del servidor: ' . $error['message'],
+            'file' => $error['file'],
+            'line' => $error['line']
+        ]);
+        exit();
+    }
+});
+
+// Iniciar sesión si no está iniciada (necesario para $_SESSION)
+if (session_status() == PHP_SESSION_NONE) {
+session_start();
+}
+
+// Logging para depuración (se verá en logs de servidor, no en la salida JSON)
+error_log("clientes_ajax.php - Acción recibida: " . ($_POST['accion'] ?? 'NO_DEFINIDA'));
 
 require_once "../controladores/cliente_controlador.php";
 require_once "../modelos/cliente_modelo.php";
 
-class AjaxCliente
-{
+if (!isset($_POST['accion'])) {
+    // Si no hay acción, devolver un error JSON
+    echo json_encode(['error' => true, 'message' => 'No se especificó la acción']);
+    exit;
+}
 
-    public $cliente_dni;
-
-    /*=========================================================*/
-    //LISTAR SELECT EN COMBO
-    /*=========================================================*/
-    public function ListarSelectClientes()
-    {
-        $cliente = ClienteControlador::ctrListarSelectClientes();
-        echo json_encode($cliente, JSON_UNESCAPED_UNICODE);
-    }
-
-
-    /*=========================================================*/
-    //LISTAR CLIENTE EN DATATABLE 
-    /*=========================================================*/
-    public function  ListarClientes()
-    {
-        $cliente = ClienteControlador::ctrListarClientes();
-        echo json_encode($cliente);
-    }
-
-
-
-
-    /*=========================================================*/
-    //REGISTRAR CLIENTE
-    /*=========================================================*/
-    public function ajaxRegistrarCliente()
-    {
-        $cliente = ClienteControlador::ctrRegistrarcliente(
-            $this->cliente_nombres,
-            $this->cliente_dni,
-            $this->cliente_cel,
-            $this->cliente_direccion,
-            $this->cliente_correo,
-            // Nuevos campos de Información Laboral
-            $_POST['cliente_empresa_laboral'] ?? null,
-            $_POST['cliente_cargo_laboral'] ?? null,
-            $_POST['cliente_tel_laboral'] ?? null,
-            $_POST['cliente_dir_laboral'] ?? null,
-            // Nuevos campos de Referencia Personal
-            $_POST['cliente_refe_per_nombre'] ?? null,
-            $_POST['cliente_refe_per_cel'] ?? null,
-            $_POST['cliente_refe_per_dir'] ?? null,
-            // Nuevos campos de Referencia Familiar
-            $_POST['cliente_refe_fami_nombre'] ?? null,
-            $_POST['cliente_refe_fami_cel'] ?? null,
-            $_POST['cliente_refe_fami_dir'] ?? null
-        );
-        echo json_encode($cliente);
-    }
-
-
-
-    /*=========================================================*/
-    //ACTUALIZAR CLIENTE
-    /*=========================================================*/
-    public function ajaxActualizarCliente($data)
-    {
-        try {
-            $table = "clientes"; //TABLA
-            $id = $_POST["cliente_id"]; //LO QUE VIENE DE PRODUCTOS.PHP
-            $nameId = "cliente_id"; //CAMPO DE LA BASE
-
-            // Debug: Log de los datos que se están enviando (comentado para producción)
-            // error_log("Datos para actualizar cliente: " . print_r($data, true));
-            // error_log("ID del cliente: " . $id);
-
-            $respuesta = ClienteControlador::ctrActualizarCliente($table, $data, $id, $nameId);
-
+try {
+    switch ($_POST['accion']) {
+        case 'ListarSelectClientes':
+            $clientes = ClienteControlador::ctrListarSelectClientes();
+            if ($clientes === false) {
+                echo json_encode(['error' => true, 'message' => 'Error al obtener los clientes']);
+                exit;
+            }
+            error_log("clientes_ajax.php - Clientes encontrados para select: " . count($clientes));
+            echo json_encode($clientes);
+            break;
+            
+        case '1': // LISTAR CLIENTE EN DATATABLE DE CLIENTE (usa tbl_clientes en vistas/cliente.php)
+            $sucursal_id = $_SESSION["usuario"]->sucursal_id ?? 1;
+            $cliente = ClienteControlador::ctrListarClientesForDataTableAssoc($sucursal_id);
+            
+            if ($cliente === false || $cliente === null) {
+                echo json_encode([]);
+                exit;
+            }
+            error_log("clientes_ajax.php - Clientes encontrados para DataTables (asoc): " . count($cliente));
+            echo json_encode($cliente, JSON_UNESCAPED_UNICODE);
+            break;
+            
+        case '7': // LISTAR CLIENTE EN DATATABLE (usa tbl_lista_cliente en vistas/prestamo.php)
+            $sucursal_id = $_SESSION["usuario"]->sucursal_id ?? 1;
+        $cliente = ClienteControlador::ctrListarClientes($sucursal_id);
+            
+            if ($cliente === false || $cliente === null) {
+                echo json_encode([]);
+                exit;
+            }
+            error_log("clientes_ajax.php - Clientes encontrados para DataTables (num): " . count($cliente));
+            echo json_encode($cliente, JSON_UNESCAPED_UNICODE);
+            break;
+            
+        case '4': // ELIMINAR UN CLIENTE (manteniendo compatibilidad)
+            $table = "clientes";
+            $id = $_POST["cliente_id"];
+            $nameId = "cliente_id";
+            $respuesta = ClienteControlador::ctrEliminarCliente($table, $id, $nameId);
+            error_log("clientes_ajax.php - Cliente eliminado: " . ($respuesta === 'ok' ? 'OK' : 'ERROR'));
             echo json_encode($respuesta);
-        } catch (Exception $e) {
-            // error_log("Error al actualizar cliente: " . $e->getMessage());
-            echo json_encode(array("error" => $e->getMessage()));
-        }
+            break;
+            
+        case 'buscar_clientes': // BUSCAR CLIENTES PARA SELECT2
+            if (!isset($_POST['busqueda']) || strlen($_POST['busqueda']) < 2) {
+                echo json_encode([]);
+                break;
+            }
+            
+            $busqueda = $_POST['busqueda'];
+            $clientes = ClienteControlador::ctrBuscarClientesParaSelect($busqueda);
+            
+            if ($clientes === false || $clientes === null) {
+                echo json_encode([]);
+                break;
+            }
+            
+            // Formatear para Select2 (id, text)
+            $clientesFormateados = [];
+            foreach ($clientes as $cliente) {
+                $clientesFormateados[] = [
+                    'id' => $cliente['cliente_id'],
+                    'text' => $cliente['cliente_nombres'] . ' - ' . ($cliente['cliente_dni'] ?? 'Sin DNI')
+                ];
+            }
+            
+            error_log("clientes_ajax.php - Clientes encontrados para búsqueda: " . count($clientesFormateados));
+            echo json_encode($clientesFormateados);
+            break;
+            
+        default:
+            // Si la acción no es reconocida, devolver un error JSON
+            echo json_encode(['error' => true, 'message' => 'Acción no válida: ' . $_POST['accion']]);
+            break;
     }
-
-
-
-    /*=========================================================*/
-    //ELIMINAR CLIENTE
-    /*=========================================================*/
-    public function ajaxEliminarCliente()
-    {
-        $table = "clientes"; //TABLA
-        $id = $_POST["cliente_id"]; //LO QUE VIENE DE PRODUCTOS.PHP
-        $nameId = "cliente_id"; //CAMPO DE LA BASE 
-        $respuesta = ClienteControlador::ctrEliminarCliente($table, $id, $nameId);
-
-        echo json_encode($respuesta);
-    }
-
-
-
-    /*=========================================================*/
-    //VERIFICAR SI EL DOCUMENTO YA SE ENCUENTRA REGISTRADO
-    /*=========================================================*/
-    public function ajaxVerificarDuplicadoDocument()
-    {
-        $respuesta = ClienteControlador::ctrVerificarDuplicadoDocument($this->cliente_dni);
-        echo json_encode($respuesta);
-        // var_dump($respuesta);
-    }
-
-
-    /*=========================================================*/
-    //Traer datos al texbox
-    /*=========================================================*/
-    public function ajaxObtenerDataClienteTexbox()
-    {
-        $cliente = ClienteControlador::ctrObtenerDataClienteTexbox($this->cliente_dni);
-        echo json_encode($cliente);
-        //var_dump($cliente);
-    }
-
-
-    /*=========================================================*/
-    //LISTAR CLIENTE EN DATATABLE 
-    /*=========================================================*/
-    public function  ListarClientesPrestamo()
-    {
-        $cliente = ClienteControlador::ctrListarClientesPrestamo();
-        echo json_encode($cliente);
-    }
-
-    /*=========================================================*/
-    //REGISTRAR LAS REFERENCIAS DEL CLIENTE
-    /*=========================================================*/
-    public function ajaxRegistrarReferencias()
-    {
-        $refe_empresa_laboral = $_POST['refe_empresa_laboral'] ?? null;
-        $refe_cargo_laboral = $_POST['refe_cargo_laboral'] ?? null;
-        $refe_tel_laboral = $_POST['refe_tel_laboral'] ?? null;
-        $refe_dir_laboral = $_POST['refe_dir_laboral'] ?? null;
-
-        $respuesta = ClienteControlador::ctrRegistrarReferencias(
-            $this->cliente_id,
-            $this->refe_personal,
-            $this->refe_cel_per,
-            $this->refe_familiar,
-            $this->refe_cel_fami,
-            $refe_empresa_laboral,
-            $refe_cargo_laboral,
-            $refe_tel_laboral,
-            $refe_dir_laboral
-        );
-        echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
-    }
-
-
-    /*=========================================================*/
-    //Traer REFERENCIAS AL EDITAR
-    /*=========================================================*/
-    public function ajaxObtenerDataReferencias()
-    {
-        $TraerRefe = ClienteControlador::ctrTraerRefe($this->cliente_id);
-        echo json_encode($TraerRefe);
-        //var_dump($cliente);
-    }
+    } catch (Exception $e) {
+    // Capturar cualquier excepción general del bloque try-catch
+    error_log("Error inesperado en clientes_ajax.php: " . $e->getMessage());
+    echo json_encode([
+        'error' => true,
+        'message' => 'Error interno del servidor (excepción): ' . $e->getMessage()
+    ]);
+} finally {
+    ob_end_flush(); // Vaciar el buffer de salida al final
 }
-
-
-
-
-
-
-
-
-if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR CLIENTE EN DATATABLE DE CLIENTE
-    $cliente = new AjaxCliente();
-    $cliente->ListarClientes();
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 2) { //PARA REGISTRAR EL CLIENTE
-    
-    // Llamada directa al controlador para mayor claridad
-    $respuesta = ClienteControlador::ctrRegistrarcliente(
-        $_POST["cliente_nombres"],
-        $_POST["cliente_dni"],
-        $_POST["cliente_cel"],
-        $_POST["cliente_direccion"],
-        $_POST["cliente_correo"],
-        // Nuevos campos de Información Laboral
-        $_POST['cliente_empresa_laboral'],
-        $_POST['cliente_cargo_laboral'],
-        $_POST['cliente_tel_laboral'],
-        $_POST['cliente_dir_laboral'],
-        // Nuevos campos de Referencia Personal
-        $_POST['cliente_refe_per_nombre'],
-        $_POST['cliente_refe_per_cel'],
-        $_POST['cliente_refe_per_dir'],
-        // Nuevos campos de Referencia Familiar
-        $_POST['cliente_refe_fami_nombre'],
-        $_POST['cliente_refe_fami_cel'],
-        $_POST['cliente_refe_fami_dir']
-    );
-    echo json_encode($respuesta);
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 3) { //ACTUALIZAR CLIENTE
-    $actualizarCliente = new AjaxCliente();
-    $data = array(
-        // Campos básicos del cliente
-        "cliente_nombres" => $_POST["cliente_nombres"],
-        "cliente_dni" => $_POST["cliente_dni"],
-        "cliente_cel" => $_POST["cliente_cel"],
-        "cliente_direccion" => $_POST["cliente_direccion"],
-        "cliente_correo" => $_POST["cliente_correo"],
-        // Campos de Información Laboral
-        "cliente_empresa_laboral" => $_POST['cliente_empresa_laboral'] ?? null,
-        "cliente_cargo_laboral" => $_POST['cliente_cargo_laboral'] ?? null,
-        "cliente_tel_laboral" => $_POST['cliente_tel_laboral'] ?? null,
-        "cliente_dir_laboral" => $_POST['cliente_dir_laboral'] ?? null,
-        // Campos de Referencia Personal
-        "cliente_refe_per_nombre" => $_POST['cliente_refe_per_nombre'] ?? null,
-        "cliente_refe_per_cel" => $_POST['cliente_refe_per_cel'] ?? null,
-        "cliente_refe_per_dir" => $_POST['cliente_refe_per_dir'] ?? null,
-        // Campos de Referencia Familiar
-        "cliente_refe_fami_nombre" => $_POST['cliente_refe_fami_nombre'] ?? null,
-        "cliente_refe_fami_cel" => $_POST['cliente_refe_fami_cel'] ?? null,
-        "cliente_refe_fami_dir" => $_POST['cliente_refe_fami_dir'] ?? null
-    );
-    $actualizarCliente->ajaxActualizarCliente($data);
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 4) { //ELIMINAR UN CLIENTE
-    $eliminarCliente = new AjaxCliente();
-    $eliminarCliente->ajaxEliminarCliente();
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 5) {   //VERIFICA SI YA ESTA REGISTRADO
-    $verificaDoc = new AjaxCliente();
-    $verificaDoc->cliente_dni = $_POST["cliente_dni"];
-    $verificaDoc->ajaxVerificarDuplicadoDocument();
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 6) { //OBTENER DATA DEL CLIENTE EN TEXBOX
-    //OBTENER DATOS DE UN PRODUCTO POR SU CODIGO
-    $TraerDatosCliente = new AjaxCliente();
-    $TraerDatosCliente->cliente_dni = $_POST["cliente_dni"]; //definimos arriba  y jalamos la variable que envia desde ventas
-    $TraerDatosCliente->ajaxObtenerDataClienteTexbox();
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 7) { //LISTAR CLIENTE EN DATATABLE DE CLIENTE PARA PRESTAR
-    $cliente = new AjaxCliente();
-    $cliente->ListarClientesPrestamo();
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 8) { //PARA REGISTRAR LAS REFERENCIAS
-    $regReferencia = new AjaxCliente();
-    $regReferencia->cliente_id = $_POST["cliente_id"];
-    $regReferencia->refe_personal = $_POST["refe_personal"];
-    $regReferencia->refe_cel_per = $_POST["refe_cel_per"];
-    $regReferencia->refe_per_dir = $_POST["refe_per_dir"] ?? null;
-    $regReferencia->refe_familiar = $_POST["refe_familiar"];
-    $regReferencia->refe_cel_fami = $_POST["refe_cel_fami"];
-    $regReferencia->refe_fami_dir = $_POST["refe_fami_dir"] ?? null;
-    $regReferencia->ajaxRegistrarReferencias();
-
-
-} else if (isset($_POST['accion']) && $_POST['accion'] == 9) {  //OBTENEMOS LAS REFERENCIAS DEL CLIENTE EN TEXBOX
-    $TraerRefe = new AjaxCliente();
-    $TraerRefe->cliente_id = $_POST["cliente_id"];
-    $TraerRefe->ajaxObtenerDataReferencias();
-
-
-} else {
-    $cliente = new AjaxCliente(); // SELECT EN COMBO
-    $cliente->ListarSelectClientes();
-}
+?>

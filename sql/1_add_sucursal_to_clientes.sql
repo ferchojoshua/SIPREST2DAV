@@ -1,0 +1,2 @@
+ALTER TABLE `clientes` ADD `sucursal_id` INT NULL AFTER `cliente_cel_refe`, ADD INDEX `fk_sucursal_id` (`sucursal_id`);
+ALTER TABLE `clientes` ADD CONSTRAINT `fk_sucursal_id` FOREIGN KEY (`sucursal_id`) REFERENCES `sucursales`(`id`) ON DELETE SET NULL ON UPDATE CASCADE; 

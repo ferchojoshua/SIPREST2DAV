@@ -27,18 +27,22 @@ $menuUsuario = UsuarioControlador::ctrObtenerMenuUsuario($_SESSION["usuario"]->i
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview" role="menu" data-accordion="false">
+            <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview" role="menu" data-accordion="false" id="sidebarMenu">
 
-                <!-- rrecorremos lo que trae $menuUsuario -->
+                <!-- El bucle dinámico se encargará de renderizar el menú desde la BD -->
                 <?php foreach ($menuUsuario as $menu) : ?>
-                    <li class="nav-item">
+                    
+                    <li class="nav-item <?php if(empty($menu->vista)) echo 'has-treeview'; ?>">
 
                         <a style="cursor: pointer;" 
                             class="nav-link <?php if($menu->vista_inicio == 1) : ?>
                                                 <?php echo 'active'; ?>
                                             <?php endif; ?>"
-                            <?php if(!empty($menu->vista)) : ?>
-                                onclick="CargarContenido('vistas/<?php echo $menu->vista; ?>','content-wrapper')" <?php endif; ?>>
+                            <?php if(!empty($menu->vista) && $menu->vista !== 'dashboard_mejorado.php') : ?>
+                                onclick="CargarContenido('vistas/<?php echo $menu->vista; ?>','content-wrapper')" 
+                            <?php else: ?>
+                                href="#"
+                            <?php endif; ?>>
                             <i class="nav-icon <?php echo $menu->icon_menu; ?>"></i>
                             <p>
                                 <?php echo $menu->modulo ?>
@@ -57,36 +61,18 @@ $menuUsuario = UsuarioControlador::ctrObtenerMenuUsuario($_SESSION["usuario"]->i
                             <ul class="nav nav-treeview">
 
                                 <?php foreach ($subMenuUsuario as $subMenu) : ?>
-
                                     <li class="nav-item">
                                         <a style="cursor: pointer;" class="nav-link" onclick="CargarContenido('vistas/<?php echo $subMenu->vista ?>','content-wrapper')">
-                                            <i class="<?php echo $subMenu->icon_menu; ?> nav-icon"></i>
-                                            <p>
-                                                <?php echo $subMenu->modulo; ?>
-                                                    
-                                            </p>
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p><?php echo $subMenu->modulo ?></p>
                                         </a>
                                     </li>
-
                                 <?php endforeach; ?>
-                                                          
+
                             </ul>
-
                         <?php endif; ?>
-
                     </li>
                 <?php endforeach; ?>
-
-
-                <!-- <li class="nav-item">
-                    <a href="http://localhost/siprest?cerrar_sesion=1" style="cursor:pointer;" class="nav-link">
-                        <i class="nav-icon fas fa-sign-out-alt"></i>
-                        <p>
-                            Cerrar Sesion
-
-                        </p>
-                    </a>
-                </li> -->
 
             </ul>
         </nav>
@@ -96,8 +82,79 @@ $menuUsuario = UsuarioControlador::ctrObtenerMenuUsuario($_SESSION["usuario"]->i
 </aside>
 
 <script>
-    $(".nav-link").on('click', function() {
-        $(".nav-link").removeClass('active');
-        $(this).addClass('active');
-    })
+// SOLUCION PARA PROBLEMAS DE MENUS DESPLEGABLES CON BOOTSTRAP 5
+$(document).ready(function() {
+    // Remover inicializaciones previas del treeview
+    $('#sidebarMenu').off('.lte.treeview');
+    
+    // Configuración manual del treeview para compatibilidad con Bootstrap 5
+    const treeviewConfig = {
+        trigger: '[data-widget="treeview"] .nav-link',
+        animationSpeed: 300,
+        accordion: true,
+        expandSidebar: false,
+        sidebarButtonSelector: '[data-widget="pushmenu"]'
+    };
+
+    // Función personalizada para manejar el toggle de menús
+    function toggleTreeview(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const $link = $(e.currentTarget);
+        const $li = $link.closest('.nav-item');
+        const $treeview = $li.find('> .nav-treeview');
+        
+        // Si no hay submenu, no hacer nada
+        if ($treeview.length === 0) {
+            return;
+        }
+        
+        const isOpen = $li.hasClass('menu-open');
+        
+        // Si accordion está activado, cerrar otros menús
+        if (treeviewConfig.accordion) {
+            $li.siblings('.menu-open').removeClass('menu-open menu-is-opening')
+               .find('> .nav-treeview').slideUp(treeviewConfig.animationSpeed);
+        }
+        
+        if (isOpen) {
+            // Cerrar menú
+            $li.removeClass('menu-open menu-is-opening');
+            $treeview.slideUp(treeviewConfig.animationSpeed);
+        } else {
+            // Abrir menú
+            $li.addClass('menu-is-opening');
+            $treeview.slideDown(treeviewConfig.animationSpeed, function() {
+                $li.addClass('menu-open').removeClass('menu-is-opening');
+            });
+        }
+    }
+    
+    // Asignar evento click a los enlaces que tienen submenús
+    $(document).on('click', '.nav-item.has-treeview > .nav-link', toggleTreeview);
+    
+    // Manejar clicks en enlaces normales (sin submenú)
+    $(".nav-link").on('click', function(e) {
+        // Solo remover active si no es un menú padre
+        if (!$(this).closest('.nav-item').hasClass('has-treeview')) {
+            $(".nav-link").removeClass('active');
+            $(this).addClass('active');
+        }
+    });
+    
+    // Inicializar estado de menús abiertos si los hay
+    $('.nav-item.has-treeview').each(function() {
+        const $li = $(this);
+        const $treeview = $li.find('> .nav-treeview');
+        
+        // Si algún submenu está activo, abrir el menú padre
+        if ($treeview.find('.nav-link.active').length > 0) {
+            $li.addClass('menu-open');
+            $treeview.show();
+        }
+    });
+    
+    console.log('[Menu] Sistema de menús desplegables inicializado correctamente');
+});
 </script>

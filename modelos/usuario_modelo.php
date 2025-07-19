@@ -15,44 +15,23 @@ class UsuarioModelo
         fwrite($logFile, date("d/m/Y H:i:s") . '  ' . $usuario . '-' . $password . "\n") or die("Error escribiendo en el archivo");
         fclose($logFile);
 
-        // DEBUG: Log de la consulta SQL
-        // $debugLog = fopen("../ajax/login_debug.log", 'a');
-        // fwrite($debugLog, "\nDEBUG mdlIniciarSesion:\n");
-        // fwrite($debugLog, "  - Usuario buscado: '" . $usuario . "'\n");
-        // fwrite($debugLog, "  - Longitud del usuario: " . strlen($usuario) . "\n");
-        // fclose($debugLog);
-
         $stmt_user = Conexion::conectar()->prepare("select clave from usuarios where usuario = :usuario and estado = 1");
         $stmt_user->bindParam(":usuario", $usuario, PDO::PARAM_STR);
         $stmt_user->execute();
         $user_hash = $stmt_user->fetch(PDO::FETCH_ASSOC);
-
-        // LOGGING DE DEBUG
-        // $logFile = fopen("../ajax/login_debug.log", 'a');
-        // if ($user_hash) {
-        //     $db_hash = $user_hash['clave'];
-        //     $crypted_pass = crypt($password, $db_hash);
-        //     $comparison_result = hash_equals($db_hash, $crypted_pass) ? 'true' : 'false';
-
-        //     fwrite($logFile, "MODELO (mdlIniciarSesion): Usuario encontrado: " . $usuario . "\n");
-        //     fwrite($logFile, "MODELO (mdlIniciarSesion): Hash de la BD: " . $db_hash . "\n");
-        //     fwrite($logFile, "MODELO (mdlIniciarSesion): Pass recibida: " . $password . "\n");
-        //     fwrite($logFile, "MODELO (mdlIniciarSesion): Pass encriptada para comparar: " . $crypted_pass . "\n");
-        //     fwrite($logFile, "MODELO (mdlIniciarSesion): Resultado de la comparación (hash_equals): " . $comparison_result . "\n\n");
-        // } else {
-        //     fwrite($logFile, "MODELO (mdlIniciarSesion): Usuario no encontrado en la BD: " . $usuario . "\n\n");
-        // }
-        // fclose($logFile);
 
         if (!$user_hash) {
             return []; // Usuario no encontrado
         }
 
         if (hash_equals($user_hash['clave'], crypt($password, $user_hash['clave']))) {
-            // Obtener datos completos del usuario
-            $stmt_complete = Conexion::conectar()->prepare("SELECT u.*, p.descripcion as perfil_descripcion
+            // Obtener datos completos del usuario (consulta corregida)image.png
+            $stmt_complete = Conexion::conectar()->prepare("SELECT u.*, 
+                                                                   COALESCE(p.descripcion, 'Usuario') as perfil_descripcion,
+                                                                   COALESCE(s.nombre, 'Sin sucursal') as sucursal_nombre
                                                             FROM usuarios u 
                                                             LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+                                                            LEFT JOIN sucursales s ON u.sucursal_id = s.id
                                                             WHERE u.usuario = :usuario AND u.estado = 1");
             $stmt_complete->bindParam(":usuario", $usuario, PDO::PARAM_STR);
             $stmt_complete->execute();
@@ -99,10 +78,13 @@ class UsuarioModelo
         fwrite($logFile, date("d/m/Y H:i:s"). '  ' . $usuario.'-'.$password."\n") or die("Error escribiendo en el archivo");
         fclose($logFile);
 
-        // Primero verificar usuario y contraseña
-        $stmt = Conexion::conectar()->prepare("SELECT u.*, p.descripcion as perfil_descripcion
+        // Consulta simplificada y corregida
+        $stmt = Conexion::conectar()->prepare("SELECT u.*, 
+                                                      COALESCE(p.descripcion, 'Usuario') as perfil_descripcion,
+                                                      COALESCE(s.nombre, 'Sin sucursal') as sucursal_nombre
                                                 FROM usuarios u 
                                                 LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+                                                LEFT JOIN sucursales s ON u.sucursal_id = s.id
                                                 WHERE u.usuario = :usuario
                                                 AND u.clave = :password
                                                 AND u.estado = 1");
@@ -112,24 +94,6 @@ class UsuarioModelo
         $stmt->execute();
         
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // LOGGING DE DEBUG
-        // $logFile = fopen("../ajax/login_debug.log", 'a'); // 'a' para añadir al archivo
-        // if ($user) {
-        //     $db_hash = $user['clave'];
-        //     $crypted_pass = crypt($password, $db_hash);
-        //     $comparison_result = hash_equals($db_hash, $crypted_pass) ? 'EXITO' : 'FALLO';
-
-        //     fwrite($logFile, "MODELO (mdlIniciarSesionSimple):\n");
-        //     fwrite($logFile, "  - Usuario encontrado en BD: " . $user['usuario'] . "\n");
-        //     fwrite($logFile, "  - Hash de la BD:              " . $db_hash . "\n");
-        //     fwrite($logFile, "  - Pass recibida para comparar:  " . $password . "\n");
-        //     fwrite($logFile, "  - Pass encriptada (generada): " . $crypted_pass . "\n");
-        //     fwrite($logFile, "  - Resultado de la comparación:  " . $comparison_result . "\n");
-        // } else {
-        //     fwrite($logFile, "MODELO (mdlIniciarSesionSimple): Usuario no encontrado en la BD: " . $usuario . "\n");
-        // }
-        // fclose($logFile);
 
         if ($user && hash_equals($user['clave'], crypt($password, $user['clave']))) {
             $user_object = (object) $user;
@@ -218,78 +182,87 @@ class UsuarioModelo
     {
         $smt = Conexion::conectar()->prepare('call SP_LISTAR_USUARIOS()');
         $smt->execute();
-        return $smt->fetchAll();
+        return $smt->fetchAll(PDO::FETCH_ASSOC);
 
-        // $stmt = Conexion::conectar()->prepare("SELECT
-        //                                                 id_categoria, 
-        //                                                 nombre_categoria, 
-        //                                                 aplica_peso as medida, 
-        //                                                 DATE(fecha_creacion_categoria) as fecha_creacion_categoria, 
-        //                                                 fecha_actualizacion_categoria,
-        //                                                 '' as opciones
-        //                                             FROM
-        //                                                 categorias 
-        //                                                 ORDER BY id_categoria DESC");
-        // $stmt->execute();
-        // return $stmt ->fetchAll();
+  
     }
 
-    /*=============================================
-    Peticion SELECT: PARA MOSTRAR EN COMBO DE USUARIO
-    =============================================*/
+    /*===================================================================*/
+    //LISTAR PERFILES EN COMBOBOX
+    /*===================================================================*/
     static public function mdlListarSelectPerfiles()
     {
-
-        $stmt = Conexion::conectar()->prepare("SELECT  id_perfil, descripcion
-                                                FROM perfiles 
-                                                where estado = 1
-                                                order BY id_perfil asc");
-        $stmt->execute();
-        return $stmt->fetchAll();
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT id_perfil, descripcion 
+                                                 FROM perfiles 
+                                                 WHERE estado = 1 
+                                                 ORDER BY descripcion");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en mdlListarSelectPerfiles: " . $e->getMessage());
+            throw $e;
+        } finally {
+            if ($stmt) {
+                $stmt->closeCursor();
+                $stmt = null;
+            }
+        }
     }
 
 
 
-    /*=============================================
-    REGISTRAR USUARIO
-    =============================================*/
-    static public function mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario)
+    /*===================================================================*/
+    //REGISTRAR USUARIOS
+    /*===================================================================*/
+    static public function mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id)
     {
         try {
-            //$fecha = date('Y-m-d');
-            $stmt = Conexion::conectar()->prepare("INSERT INTO usuarios(nombre_usuario, 
-                                                                          apellido_usuario,
-                                                                          usuario,
-                                                                          clave ,
-                                                                          id_perfil_usuario, estado) 
-                                                                VALUES (:nombre_usuario, 
-                                                                        :apellido_usuario,
-                                                                        :usuario,
-                                                                        :clave,
-                                                                        :id_perfil_usuario, '1')");
+            $stmt = Conexion::conectar()->prepare("INSERT INTO usuarios(
+                nombre_usuario, 
+                apellido_usuario, 
+                usuario, 
+                clave, 
+                id_perfil_usuario, 
+                sucursal_id,
+                estado
+            ) VALUES (
+                :nombre_usuario, 
+                :apellido_usuario, 
+                :usuario, 
+                :clave, 
+                :id_perfil_usuario, 
+                :sucursal_id,
+                1
+            )");
 
             $stmt->bindParam(":nombre_usuario", $nombre_usuario, PDO::PARAM_STR);
             $stmt->bindParam(":apellido_usuario", $apellido_usuario, PDO::PARAM_STR);
             $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
             $stmt->bindParam(":clave", $clave, PDO::PARAM_STR);
-            $stmt->bindParam(":id_perfil_usuario", $id_perfil_usuario, PDO::PARAM_STR);
+            $stmt->bindParam(":id_perfil_usuario", $id_perfil_usuario, PDO::PARAM_INT);
+            $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                $resultado = "ok";
+                return "ok";
             } else {
-                $resultado = "error";
+                $error = $stmt->errorInfo();
+                error_log("Error al registrar usuario: " . print_r($error, true));
+                return "error: " . $error[2];
             }
         } catch (Exception $e) {
-            $resultado = 'Excepción capturada: ' .  $e->getMessage() . "\n";
+            error_log("Excepción al registrar usuario: " . $e->getMessage());
+            return "error: " . $e->getMessage();
+        } finally {
+            if ($stmt) {
+                $stmt->closeCursor();
+                $stmt = null;
+            }
         }
-
-        return $resultado;
-
-        $stmt = null;
     }
-
-
-    /*=============================================
+ 
+ 
+     /*=============================================
     ACTUALIZAR DATOS DEL USUARIO
     =============================================*/
     static public function mdlActualizarUsuario($table, $data, $id, $nameId)
@@ -383,18 +356,12 @@ class UsuarioModelo
     /*===================================================================*/
     static public function mdlObtenerColectores()
     {
-        $stmt = Conexion::conectar()->prepare("
-            SELECT u.id_usuario, u.nombre_usuario
-            FROM usuarios u
-            INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
-            WHERE p.descripcion = 'COLECTOR'
-            ORDER BY u.nombre_usuario ASC
-        ");
-
+        $stmt = Conexion::conectar()->prepare("SELECT u.id_usuario, u.nombre_usuario, u.apellido_usuario
+                                            FROM usuarios u
+                                            INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+                                            WHERE p.descripcion = 'Cobrador' AND u.estado = 1
+                                            ORDER BY u.nombre_usuario ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $stmt->close();
-        $stmt = null;
     }
 }

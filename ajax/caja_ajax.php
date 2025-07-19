@@ -97,28 +97,254 @@ class AjaxCaja
     }
 
 
+    /*===================================================================*/
+    // NUEVOS MÉTODOS PARA SISTEMA MEJORADO DE CAJA
+    /*===================================================================*/
+
+    /*===================================================================*/
+    // VERIFICAR PERMISOS DE USUARIO PARA OPERACIONES DE CAJA
+    /*===================================================================*/
+    public function ajaxVerificarPermisosCaja()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $id_usuario = $_SESSION['id_usuario'];
+        $accion = $this->accion ?? 'ABRIR_CAJA';
+        $monto = $this->monto ?? 0;
+
+        $permisos = CajaControlador::ctrVerificarPermisosCaja($id_usuario, $accion, $monto);
+        
+        echo json_encode([
+            'success' => true,
+            'permisos' => $permisos
+        ]);
+    }
+
+    /*===================================================================*/
+    // REGISTRAR CAJA CON VALIDACIONES COMPLETAS
+    /*===================================================================*/
+    public function ajaxRegistrarCajaConValidaciones()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $resultado = CajaControlador::ctrRegistrarCajaConValidaciones(
+            $this->caja_descripcion,
+            $this->caja_monto_inicial,
+            $_SESSION['id_usuario'],
+            $this->validacion_fisica ?? false,
+            $this->observaciones ?? null
+        );
+
+        echo json_encode($resultado);
+    }
+
+    /*===================================================================*/
+    // CERRAR CAJA CON VALIDACIONES Y AUDITORÍA
+    /*===================================================================*/
+    public function ajaxCerrarCajaConValidaciones()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $resultado = CajaControlador::ctrCerrarCajaConValidaciones(
+            $this->caja_monto_ingreso,
+            $this->caja_prestamo,
+            $this->caja__monto_egreso,
+            $this->caja_monto_total,
+            $this->caja_count_prestamo,
+            $this->caja_count_ingreso,
+            $this->caja_count_egreso,
+            $this->caja_interes,
+            $_SESSION['id_usuario'],
+            $this->validacion_fisica ?? false,
+            $this->observaciones ?? null
+        );
+
+        echo json_encode($resultado);
+    }
+
+    /*===================================================================*/
+    // OBTENER DASHBOARD EN TIEMPO REAL
+    /*===================================================================*/
+    public function ajaxObtenerDashboardCaja()
+    {
+        $id_usuario = $_SESSION['id_usuario'] ?? null;
+        $dashboard = CajaControlador::ctrObtenerDashboardCaja($id_usuario);
+        
+        echo json_encode($dashboard, JSON_UNESCAPED_UNICODE);
+    }
+
+    /*===================================================================*/
+    // LISTAR ALERTAS PENDIENTES
+    /*===================================================================*/
+    public function ajaxListarAlertasPendientes()
+    {
+        $id_usuario = $_SESSION['id_usuario'] ?? null;
+        $alertas = CajaControlador::ctrListarAlertasPendientes($id_usuario);
+        
+        echo json_encode($alertas, JSON_UNESCAPED_UNICODE);
+    }
+
+    /*===================================================================*/
+    // MARCAR ALERTA COMO LEÍDA
+    /*===================================================================*/
+    public function ajaxMarcarAlertaLeida()
+    {
+        if (!isset($_SESSION['id_usuario']) || !isset($this->alerta_id)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Datos incompletos'
+            ]);
+            return;
+        }
+
+        $resultado = CajaControlador::ctrMarcarAlertaLeida(
+            $this->alerta_id,
+            $_SESSION['id_usuario']
+        );
+
+        echo json_encode([
+            'success' => $resultado,
+            'message' => $resultado ? 'Alerta marcada como leída' : 'Error al marcar alerta'
+        ]);
+    }
+
+    /*===================================================================*/
+    // REGISTRAR CONTEO FÍSICO
+    /*===================================================================*/
+    public function ajaxRegistrarConteoFisico()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $conteo_id = CajaControlador::ctrRegistrarConteoFisico(
+            $this->caja_id,
+            $_SESSION['id_usuario'],
+            $this->tipo_conteo,
+            $this->saldo_sistema,
+            $this->saldo_fisico,
+            $this->denominaciones ?? null,
+            $this->observaciones ?? null
+        );
+        echo json_encode([
+            'success' => $conteo_id > 0,
+            'message' => $conteo_id > 0 ? 'Conteo físico registrado con éxito' : 'Error al registrar conteo físico',
+            'conteo_id' => $conteo_id
+        ]);
+    }
+
+    /*===================================================================*/
+    // REGISTRAR MOVIMIENTO DE AJUSTE (SOBRANTE/FALTANTE)
+    /*===================================================================*/
+    public function ajaxRegistrarMovimientoAjuste()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+        
+        $movimiento_id = CajaControlador::ctrRegistrarMovimientoAjuste(
+            $this->caja_id,
+            $_SESSION['id_usuario'],
+            $this->tipo_movimiento,
+            $this->monto,
+            $this->observaciones ?? null
+        );
+
+        echo json_encode([
+            'success' => $movimiento_id > 0,
+            'message' => $movimiento_id > 0 ? 'Movimiento de ajuste registrado con éxito' : 'Error al registrar movimiento de ajuste',
+            'movimiento_id' => $movimiento_id
+        ]);
+    }
+
+    /*===================================================================*/
+    // GENERAR REPORTE PDF DE CAJA
+    /*===================================================================*/
+    public function ajaxGenerarReporteCaja()
+    {
+        // Esta función podría generar el PDF y devolver la URL o un indicador de éxito
+        // Por ahora, solo simularé la acción.
+        echo json_encode([
+            'success' => true,
+            'message' => 'Generación de reporte iniciada (funcionalidad pendiente de implementar)'
+        ]);
+    }
+
+     /*===================================================================*/
+    // OBTENER CONTEXTO DE USUARIO (ROLES, PERMISOS ESPECÍFICOS)
+    /*===================================================================*/
+    public function ajaxObtenerContextoUsuario()
+    {
+        $id_usuario = $_SESSION['id_usuario'] ?? null;
+        $contexto = CajaControlador::ctrObtenerContextoUsuario($id_usuario);
+        echo json_encode($contexto, JSON_UNESCAPED_UNICODE);
+    }
+
+    /*===================================================================*/
+    // VERIFICAR ESTADO GENERAL DEL SISTEMA DE CAJA
+    /*===================================================================*/
+    public function ajaxVerificarEstadoSistemaCaja()
+    {
+        $estado = CajaControlador::ctrVerificarEstadoSistemaCaja();
+        echo json_encode($estado, JSON_UNESCAPED_UNICODE);
+    }
+
+    /*===================================================================*/
+    // OBTENER ESTADÍSTICAS RÁPIDAS (APERTURAS/CIERRES HOY)
+    /*===================================================================*/
+    public function ajaxObtenerEstadisticasRapidas()
+    {
+        $estadisticas = CajaControlador::ctrObtenerEstadisticasRapidas();
+        echo json_encode($estadisticas, JSON_UNESCAPED_UNICODE);
+    }
 }
 
-
-if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR DATOS 
+//instanciamos para que se ejecute la funcion
+if (isset($_POST['accion']) && $_POST['accion'] == 1) {        //LISTAR CAJA EN DATATABLE
     $ListarCaja = new AjaxCaja();
     $ListarCaja->ListarAperturaCaja();
 
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 2) { //PARA REGISTRAR LA CAJA
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 2) {    //REGISTRAR CAJA
     $RegCaja = new AjaxCaja();
     $RegCaja->caja_descripcion = $_POST["caja_descripcion"];
     $RegCaja->caja_monto_inicial = $_POST["caja_monto_inicial"];
     $RegCaja->ajaxRegistrarCaja();
 
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 3) {   //TRAER DATOS DEL CIERRE DE CAJA
-    $DataCierreCaja = new AjaxCaja();
-    $DataCierreCaja->ajaxObtenerDataCierreCaja(); 
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 3) {    //TRAER DATOS FINALES PARA CERRAR LA CAJA
+    $DataCierreCaja = new AjaxCaja(); //clase
+    $DataCierreCaja->ajaxObtenerDataCierreCaja();
 
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 4) { //PARA REGISTRAR EL  CERRAR LA CAJA
-    $CerrarCaja = new AjaxCaja();
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 4) {    //REGISTRAR CERRAR LA CAJA
+    $CerrarCaja = new AjaxCaja(); //clase
     $CerrarCaja->caja_monto_ingreso = $_POST["caja_monto_ingreso"];
     $CerrarCaja->caja_prestamo = $_POST["caja_prestamo"];
     $CerrarCaja->caja__monto_egreso = $_POST["caja__monto_egreso"];
@@ -130,23 +356,85 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR DATOS
     $CerrarCaja->ajaxCerrarCaja();
 
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 5) {    // ESTADO DE LA CAJA PARA PROCEDER A REALIZAR UN PRESTAMO
-    $DataEstadoCaja = new AjaxCaja();
-    $DataEstadoCaja->ajaxObtenerDataEstadoCaja(); 
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 5) {    //ESTADO DE LA CAJA PARA PROCEDER A REALIZAR UN PRESTAMO
+    $DataEstadoCaja = new AjaxCaja(); //clase
+    $DataEstadoCaja->ajaxObtenerDataEstadoCaja();
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 6) {   //OBTENER   ID DE LA CAJA
-    $traerIdCaja = new AjaxCaja();
-    $traerIdCaja->ajaxObtenerIDCaja(); //creamos el metodo
 
-} else if (isset($_POST['accion']) && $_POST['accion'] == 7) {       ///VER  PRESTAMO POR CAJA ID
-    $PrestamosporCajaID = new AjaxCaja();
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 6) {    //OBTENER   ID DE LA CAJA
+    $traerIdCaja = new AjaxCaja(); //clase
+    $traerIdCaja->ajaxObtenerIDCaja();
+
+
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 7) {    //VER DETALLE DL PRESTAMO EN MODAL
+    $PrestamosporCajaID = new AjaxCaja(); //clase
     $PrestamosporCajaID->ajaxPrestamoPorCajaID($_POST["caja_id"]);
 
 
-}else if (isset($_POST['accion']) && $_POST['accion'] == 8) {       ///VER  MOVIMIENTOS POR CAJA ID
-    $MovimientosporCajaID = new AjaxCaja();
+} else  if (isset($_POST['accion']) && $_POST['accion'] == 8) {    //VER DETALLE DL PRESTAMO EN MODAL
+    $MovimientosporCajaID = new AjaxCaja(); //clase
     $MovimientosporCajaID->ajaxMovimientosPorCajaID($_POST["caja_id"]);
 
+} else if (isset($_POST['accion']) && $_POST['accion'] == 9) {
+    $estadisticasRapidas = new AjaxCaja();
+    $estadisticasRapidas->ajaxObtenerEstadisticasRapidas();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'registrar_conteo_fisico') {
+    $conteoFisico = new AjaxCaja();
+    $conteoFisico->caja_id = $_POST['caja_id'];
+    $conteoFisico->tipo_conteo = $_POST['tipo_conteo'];
+    $conteoFisico->saldo_sistema = $_POST['saldo_sistema'];
+    $conteoFisico->saldo_fisico = $_POST['saldo_fisico'];
+    $conteoFisico->denominaciones = $_POST['denominaciones'] ?? null;
+    $conteoFisico->observaciones = $_POST['observaciones'] ?? null;
+    $conteoFisico->ajaxRegistrarConteoFisico();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'generar_reporte_caja') {
+    $generarReporte = new AjaxCaja();
+    $generarReporte->ajaxGenerarReporteCaja();
 
+
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'verificar_permisos_caja') {
+    $permisosCaja = new AjaxCaja();
+    $permisosCaja->accion = $_POST['sub_accion'];
+    $permisosCaja->monto = $_POST['monto'] ?? 0;
+    $permisosCaja->ajaxVerificarPermisosCaja();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'registrar_caja_validada') {
+    $registrarCajaValidada = new AjaxCaja();
+    $registrarCajaValidada->caja_descripcion = $_POST['caja_descripcion'];
+    $registrarCajaValidada->caja_monto_inicial = $_POST['caja_monto_inicial'];
+    $registrarCajaValidada->validacion_fisica = filter_var($_POST['validacion_fisica'], FILTER_VALIDATE_BOOLEAN);
+    $registrarCajaValidada->observaciones = $_POST['observaciones'];
+    $registrarCajaValidada->ajaxRegistrarCajaConValidaciones();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'cerrar_caja_validada') {
+    $cerrarCajaValidada = new AjaxCaja();
+    $cerrarCajaValidada->caja_monto_ingreso = $_POST['caja_monto_ingreso'];
+    $cerrarCajaValidada->caja_prestamo = $_POST['caja_prestamo'];
+    $cerrarCajaValidada->caja__monto_egreso = $_POST['caja__monto_egreso'];
+    $cerrarCajaValidada->caja_monto_total = $_POST['caja_monto_total'];
+    $cerrarCajaValidada->caja_count_prestamo = $_POST['caja_count_prestamo'];
+    $cerrarCajaValidada->caja_count_ingreso = $_POST['caja_count_ingreso'];
+    $cerrarCajaValidada->caja_count_egreso = $_POST['caja_count_egreso'];
+    $cerrarCajaValidada->caja_interes = $_POST['caja_interes'];
+    $cerrarCajaValidada->validacion_fisica = filter_var($_POST['validacion_fisica'], FILTER_VALIDATE_BOOLEAN);
+    $cerrarCajaValidada->observaciones = $_POST['observaciones'];
+    $cerrarCajaValidada->ajaxCerrarCajaConValidaciones();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'obtener_dashboard_caja') {
+    $dashboardCaja = new AjaxCaja();
+    $dashboardCaja->ajaxObtenerDashboardCaja();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'listar_alertas_pendientes') {
+    $alertasPendientes = new AjaxCaja();
+    $alertasPendientes->ajaxListarAlertasPendientes();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'marcar_alerta_leida') {
+    $marcarAlertaLeida = new AjaxCaja();
+    $marcarAlertaLeida->alerta_id = $_POST['alerta_id'];
+    $marcarAlertaLeida->ajaxMarcarAlertaLeida();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'obtener_contexto_usuario') {
+    $contextoUsuario = new AjaxCaja();
+    $contextoUsuario->ajaxObtenerContextoUsuario();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'verificar_estado_sistema_caja') {
+    $estadoSistemaCaja = new AjaxCaja();
+    $estadoSistemaCaja->ajaxVerificarEstadoSistemaCaja();
+} else {
+    $datos = new AjaxCaja();        //TRAER DATOS PARA LAS CAJAS 
+    $datos->getDatosDashboard();
 }
 

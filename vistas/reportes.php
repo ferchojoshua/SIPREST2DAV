@@ -1,446 +1,400 @@
-  <!-- Content Header (Page header) -->
-  <div class="content-header">
-      <div class="container-fluid">
-          <div class="row mb-2">
-              <!-- <div class="col-sm-6">
-                  <h4 class="m-0">Reporte por Cliente</h4>
-              </div> -->
-              <!-- /.col -->
-              <!-- <div class="col-sm-6">
-                  <ol class="breadcrumb float-sm-right">
-                      <li class="breadcrumb-item"><a href="index.php">Inicio</a></li>
-                      <li class="breadcrumb-item ">Reportes</li>
-                      <li class="breadcrumb-item active">Por Cliente</li>
-                  </ol>
-              </div> -->
-              <!-- /.col -->
-          </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
-  </div>
-  <!-- /.content-header -->
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+if (isset($_SESSION["usuario"])) {
+?>
 
-  <!-- Main content -->
-  <div class="content pb-2">
-      <div class="container-fluid">
-          <div class="row p-0 m-0">
-              <div class="col-md-12">
-                  <div class="card card-info card-outline shadow ">
-                      <div class="card-header bg-gradient-info">
-                          <h3 class="card-title">Pivot General Prestamos</h3>
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">📊 Reporte Pivot</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="index.php">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="#">Reportes</a></li>
+                    <li class="breadcrumb-item active">Pivot</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 
-                      </div>
-                      <div class=" card-body">
-                          <!-- <div class="row">
-                              <div class="col-md-4">
-                                  <div class="form-group">
-                                      <label for="">
-                                          <span class="small">Cliente:</span>
-                                      </label>
-                                      <select class="form-control form-control-sm js-example-basic-single" id="select_clientes" style="width: 100%"> </select>
-                                      <div class="invalid-feedback">Seleccione un Cliente</div>
-                                  </div>
-                              </div>
+<!-- Main content -->
+<div class="content">
+    <div class="container-fluid">
+        
+        <!-- Filtros -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card card-info card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-filter"></i> Configuración del Reporte</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Usuario/Cobrador:</label>
+                                    <select id="select_usuario" class="form-control select2">
+                                        <option value="">Todos los usuarios</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Año:</label>
+                                    <select id="select_anio" class="form-control select2">
+                                        <option value="">Seleccionar año</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Tipo de Reporte:</label>
+                                    <select id="tipo_reporte" class="form-control">
+                                        <option value="mensual">Resumen Mensual</option>
+                                        <option value="trimestral">Resumen Trimestral</option>
+                                        <option value="anual">Resumen Anual</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>&nbsp;</label><br>
+                                    <button type="button" class="btn btn-info" onclick="generarReporte()">
+                                        <i class="fas fa-chart-bar"></i> Generar Pivot
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                              <div class="col-md-8 d-flex flex-row align-items-center justify-content-end">
-                                  <div class="form-group m-0"><a class="btn btn-primary btn-sm" style="width:120px;" id="btnFiltrar">Buscar</a></div>
-                              </div>
-                          </div><br> -->
-                          <div class="col-12 table-responsive">
-                              <table id="tbl_reporte_pivot" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-gradient-info text-white">
-                                      <tr>
-                                          <th>Año</th>
-                                          <th>Enero</th>
-                                          <th>Febrero</th>
-                                          <th>Marzo</th>
-                                          <th>Abril</th>
-                                          <th>Mayo</th>
-                                          <th>Junio</th>
-                                          <th>Julio</th>
-                                          <th>Agosto</th>
-                                          <th>Set.</th>
-                                          <th>Oct.</th>
-                                          <th>Nov.</th>
-                                          <th>Dic.</th>
-                                          <th class="text-center">Total</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody class="small text left">
-                                  </tbody>
-                              </table>
+        <!-- Área de Resultados -->
+        <div class="row" id="area_resultados" style="display: none;">
+            
+            <!-- Gráfico -->
+            <div class="col-md-8">
+                <div class="card card-info card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-line"></i> Gráfico de Tendencias
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartPivot" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
 
-                          </div>
+            <!-- Resumen -->
+            <div class="col-md-4">
+                <div class="card card-success card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calculator"></i> Resumen Ejecutivo
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-box bg-success">
+                            <span class="info-box-icon"><i class="fas fa-money-bill-wave"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Total Colocado</span>
+                                <span class="info-box-number" id="total_colocado">C$ 0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box bg-info">
+                            <span class="info-box-icon"><i class="fas fa-hand-holding-usd"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Total Cobrado</span>
+                                <span class="info-box-number" id="total_cobrado">C$ 0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box bg-warning">
+                            <span class="info-box-icon"><i class="fas fa-users"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Clientes Atendidos</span>
+                                <span class="info-box-number" id="clientes_atendidos">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box bg-purple">
+                            <span class="info-box-icon"><i class="fas fa-percentage"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Eficiencia</span>
+                                <span class="info-box-number" id="eficiencia">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                      </div>
-                  </div>
-              </div>
-          </div>
+            <!-- Tabla Detallada -->
+            <div class="col-12">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-table"></i> Datos Detallados
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-success btn-sm" onclick="exportarExcel()">
+                                <i class="fas fa-file-excel"></i> Excel
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="exportarPDF()">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="tabla_pivot" class="table table-striped table-bordered table-hover">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th>Período</th>
+                                        <th>Usuario</th>
+                                        <th>Préstamos</th>
+                                        <th>Monto Colocado</th>
+                                        <th>Cuotas Cobradas</th>
+                                        <th>Monto Cobrado</th>
+                                        <th>Clientes</th>
+                                        <th>Eficiencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-      </div><!-- /.container-fluid -->
-  </div>
-  <!-- /.content -->
+        </div>
 
-  <!-- Main content -->
-  <div class="content pb-2">
-      <div class="container-fluid">
-          <div class="row p-0 m-0">
-              <div class="col-md-12">
-                  <div class="card card-info card-outline shadow ">
-                      <div class="card-header bg-gradient-info">
-                          <h3 class="card-title">Record Por usuario</h3>
+    </div>
+</div>
 
-                      </div>
-                      <div class=" card-body">
-                          <div class="row">
-                              <div class="col-md-4">
-                                  <div class="form-group">
-                                      <label for="">
-                                          <span class="small">Usuario:</span>
-                                      </label>
-                                      <select class="form-control form-control-sm js-example-basic-single" id="select_usuario" style="width: 100%"> </select>
-                                  </div>
-                              </div>
+<script>
+var chartPivot = null;
 
-                              <div class="col-md-4">
-                                  <div class="form-group">
-                                      <label for="">
-                                          <span class="small">Año:</span>
-                                      </label>
-                                      <select class="form-control form-control-sm js-example-basic-single" id="select_anio" style="width: 100%"> </select>
+$(document).ready(function() {
+    cargarUsuarios();
+    cargarAnios();
+    $('.select2').select2();
+});
 
-                                  </div>
-                              </div>
+function cargarUsuarios() {
+    $.ajax({
+        url: 'ajax/reportes_ajax.php',
+        method: 'POST',
+        data: { accion: 4 },
+        dataType: 'json',
+        success: function(respuesta) {
+            $('#select_usuario').append('<option value="">Todos los usuarios</option>');
+            respuesta.forEach(function(usuario) {
+                $('#select_usuario').append(`<option value="${usuario.id}">${usuario.nombre}</option>`);
+            });
+        },
+        error: function() {
+            console.error('Error al cargar usuarios');
+        }
+    });
+}
 
-                              <div class="col-md-4 d-flex flex-row align-items-center justify-content-end">
-                                  <label for="">&nbsp;</label><br>
-                                  <div class="form-group m-0"><a class="btn btn-info btn-sm" style="width:120px;" id="btnBuscar"><i class="fas fa-search"></i></a></div>
-                                  <!-- <button class="btn btn-info btn-sm" onclick="Listar_record_usuario();validar2();"><i class="fas fa-search"></i></button> -->
-                              </div>
-                          </div><br>
+function cargarAnios() {
+    $.ajax({
+        url: 'ajax/reportes_ajax.php',
+        method: 'POST',
+        data: { accion: 5 },
+        dataType: 'json',
+        success: function(respuesta) {
+            $('#select_anio').append('<option value="">Seleccionar año</option>');
+            respuesta.forEach(function(anio) {
+                $('#select_anio').append(`<option value="${anio.anio}">${anio.anio}</option>`);
+            });
+            
+            // Seleccionar año actual por defecto
+            $('#select_anio').val(new Date().getFullYear()).trigger('change');
+        },
+        error: function() {
+            console.error('Error al cargar años');
+        }
+    });
+}
 
-                          <div class="col-12 table-responsive">
-                              <table id="tbl_reporte_record_usu" class="table display table-hover text-nowrap compact  w-100  rounded">
-                                  <thead class="bg-gradient-info text-white">
-                                      <tr>
-                                          <th>Año</th>
-                                          <th>Mes</th>
-                                          <th>Usuario</th>
-                                          <th>Cant. Prest.</th>
-                                          <th class="text-center">Total</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody class="small text left">
-                                  </tbody>
-                              </table>
+function generarReporte() {
+    var usuario = $('#select_usuario').val();
+    var anio = $('#select_anio').val();
+    var tipoReporte = $('#tipo_reporte').val();
+    
+    if (!anio) {
+        Swal.fire('Atención', 'Debe seleccionar un año para generar el reporte.', 'warning');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Generando reporte pivot...',
+        text: 'Procesando datos...',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
-                          </div>
+    $.ajax({
+        url: 'ajax/reportes_ajax.php',
+        method: 'POST',
+        data: {
+            accion: 3,
+            usuario: usuario,
+            anio: anio,
+            tipo: tipoReporte
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            Swal.close();
+            
+            if (respuesta && respuesta.length > 0) {
+                mostrarResultados(respuesta);
+                generarGrafico(respuesta);
+                calcularResumen(respuesta);
+            } else {
+                Swal.fire('Sin resultados', 'No se encontraron datos para los filtros seleccionados.', 'info');
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire('Error', 'Error al generar el reporte. Intente nuevamente.', 'error');
+        }
+    });
+}
 
-                      </div>
-                  </div>
-              </div>
-          </div>
+function mostrarResultados(datos) {
+    // Destruir tabla existente
+    if ($.fn.DataTable.isDataTable('#tabla_pivot')) {
+        $('#tabla_pivot').DataTable().destroy();
+    }
+    
+    // Limpiar tabla
+    $('#tabla_pivot tbody').empty();
+    
+    // Llenar tabla con datos
+    datos.forEach(function(item) {
+        var eficiencia = item.monto_colocado > 0 ? 
+            ((item.monto_cobrado / item.monto_colocado) * 100).toFixed(1) : 0;
+            
+        var fila = `
+            <tr>
+                <td>${item.periodo || ''}</td>
+                <td>${item.usuario || 'Todos'}</td>
+                <td>${item.prestamos || 0}</td>
+                <td>C$ ${parseFloat(item.monto_colocado || 0).toLocaleString('es-NI')}</td>
+                <td>${item.cuotas_cobradas || 0}</td>
+                <td>C$ ${parseFloat(item.monto_cobrado || 0).toLocaleString('es-NI')}</td>
+                <td>${item.clientes || 0}</td>
+                <td><span class="badge badge-${eficiencia >= 80 ? 'success' : eficiencia >= 60 ? 'warning' : 'danger'}">${eficiencia}%</span></td>
+            </tr>
+        `;
+        $('#tabla_pivot tbody').append(fila);
+    });
+    
+    // Inicializar DataTable
+    $('#tabla_pivot').DataTable({
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+        },
+        responsive: true,
+        order: [[0, "asc"]]
+    });
+    
+    $('#area_resultados').show();
+}
 
-      </div><!-- /.container-fluid -->
-  </div>
-  <!-- /.content -->
-
-  <script>
-      var accion;
-      var tbl_reporte_pivot, tbl_reporte_record_usu;
-
-      var Toast = Swal.mixin({
-          toast: true,
-          position: 'top',
-          showConfirmButton: false,
-          timer: 3000
-      });
-
-
-      $(document).ready(function() {
-          ReporteRecorUsuario();
-          $('.js-example-basic-single').select2();
-
-          /*===================================================================*/
-          // ACTIVAR BUSQUEDA AL CAMBIAR SELECTOR DE USUARIO
-          /*===================================================================*/
-          $('#select_usuario').on('change', function() {
-              $('#btnBuscar').click();
-          });
-
-          /*===================================================================*/
-          // ACTIVAR BUSQUEDA AL CAMBIAR SELECTOR DE AÑO
-          /*===================================================================*/
-          $('#select_anio').on('change', function() {
-              $('#btnBuscar').click();
-          });
-
-          /*===================================================================*/
-          // EVENTO CLICK DEL BOTON BUSCAR
-          /*===================================================================*/
-          $("#btnBuscar").on('click', function() {
-              ReporteRecorUsuario(); // Llama a la función para recargar la tabla
-          });
-
-          /***************************************************************************
-           * INICIAR DATATABLE REPORTE PIVOT
-           ******************************************************************************/
-          var tbl_reporte_pivot = $("#tbl_reporte_pivot").DataTable({
+function generarGrafico(datos) {
+    // Destruir gráfico existente
+    if (chartPivot) {
+        chartPivot.destroy();
+    }
+    
+    var ctx = document.getElementById('chartPivot').getContext('2d');
+    var labels = datos.map(item => item.periodo);
+    var montoColocado = datos.map(item => parseFloat(item.monto_colocado || 0));
+    var montoCobrado = datos.map(item => parseFloat(item.monto_cobrado || 0));
+    
+    chartPivot = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Monto Colocado',
+                data: montoColocado,
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Monto Cobrado',
+                data: montoCobrado,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
             responsive: true,
-              dom: 'Bfrtip',
-              buttons: [{
-                      "extend": 'excelHtml5',
-                      "title": 'Reporte Pivot',
-                      "exportOptions": {
-                          'columns': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-                      },
-                      "text": '<i class="fa fa-file-excel"></i>',
-                      "titleAttr": 'Exportar a Excel'
-                  },
-                  {
-                      "extend": 'print',
-                      "text": '<i class="fa fa-print"></i> ',
-                      "titleAttr": 'Imprimir',
-                      "exportOptions": {
-                          'columns': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-                      },
-                      "download": 'open'
-                  },
-                  'pageLength',
-              ],
-              ajax: {
-                  url: "ajax/reportes_ajax.php",
-                  dataSrc: "",
-                  type: "POST",
-                  data: {
-                      'accion': 3
-                  }, //LISTAR 
-              },
-              /*columnDefs: [
-                {
-                      targets: 8, //columna 2
-                      sortable: false, //no ordene
-                      render: function(data, type, full, meta) {
-                          return "<center>" +
-                              "<span class='btnEditarCliente  text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Editar Cliente'> " +
-                              "<i class='fas fa-pencil-alt fs-6'></i> " +
-                              "</span> " +
-                              "<span class='btnEliminarCliente text-danger px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Eliminar Cliente'> " +
-                              "<i class='fas fa-trash fs-6'> </i> " +
-                              "</span>" +
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'C$ ' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
 
-                              "</center>"
-                      }
-                  }
-              ],*/
+function calcularResumen(datos) {
+    var totalColocado = datos.reduce((sum, item) => sum + parseFloat(item.monto_colocado || 0), 0);
+    var totalCobrado = datos.reduce((sum, item) => sum + parseFloat(item.monto_cobrado || 0), 0);
+    var clientesAtendidos = datos.reduce((sum, item) => sum + parseInt(item.clientes || 0), 0);
+    var eficienciaPromedio = totalColocado > 0 ? ((totalCobrado / totalColocado) * 100).toFixed(1) : 0;
+    
+    $('#total_colocado').text('C$ ' + totalColocado.toLocaleString('es-NI'));
+    $('#total_cobrado').text('C$ ' + totalCobrado.toLocaleString('es-NI'));
+    $('#clientes_atendidos').text(clientesAtendidos.toLocaleString());
+    $('#eficiencia').text(eficienciaPromedio + '%');
+}
 
-              lengthMenu: [5, 10, 15, 20, 50],
-              "pageLength": 10,
-              "language": idioma_espanol,
-              select: true
-          });
+function exportarExcel() {
+    Swal.fire('Información', 'Función de exportar a Excel en desarrollo.', 'info');
+}
 
-          /*===================================================================*/
-          //SOLICITUD AJAX PARA CARGAR USUARIOS EN COMBO
-          /*===================================================================*/
-          $.ajax({
-              url: "ajax/reportes_ajax.php",
-              method: "POST",
-              cache: false,
-              //contentType: false,
-              //processData: false,
-              data: {
-                  'accion': 4
-              },
-              dataType: 'json',
-              success: function(respuesta) {
-                  //console.log(respuesta);
+function exportarPDF() {
+    Swal.fire('Información', 'Función de exportar a PDF en desarrollo.', 'info');
+}
+</script>
 
-                  var options = '<option selected value="">Seleccione un usuario</option>';
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-                  if (respuesta.length > 0) {
-                      for (let i = 0; i < respuesta.length; i++) {
-                          options += "<option value='" + respuesta[i][0] + "'>" + respuesta[i][1] + "</option>";
-                      }
-                      document.getElementById('select_usuario').innerHTML = options;
-                  } else {
-                      options += "<option value=''>No se encontraron datos</option>";
-                     // document.getElementById('select_usuario').innerHTML = options;
-
-
-                  }
-
-                  /* for (let index = 0; index < respuesta.length; index++) {
-                       options = options + '<option value=' + respuesta[index][0] + '>' + respuesta[index][1] + '</option>';
-                   }
-                   $("#select_usuario").append(options);*/
-
-              }
-          });
-
-          /*===================================================================*/
-          //SOLICITUD AJAX PARA CARGAR AÑOS DE PRESTAMOS EN COMBO
-          /*===================================================================*/
-          $.ajax({
-              url: "ajax/reportes_ajax.php",
-              method: "POST",
-              cache: false,
-              //contentType: false,
-              //processData: false,
-              data: {
-                  'accion': 5
-              },
-              dataType: 'json',
-              success: function(respuesta) {
-                  // console.log(respuesta);
-
-                  var options = '<option selected value="">Seleccione un año</option>';
-
-                  if (respuesta.length > 0) {
-                      for (let i = 0; i < respuesta.length; i++) {
-                          options += "<option>" + respuesta[i][0] + "</option>";
-                      }
-                      document.getElementById('select_anio').innerHTML = options;
-                  } else {
-                      options += "<option value=''>No se encontraron datos</option>";
-                     // document.getElementById('select_anio').innerHTML = options;
-
-
-                  }
-
-                /*  for (let index = 0; index < respuesta.length; index++) {
-                      options = options + '<option>' + respuesta[index][0] + '</option>';
-                  }
-                  $("#select_anio").append(options);*/
-
-              }
-          });
-
-
-
-
-          /*===================================================================*/
-          //FILTRAR AL DAR CLICK EN EL BOTON
-          /*===================================================================*/
-          $("#btnBuscar").on('click', function() {
-              ReporteRecorUsuario();
-              validar();
-
-          })
-
-      });
-
-
-
-      ////////////////////FUNCIONES///////////////////////////////
-
-      function ReporteRecorUsuario() {
-          var id_usuario = document.getElementById('select_usuario').value;
-          var anio = document.getElementById('select_anio').value;
-
-          tbl_reporte_record_usu = $("#tbl_reporte_record_usu").DataTable({
-              responsive: true,
-              destroy: true,
-              //retrieve: true,
-              //searching: false,
-              paging: false,
-              async: false,
-              processing: true,
-
-              dom: 'Bfrtip',
-              buttons: [{
-                      "extend": 'excelHtml5',
-                      "title": 'Reporte prestamos por usuario y año',
-                      "exportOptions": {
-                          'columns': [1, 2, 3, 4, 5]
-                      },
-                      "text": '<i class="fa fa-file-excel"></i>',
-                      "titleAttr": 'Exportar a Excel'
-                  },
-                  {
-                      "extend": 'print',
-                      "text": '<i class="fa fa-print"></i> ',
-                      "titleAttr": 'Imprimir',
-                      "exportOptions": {
-                          'columns': [1, 2, 3, 4, 5]
-                      },
-                      "download": 'open'
-                  },
-                  'pageLength',
-              ],
-              ajax: {
-                  url: "ajax/reportes_ajax.php",
-                  dataSrc: "",
-                  type: "POST",
-                  data: {
-                      'accion': 6,
-                      'id_usuario': id_usuario,
-                      'anio': anio
-
-                  }, //LISTAR 
-              },
-              lengthMenu: [0, 5, 10, 15, 20, 50],
-              "pageLength": 10,
-              "language": idioma_espanol,
-              select: true
-          });
-
-
-
-      }
-
-
-
-      function validar() {
-    		let id_usuario = document.getElementById('select_usuario').value;
-    		let anio = document.getElementById('select_anio').value;
-    		if (id_usuario.length == 0) {
-    			
-                Swal.fire({
-                  position: 'center',
-                  icon: 'error',
-                  title: 'Debe Seleccionar un Usuario',
-                  showConfirmButton: true,
-                  timer: 1500
-              })
-              $("#select_usuario").focus();
-    		}
-    		if (anio.length == 0) {
-    			Toast.fire({
-                  icon: 'error',
-                  title: ' Debe Seleccionar un Año'
-              })
-              $("#select_anio").focus();
-    		}
-    	}
-
-
-
-
-      var idioma_espanol = {
-          select: {
-              rows: "%d fila seleccionada"
-          },
-          "sProcessing": "Procesando...",
-          "sLengthMenu": "Ver _MENU_ ",
-          "sZeroRecords": "No se encontraron resultados",
-          "sEmptyTable": "No hay informacion en esta tabla",
-          "sInfo": "Mostrando (_START_ a _END_) total de _TOTAL_ registros",
-          "sInfoEmpty": "Registros del (0 al 0) total de 0 registros",
-          "sInfoFiltered": "(Filtrado de un total de _MAX_ registros)",
-          "SInfoPostFix": "",
-          "sSearch": "Buscar:",
-          "sUrl": "",
-          "sInfoThousands": ",",
-          "sLoadingRecords": "<b>No se encontraron datos</b>",
-          "oPaginate": {
-              "sFirst": "Primero",
-              "sLast": "Ultimo",
-              "sNext": "Siguiente",
-              "sPrevious": "Anterior"
-          },
-          "aria": {
-              "sSortAscending": ": ordenar de manera Ascendente",
-              "SSortDescending": ": ordenar de manera Descendente ",
-          }
-      }
-  </script>
+<?php 
+} else {
+    header("Location: index.php");
+}
+?> 

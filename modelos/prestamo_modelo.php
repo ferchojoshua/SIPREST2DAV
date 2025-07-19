@@ -1,6 +1,6 @@
 <?php
 
-require_once "conexion.php";
+require_once __DIR__ . "/conexion.php";
 
 
 class PrestamoModelo
@@ -69,48 +69,49 @@ class PrestamoModelo
     /*===================================================================*/
     //REGISTRAR DETALLE DEL PRESTAMO
     /*===================================================================*/
-    static public function mdlRegistrarPrestamoDetalle($nro_prestamo, $array_cuota, $array_monto, $array_fecha)
+    static public function mdlRegistrarPrestamoDetalle($nro_prestamo, $pdetalle_nro_cuota, $pdetalle_monto_cuota, $pdetalle_fecha)
     {
         try {
-            // Convertir las cadenas de arrays a arrays PHP si no lo están ya
-            $cuotas = explode(",", $array_cuota);
-            $montos = explode(",", $array_monto);
-            $fechas = explode(",", $array_fecha);
-
             $conn = Conexion::conectar();
-            $conn->beginTransaction();
 
-            for ($i = 0; $i < count($cuotas); $i++) {
-                $pdetalle_nro_cuota = trim($cuotas[$i]);
-                $pdetalle_monto_cuota = trim($montos[$i]);
-                $pdetalle_fecha_cuota = trim($fechas[$i]);
+            $stmt = $conn->prepare("INSERT INTO prestamo_detalle(
+                nro_prestamo, 
+                pdetalle_nro_cuota, 
+                pdetalle_monto_cuota, 
+                pdetalle_fecha, 
+                pdetalle_estado_cuota, 
+                pdetalle_liquidar, 
+                pdetalle_caja, 
+                pdetalle_aprobacion, 
+                pdetalle_saldo_cuota
+            ) VALUES (
+                :nro_prestamo,
+                :pdetalle_nro_cuota,
+                :pdetalle_monto_cuota,
+                :pdetalle_fecha, 
+                'pendiente', 
+                '0', 
+                'VIGENTE', 
+                'pendiente', 
+                :pdetalle_saldo_cuota
+            )");
 
-                $stmt = $conn->prepare("INSERT INTO prestamo_detalle(nro_prestamo, pdetalle_nro_cuota, pdetalle_monto_cuota, pdetalle_fecha, pdetalle_estado_cuota, pdetalle_liquidar, pdetalle_caja, pdetalle_aprobacion, pdetalle_saldo_cuota) 
-                                                    VALUES(:nro_prestamo,:pdetalle_nro_cuota,:pdetalle_monto_cuota,:pdetalle_fecha, 'pendiente', '0', 'VIGENTE', 'pendiente', :pdetalle_saldo_cuota)");
+            $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_monto_cuota", $pdetalle_monto_cuota, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_fecha", $pdetalle_fecha, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_saldo_cuota", $pdetalle_monto_cuota, PDO::PARAM_STR);
 
-                $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
-                $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
-                $stmt->bindParam(":pdetalle_monto_cuota", $pdetalle_monto_cuota, PDO::PARAM_STR);
-                $stmt->bindParam(":pdetalle_fecha", $pdetalle_fecha_cuota, PDO::PARAM_STR);
-                $stmt->bindParam(":pdetalle_saldo_cuota", $pdetalle_monto_cuota, PDO::PARAM_STR);
-
-                if (!$stmt->execute()) {
-                    $conn->rollBack();
-                    return "error al guardar detalle";
-                }
+            if (!$stmt->execute()) {
+                return "error al guardar detalle";
             }
 
-            $conn->commit();
-            $resultado = "ok";
+            return "ok";
 
         } catch (Exception $e) {
-            if (isset($conn) && $conn->inTransaction()) {
-                $conn->rollBack();
-            }
-            $resultado = 'Excepción capturada: ' .  $e->getMessage() . "\n";
+            error_log("Error en mdlRegistrarPrestamoDetalle: " . $e->getMessage());
+            return 'Error: ' . $e->getMessage();
         }
-
-        return $resultado;
     }
 
 
@@ -146,7 +147,7 @@ class PrestamoModelo
         }
 
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_NUM); // Usar FETCH_NUM para que coincida con el JS
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Cambiado a FETCH_ASSOC para devolver array asociativo
     }
 
     /*===================================================================*/
@@ -155,42 +156,116 @@ class PrestamoModelo
     static public function mdlObtenerTiposCalculo()
     {
         try {
+            $conexion = Conexion::conectar();
+            
             // Verificar si la tabla existe
-            $stmt = Conexion::conectar()->prepare("SHOW TABLES LIKE 'tipos_calculo_interes'");
+            $stmt = $conexion->prepare("SHOW TABLES LIKE 'tipos_calculo_interes'");
             $stmt->execute();
             $tablaExiste = $stmt->fetch();
             
-            if ($tablaExiste) {
-                // Si existe la tabla, usarla con los nombres correctos de columnas
-                $stmt = Conexion::conectar()->prepare("SELECT 
-                    tipo_calculo_id as id,
-                    tipo_calculo_nombre as nombre, 
-                    tipo_calculo_descripcion as descripcion 
-                    FROM tipos_calculo_interes 
-                    WHERE tipo_calculo_estado = 1 
-                    ORDER BY tipo_calculo_id");
-                $stmt->execute();
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } else {
-                // Si no existe, devolver tipos hardcodeados
-                return [
-                    ['id' => '1', 'nombre' => 'FRANCES', 'descripcion' => 'Sistema Francés - Cuotas fijas'],
-                    ['id' => '2', 'nombre' => 'ALEMAN', 'descripcion' => 'Sistema Alemán - Capital fijo'],
-                    ['id' => '3', 'nombre' => 'AMERICANO', 'descripcion' => 'Sistema Americano - Solo intereses'],
-                    ['id' => '4', 'nombre' => 'SIMPLE', 'descripcion' => 'Sistema Simple - Interés fijo'],
-                    ['id' => '5', 'nombre' => 'COMPUESTO', 'descripcion' => 'Sistema Compuesto - Interés sobre interés']
-                ];
+            if (!$tablaExiste) {
+                // Crear la tabla si no existe
+                self::crearTablaTiposCalculo($conexion);
             }
+            
+            // Obtener los tipos de cálculo
+            $stmt = $conexion->prepare("SELECT 
+                tipo_calculo_id as id,
+                tipo_calculo_nombre as nombre, 
+                tipo_calculo_descripcion as descripcion 
+                FROM tipos_calculo_interes 
+                WHERE tipo_calculo_estado = 1 
+                ORDER BY tipo_calculo_id");
+            
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($resultados)) {
+                // Insertar datos por defecto si no hay registros
+                self::insertarDatosPorDefecto($conexion);
+                
+                // Volver a consultar
+                $stmt->execute();
+                $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            return $resultados;
+            
         } catch (Exception $e) {
             error_log("Error en mdlObtenerTiposCalculo: " . $e->getMessage());
-            // Fallback con tipos estándar
-            return [
-                ['id' => '1', 'nombre' => 'FRANCES', 'descripcion' => 'Sistema Francés - Cuotas fijas'],
-                ['id' => '2', 'nombre' => 'ALEMAN', 'descripcion' => 'Sistema Alemán - Capital fijo'],
-                ['id' => '3', 'nombre' => 'AMERICANO', 'descripcion' => 'Sistema Americano - Solo intereses'],
-                ['id' => '4', 'nombre' => 'SIMPLE', 'descripcion' => 'Sistema Simple - Interés fijo'],
-                ['id' => '5', 'nombre' => 'COMPUESTO', 'descripcion' => 'Sistema Compuesto - Interés sobre interés']
-            ];
+            throw new Exception("Error al obtener tipos de cálculo: " . $e->getMessage());
+        }
+    }
+    
+    /*===================================================================*/
+    // CREAR TABLA TIPOS_CALCULO_INTERES
+    /*===================================================================*/
+    private static function crearTablaTiposCalculo($conexion)
+    {
+        $sql = "CREATE TABLE tipos_calculo_interes (
+            tipo_calculo_id INT AUTO_INCREMENT PRIMARY KEY,
+            tipo_calculo_nombre VARCHAR(100) NOT NULL,
+            tipo_calculo_descripcion TEXT DEFAULT NULL,
+            tipo_calculo_estado TINYINT(1) DEFAULT 1
+        )";
+        
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute();
+        
+        // Insertar datos por defecto
+        self::insertarDatosPorDefecto($conexion);
+    }
+    
+    /*===================================================================*/
+    // INSERTAR DATOS POR DEFECTO EN TIPOS_CALCULO_INTERES
+    /*===================================================================*/
+    private static function insertarDatosPorDefecto($conexion)
+    {
+        $datos = [
+            [1, 'FRANCES', 'Sistema Francés - Cuotas fijas', 1],
+            [2, 'ALEMAN', 'Sistema Alemán - Capital fijo', 1],
+            [3, 'AMERICANO', 'Sistema Americano - Solo intereses', 1],
+            [4, 'SIMPLE', 'Sistema Simple - Interés fijo', 1],
+            [5, 'COMPUESTO', 'Sistema Compuesto - Interés sobre interés', 1],
+            [6, 'FLAT', 'Sistema Flat - Interés siempre sobre capital original', 1]
+        ];
+        
+        $sql = "INSERT INTO tipos_calculo_interes (tipo_calculo_id, tipo_calculo_nombre, tipo_calculo_descripcion, tipo_calculo_estado) VALUES (?, ?, ?, ?)";
+        $stmt = $conexion->prepare($sql);
+        
+        foreach ($datos as $fila) {
+            $stmt->execute($fila);
+        }
+    }
+    
+    /*===================================================================*/
+    // OBTENER CONFIGURACIÓN DE PERÍODOS DE PAGO
+    /*===================================================================*/
+    static public function mdlObtenerPeriodosPago()
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                fpago_id,
+                fpago_descripcion,
+                CASE 
+                    WHEN fpago_id = 1 THEN 365
+                    WHEN fpago_id = 2 THEN 52
+                    WHEN fpago_id = 3 THEN 24
+                    WHEN fpago_id = 4 THEN 12
+                    WHEN fpago_id = 5 THEN 6
+                    WHEN fpago_id = 6 THEN 2
+                    WHEN fpago_id = 7 THEN 1
+                    ELSE 12
+                END as periodos_por_anio
+                FROM forma_pago 
+                ORDER BY fpago_id");
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerPeriodosPago: " . $e->getMessage());
+            throw new Exception("Error al obtener configuración de períodos: " . $e->getMessage());
         }
     }
 

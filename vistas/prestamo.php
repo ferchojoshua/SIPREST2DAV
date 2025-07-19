@@ -133,13 +133,13 @@
                                                   <div class="form-group mb-2">
                                                       <label for="" class="">
 
-                                                          <span class="small"> Nro Cuotas</span>
+                                                          <span class="small"> Plazo/Cuotas</span>
                                                       </label>
                                                       <input type="number" class=" form-control form-control-sm"
-                                                          id="text_cuotas" min="0" max="50" placeholder="Nro Cuotas"
+                                                          id="text_cuotas" min="0" max="50" placeholder="Cantida de Cutas"
                                                           required>
 
-                                                      <div class="invalid-feedback">Debe ingresar el nro de nuotas
+                                                      <div class="invalid-feedback">Debe ingresar el Plazo
                                                       </div>
                                                   </div>
                                               </div>
@@ -173,20 +173,20 @@
                                               <div class="col-md-4">
                                                   <div class="form-group mb-2">
                                                       <label for="" class="">
-                                                          <span class="small">Sistema de amortización:</span>
+                                                          <span class="small">Amortización:</span>
                                                       </label>
                                                       <select name="" id="select_tipo_calculo"
                                                           class="form-select form-select-sm"
                                                           aria-label=".form-select-sm example" required>
                                                       </select>
 
-                                                      <div class="invalid-feedback">Seleccione un tipo de amortización</div>
+                                                      <div class="invalid-feedback">Seleccione un tipo de Amortización</div>
                                                   </div>
                                               </div>
                                               <div class="col-md-4">
                                                   <div class="form-group mb-2">
                                                       <label for="" class="">
-                                                          <span class="small">Fecha</span>
+                                                          <span class="small">Fecha Inicio</span>
                                                       </label>
                                                       <input type="date" class="form-control form-control-sm" id="text_fecha" required>
                                                       <div class="invalid-feedback">Ingrese una fecha</div>
@@ -552,6 +552,54 @@ $(document).ready(function() {
     CargarCorrelativo();
     CargarEstadoCaja();
     CargarId_Caja();
+    
+    // Cargar formas de pago y moneda al iniciar
+    $.ajax({
+        url: "ajax/prestamo_ajax.php",
+        method: "POST",
+        data: {
+            'accion': 'cargar_forma_pago'
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            var options = '<option value="">Seleccione forma de pago</option>';
+            if (Array.isArray(respuesta)) {
+                respuesta.forEach(function(item) {
+                    options += '<option value="' + item.fpago_id + '">' + item.fpago_descripcion + '</option>';
+                });
+                $("#select_f_pago").html(options);
+            }
+        },
+        error: function(xhr, status, error) {
+            // Error silencioso
+        }
+    });
+
+    $.ajax({
+        url: "ajax/prestamo_ajax.php",
+        method: "POST",
+        data: {
+            'accion': 'cargar_moneda'
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            console.log('Respuesta moneda:', respuesta); // Para debug
+            var options = '<option value="">Seleccione moneda</option>';
+            if (Array.isArray(respuesta)) {
+                respuesta.forEach(function(item) {
+                    options += '<option value="' + item.moneda_id + '">' + item.moneda_descripcion + '</option>';
+                });
+                $("#select_moneda").html(options);
+            } else {
+                console.error('La respuesta no es un array:', respuesta);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error al cargar monedas:", error);
+            console.error("Respuesta del servidor:", xhr.responseText);
+        }
+    });
+
     var id_usuario = $("#text_Idprincipal").val();
     $("#id_usuario").val(id_usuario);
     $("#btnRegistrar").attr('hidden', true);
@@ -827,31 +875,19 @@ $(document).ready(function() {
             var annual_interest_rate = interes / 100;
             var i_per_period;
 
-            switch (fpago) {
-                case "1": // DIARIO
-                    i_per_period = annual_interest_rate / 365;
-                    break;
-                case "2": // SEMANAL
-                    i_per_period = annual_interest_rate / 52;
-                    break;
-                case "3": // QUINCENAL (asumiendo 24 quincenas al año)
-                    i_per_period = annual_interest_rate / 24;
-                    break;
-                case "4": // MENSUAL
-                    i_per_period = annual_interest_rate / 12;
-                    break;
-                case "5": // BIMESTRAL (cada 2 meses, 6 períodos al año)
-                    i_per_period = annual_interest_rate / 6;
-                    break;
-                case "6": // SEMESTRAL (cada 6 meses, 2 períodos al año)
-                    i_per_period = annual_interest_rate / 2;
-                    break;
-                case "7": // ANUAL
-                    i_per_period = annual_interest_rate / 1;
-                    break;
-                default:
-                    i_per_period = annual_interest_rate / 12;
-            }
+            // Obtener la configuración de periodicidad desde la base de datos
+            var periodosAnuales = {
+                "1": 365,  // DIARIO
+                "2": 52,   // SEMANAL  
+                "3": 24,   // QUINCENAL
+                "4": 12,   // MENSUAL
+               //  "5": 6,    // BIMESTRAL
+               //  "6": 2,    // SEMESTRAL
+               //  "7": 1     // ANUAL
+            };
+            
+            var periodos = periodosAnuales[fpago] || 12; // Default mensual
+            i_per_period = annual_interest_rate / periodos;
 
             var saldo_capital_restante = montoPresta;
             var amortizacion_fija = tipoCalculo === 'aleman' ? montoPresta / cuota : 0;
@@ -866,19 +902,25 @@ $(document).ready(function() {
                 let current_date;
                 if (fpago == 1) { // DIARIO
                     current_date = moment(fechaActual).add(i_cuota, 'days').format('YYYY-MM-DD');
-                } else if (fpago == 2) { // SEMANAL
-                    current_date = moment(fechaActual).add(i_cuota, 'weeks').format('YYYY-MM-DD');
-                } else if (fpago == 3) { // QUINCENAL
-                    current_date = moment(fechaActual).add(i_cuota * 14, 'days').format('YYYY-MM-DD');
-                } else if (fpago == 4) { // MENSUAL
-                    current_date = moment(fechaActual).add(i_cuota, 'months').format('YYYY-MM-DD');
-                } else if (fpago == 5) { // BIMESTRAL
-                    current_date = moment(fechaActual).add(i_cuota * 2, 'months').format('YYYY-MM-DD');
-                } else if (fpago == 6) { // SEMESTRAL
-                    current_date = moment(fechaActual).add(i_cuota * 6, 'months').format('YYYY-MM-DD');
-                } else if (fpago == 7) { // ANUAL
-                    current_date = moment(fechaActual).add(i_cuota, 'years').format('YYYY-MM-DD');
                 }
+                 else if (fpago == 2) { // SEMANAL
+                    current_date = moment(fechaActual).add(i_cuota, 'weeks').format('YYYY-MM-DD');
+                } 
+                else if (fpago == 3) { // QUINCENAL
+                    current_date = moment(fechaActual).add(i_cuota * 14, 'days').format('YYYY-MM-DD');
+                } 
+                else if (fpago == 4) { // MENSUAL
+                    current_date = moment(fechaActual).add(i_cuota, 'months').format('YYYY-MM-DD');
+                } 
+                /*else if (fpago == 5) { // BIMESTRAL
+                    current_date = moment(fechaActual).add(i_cuota * 2, 'months').format('YYYY-MM-DD');
+                } 
+                else if (fpago == 6) { // SEMESTRAL
+                    current_date = moment(fechaActual).add(i_cuota * 6, 'months').format('YYYY-MM-DD');
+                } 
+                else if (fpago == 7) { // ANUAL
+                    current_date = moment(fechaActual).add(i_cuota, 'years').format('YYYY-MM-DD');
+            }*/
 
                 var nro_cuota = i_cuota + 1;
                 var interes_cuota, capital_cuota, cuota_total;
@@ -947,62 +989,6 @@ $(document).ready(function() {
         $("#btnCalcular").attr('hidden', false);
         $("#btnRegistrar").attr('hidden', true);
     })
-
-
-
-
-    /*===================================================================*/
-    //SOLICITUD AJAX PARA CARGAR MONEDA EN COMBO
-    /*===================================================================*/
-    $.ajax({
-        url: "ajax/moneda_ajax.php",
-        cache: false,
-        contentType: false,
-        processData: false,
-        dataType: 'json',
-        success: function(respuesta) {
-
-            var options = '<option selected value="">Seleccione una moneda</option>';
-
-            for (let index = 0; index < respuesta.length; index++) {
-                options = options + '<option value=' + respuesta[index][0] + '>' + respuesta[index][
-                    1
-                ] + '</option>';
-
-            }
-
-            $("#select_moneda").append(options);
-
-        }
-    });
-
-    /*===================================================================*/
-    //SOLICITUD AJAX PARA CARGAR FORMA DE PAGO EN COMBO
-    /*===================================================================*/
-    $.ajax({
-        url: "ajax/fpago_ajax.php",
-        cache: false,
-        contentType: false,
-        processData: false,
-        dataType: 'json',
-        success: function(respuesta) {
-
-            var options = '<option selected value="">Seleccione una forma de pago</option>';
-            // var options = '';
-
-            for (let index = 0; index < respuesta.length; index++) {
-                options = options + '<option value=' + respuesta[index][0] + '>' + respuesta[index][
-                    1
-                ] + '</option>';
-
-            }
-
-            $("#select_f_pago").append(options);
-
-
-
-        }
-    });
 
     /*===================================================================*/
     //REGISTRAR CLIENTE
@@ -1267,8 +1253,20 @@ $(document).ready(function() {
                 'accion': 'obtener_tipos_calculo'
             },
             dataType: 'json',
-            success: function(respuesta) {
-                console.log('Tipos de cálculo cargados:', respuesta);
+                    success: function(respuesta) {
+            // Verificar si hay error en la respuesta
+            if (respuesta.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error del servidor',
+                        text: respuesta.error
+                    });
+                    $("#select_tipo_calculo")
+                        .html('<option value="">Error al cargar</option>')
+                        .prop('disabled', true);
+                    return;
+                }
+                
                 var options = '<option value="">Seleccione un tipo de cálculo</option>';
                 
                 if (Array.isArray(respuesta)) {
@@ -1276,22 +1274,31 @@ $(document).ready(function() {
                         options += '<option value="' + tipo.nombre + '" title="' + tipo.descripcion + '">' + 
                                   tipo.descripcion + '</option>';
                     });
+                    $("#select_tipo_calculo").html(options);
                 } else {
                     console.error('Respuesta no es un array:', respuesta);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de formato',
+                        text: 'La respuesta del servidor no tiene el formato esperado.'
+                    });
                 }
-                
-                $("#select_tipo_calculo").html(options);
             },
             error: function(xhr, status, error) {
                 console.error('Error al cargar tipos de cálculo:', error);
                 console.error('Respuesta del servidor:', xhr.responseText);
                 
-                // Fallback con opciones básicas
-                var options = '<option value="">Seleccione un tipo de cálculo</option>' +
-                             '<option value="FRANCES">Sistema Francés - Cuotas fijas</option>' +
-                             '<option value="ALEMAN">Sistema Alemán - Capital fijo</option>' +
-                             '<option value="AMERICANO">Sistema Americano - Solo intereses</option>';
-                $("#select_tipo_calculo").html(options);
+                // Mostrar mensaje de error al usuario
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los tipos de cálculo. Por favor, intente nuevamente.'
+                });
+                
+                // Deshabilitar el select
+                $("#select_tipo_calculo")
+                    .html('<option value="">Error al cargar</option>')
+                    .prop('disabled', true);
             }
         });
     }
@@ -1360,44 +1367,7 @@ $(document).ready(function() {
         calcularAmortizacion();
     });
 
-    /* =======================================================
-    SOLICITUD AJAX PARA CARGAR SELECT DE FORMA DE PAGO
-    =======================================================*/
-    $.ajax({
-        url: "ajax/prestamo_ajax.php",
-        method: 'POST',
-        data: {
-            'accion': 'cargar_forma_pago' // ACCIÓN CORREGIDA
-        },
-        dataType: 'json',
-        success: function(respuesta) {
-            var opciones = '<option value="">Seleccione f. pago</option>';
-            for (let i = 0; i < respuesta.length; i++) {
-                opciones += '<option value="' + respuesta[i][0] + '">' + respuesta[i][1] + '</option>';
-            }
-            $("#select_f_pago").html(opciones);
-        }
-    });
-
-    /* =======================================================
-    SOLICITUD AJAX PARA CARGAR SELECT DE MONEDA
-    =======================================================*/
-    $.ajax({
-        url: "ajax/prestamo_ajax.php",
-        method: 'POST',
-        data: {
-            'accion': 'cargar_moneda' // ACCIÓN CORREGIDA
-        },
-        dataType: 'json',
-        success: function(respuesta) {
-            var opciones = '<option value="">Seleccione Moneda</option>';
-            for (let i = 0; i < respuesta.length; i++) {
-                // Asumiendo que el formato es [id, descripcion, simbolo]
-                opciones += '<option value="' + respuesta[i][0] + '" data-simbolo="' + respuesta[i][2] + '">' + respuesta[i][1] + ' (' + respuesta[i][2] + ')</option>';
-            }
-            $("#select_moneda").html(opciones);
-        }
-    });
+    // Las formas de pago y monedas se cargan desde el archivo original
 
 }) /// FIN DOCUMENT READY         
 
@@ -1590,7 +1560,6 @@ function CargarDatosCliente(dni = "") {
 //REGISTRAR CABECERA DEL PRESTAMO
 /*===================================================================*/
 function RegistarPrestamo() {
-
     var count = 0;
     var nro_prestamo = $("#text_nro_prestamo").val();
     var cliente_id = $("#cliente_id").val();
@@ -1609,21 +1578,17 @@ function RegistarPrestamo() {
     var caja_id = $("#id_caja").val();
 
     //para validar que el detalle tenga un dato
-
-    $("#tbl_prestamo  tbody  tr ").each(function(i, e) {
-        count = count + 1; //cuenta las filas 
-    })
-    // alert(count);
+    $("#tbody_tabla_detalle_pro tr").each(function(i, e) {
+        count = count + 1;
+    });
 
     if (count > 0) { //SI HAY DATOS AGREGADOS EN EL DETALLE
         if (cliente_id > 0) {
-
             var formData = new FormData();
 
             //PARA LA CABECERA
             formData.append("accion", 1);
-            formData.append('nro_prestamo', nro_prestamo); //declaramos y capturamos arriba
-            //formData.append('descripcion_venta', 'Prestamo:  ' + nro_boleta);
+            formData.append('nro_prestamo', nro_prestamo);
             formData.append('cliente_id', cliente_id);
             formData.append('pres_monto', parseFloat(pres_monto));
             formData.append('pres_cuotas', pres_cuotas);
@@ -1638,9 +1603,6 @@ function RegistarPrestamo() {
             formData.append('caja_id', caja_id);
             formData.append('tipo_calculo', tipo_calculo);
 
-
-
-
             $.ajax({
                 url: "ajax/prestamo_ajax.php",
                 method: "POST",
@@ -1649,54 +1611,38 @@ function RegistarPrestamo() {
                 contentType: false,
                 processData: false,
                 success: function(respuesta) {
-                    //console.log(respuesta);
-
+                    
                     Swal.fire({
                         position: 'center',
                         icon: 'success',
                         title: respuesta,
                         showConfirmButton: false,
                         timer: 1500
-                    })
-
+                    });
 
                     RegistrarDetalle();
-
                     LimpiarInputs();
-
                     CargarCorrelativo();
                     fechas();
 
-                    $('#tbl_prestamo').DataTable().clear().destroy();
-                    //  $('#tbl_lista_cliente').ajax.reload(); //recargamos el datatable 
-
-
+                    // Limpiar la tabla de amortización
+                    $("#tbody_tabla_detalle_pro").empty();
                 }
             });
         } else {
             Toast.fire({
                 icon: 'warning',
-                title: 'Debe ingresar un cliente '
-
+                title: 'Debe ingresar un cliente'
             });
             $("#btnRegistrar").attr('hidden', false);
         }
-
-
-
-
     } else {
-
         Toast.fire({
             icon: 'warning',
-            title: 'No hay nada en el detalle'
+            title: 'No hay datos en la tabla de amortización'
         });
-
     }
-
-    // $("#iptCodigoVenta").focus();
-
-} /* FIN registrar prestamo */
+}
 
 
 
@@ -1707,23 +1653,33 @@ function RegistrarDetalle() {
     var count = 0;
     var nro_prestamo = $("#text_nro_prestamo").val();
 
-
     var arreglo_cuota = new Array();
     var arreglo_fecha = new Array();
     var arreglo_monto = new Array();
 
-    $("#tbl_prestamo tbody tr").each(function(i, e) {
+    $("#tbody_tabla_detalle_pro tr").each(function(i, e) {
         arreglo_cuota.push($(this).find('td').eq(0).text());
         arreglo_monto.push($(this).find('td').eq(2).text());
         arreglo_fecha.push($(this).find('td').eq(1).text());
         count++;
     })
 
+    if (count === 0) {
+        Toast.fire({
+            icon: 'error',
+            title: 'No hay datos en la tabla de amortización'
+        });
+        return;
+    }
+
     var pdetalle_nro_cuota = arreglo_cuota.toString();
     var pdetalle_monto_cuota = arreglo_monto.toString();
     var pdetalle_fecha = arreglo_fecha.toString();
 
-    console.log("pdetalle_fecha enviado:", pdetalle_fecha);
+    console.log("Guardando detalle del préstamo:");
+    console.log("Cuotas:", pdetalle_nro_cuota);
+    console.log("Montos:", pdetalle_monto_cuota);
+    console.log("Fechas:", pdetalle_fecha);
 
     $.ajax({
         url: "ajax/prestamo_ajax.php",
@@ -1734,29 +1690,28 @@ function RegistrarDetalle() {
             pdetalle_nro_cuota: pdetalle_nro_cuota,
             pdetalle_monto_cuota: pdetalle_monto_cuota,
             pdetalle_fecha: pdetalle_fecha
-
         },
-        //   cache: false,
-        //   contentType: false,
-        //   processData: false,
         dataType: 'json',
         success: function(respuesta) {
-            // console.log(respuesta);
-
-
-            //   Swal.fire({
-            //       position: 'center',
-            //       icon: 'success',
-            //       title: respuesta,
-            //       showConfirmButton: false,
-            //       timer: 1500
-            //   })
-
-
-
+            if (respuesta === "ok") {
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Detalle del préstamo guardado correctamente'
+                });
+            } else {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Error al guardar el detalle del préstamo'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            Toast.fire({
+                icon: 'error',
+                title: 'Error al guardar el detalle del préstamo'
+            });
         }
     });
-
 }
 
 
@@ -1996,41 +1951,5 @@ $('#select_tipo_calculo').on('change', function() {
     $('#btnCalcular').click();
 });
 
-let simboloMoneda = 'S/'; // Valor por defecto
-
-// Cargar símbolo de moneda al cambiar el select
-$('#select_moneda').on('change', function() {
-    simboloMoneda = $('#select_moneda option:selected').text().split('|').pop().trim().split(' ')[0] || 'S/';
-    actualizarLabelsMoneda();
-});
-
-function actualizarLabelsMoneda() {
-    // Actualizar los labels de totales y resumen
-    $("#label_monto_por_cuota").text(simboloMoneda);
-    $("#label_total_interes").text(simboloMoneda);
-    $("#label_total_pagar").text(simboloMoneda);
-    // Actualizar la tabla de detalle si es necesario
-    $("#tbody_tabla_detalle_pro tr").each(function() {
-        $(this).find('td').each(function(idx) {
-            if(idx >= 2 && idx <= 4) {
-                let val = $(this).text().replace(/^[^\d-]+/, '');
-                $(this).text(simboloMoneda + ' ' + val);
-            }
-        });
-    });
-}
-
-// Llamar a actualizarLabelsMoneda al cargar la página
-$(document).ready(function() {
-    simboloMoneda = $('#select_moneda option:selected').text().split('|').pop().trim().split(' ')[0] || 'S/';
-    actualizarLabelsMoneda();
-});
-
-// Al mostrar los totales y la tabla, usar simboloMoneda dinámicamente
-function mostrarTotalesPrestamo(cuota, interes, total) {
-    $("#text_monto_por_cuota").val(cuota.toFixed(2));
-    $("#text_interes_resultado").val(interes.toFixed(2));
-    $("#text_total_resultado").val(total.toFixed(2));
-    actualizarLabelsMoneda();
-}
+// El símbolo de moneda se maneja desde la base de datos
   </script>

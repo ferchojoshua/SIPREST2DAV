@@ -13,12 +13,36 @@ class DashboardModelo {
         return $smt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /*===================================================================*/
+    //TRAER DATOS PARA LAS CAJAS CON FILTROS
+    /*===================================================================*/
+    static public function mdlListaDashboardFiltrado($sucursalId, $periodo){
+        $query = 'CALL SP_DATOS_DASHBOARD_FILTRADO(?, ?)';
+        $smt = Conexion::conectar()->prepare($query);
+        $smt->bindParam(1, $sucursalId, PDO::PARAM_INT);
+        $smt->bindParam(2, $periodo, PDO::PARAM_STR);
+        $smt->execute();
+        return $smt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
     /*===================================================================*/
     //PRESTAMOS DEL MES - BARRAS
     /*===================================================================*/
     static public function mdlListaPrestamosmesactual(){
         $smt = Conexion::conectar()->prepare('call SP_PRESTAMOS_MES_ACTUAL()');
+        $smt->execute();
+        return $smt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /*===================================================================*/
+    //PRESTAMOS DEL MES - BARRAS CON FILTROS
+    /*===================================================================*/
+    static public function mdlListaPrestamosmesactualFiltrado($sucursalId, $periodo){
+        $query = 'CALL SP_PRESTAMOS_MES_ACTUAL_FILTRADO(?, ?)';
+        $smt = Conexion::conectar()->prepare($query);
+        $smt->bindParam(1, $sucursalId, PDO::PARAM_INT);
+        $smt->bindParam(2, $periodo, PDO::PARAM_STR);
         $smt->execute();
         return $smt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -54,5 +78,17 @@ class DashboardModelo {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         //return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /*===================================================================*/
+    //KPIs GERENCIALES CON FILTROS
+    /*===================================================================*/
+    static public function mdlListaKpisFiltrados($sucursalId, $periodo){
+        $query = 'CALL SP_KPIs_FILTRADOS(?, ?)';
+        $smt = Conexion::conectar()->prepare($query);
+        $smt->bindParam(1, $sucursalId, PDO::PARAM_INT);
+        $smt->bindParam(2, $periodo, PDO::PARAM_STR);
+        $smt->execute();
+        return $smt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

@@ -5,6 +5,6 @@
         Anything you want
     </div>
     <!-- Default to the left -->
-    <strong>Copyright &copy; 2014-2022 <a href="https://developergm.com">Gustavo Masias</a>.</strong> All rights
+    <strong>Copyright &copy; 2014-2022 <a href="https://www.facebook.com/profile.php?id=61578194078656">IT_Solutions505</a>.</strong> All rights
     reserved.
 </footer>

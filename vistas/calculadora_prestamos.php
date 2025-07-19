@@ -33,11 +33,7 @@ require_once "../utilitarios/calculadora_prestamos.php";
                                     <div class="form-group">
                                         <label>Sistema de Amortización:</label>
                                         <select class="form-control" name="sistema" id="sistema">
-                                            <option value="frances">Sistema Francés (Cuota Fija)</option>
-                                            <option value="aleman">Sistema Alemán (Amortización Fija)</option>
-                                            <option value="americano">Sistema Americano (Interés + Capital Final)</option>
-                                            <option value="simple">Sistema Simple (Todo Fijo)</option>
-                                            <option value="compuesto">Sistema Compuesto (Interés sobre Interés)</option>
+                                            <option value="">Seleccione un sistema</option>
                                         </select>
                                     </div>
                                 </div>
@@ -130,6 +126,32 @@ $(document).ready(function() {
     // Cambiar símbolo al cambiar moneda
     $('#moneda').on('change', function() {
         simboloMoneda = $('#moneda option:selected').data('simbolo') || 'S/';
+    });
+
+    // Cargar tipos de cálculo al iniciar
+    $.ajax({
+        url: 'ajax/prestamo_ajax.php',
+        type: 'POST',
+        data: {
+            'accion': 'obtener_tipos_calculo'
+        },
+        dataType: 'json',
+        success: function(response) {
+            var options = '<option value="">Seleccione un sistema</option>';
+            response.forEach(function(tipo) {
+                options += '<option value="' + tipo.nombre + '">' + tipo.descripcion + '</option>';
+            });
+            $('#sistema').html(options);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al cargar tipos de cálculo:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los sistemas de amortización'
+            });
+            $('#sistema').prop('disabled', true);
+        }
     });
 
     $('#formCalculadora').on('submit', function(e) {

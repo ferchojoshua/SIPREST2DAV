@@ -15,6 +15,15 @@ class AjaxDashboard
     }
 
     /*===================================================================*/
+    //TRAER DATOS PARA LAS CAJAS CON FILTROS
+    /*===================================================================*/
+    public function getDatosDashboardFiltrados($sucursalId, $periodo)
+    {
+        $datos = DashboardControlador::ctrListaDashboardFiltrado($sucursalId, $periodo);
+        echo json_encode($datos);
+    }
+
+    /*===================================================================*/
     //PRESTAMOS DEL MES - BARRAS
     /*===================================================================*/
     public function getDatosPrestamosdelmes()
@@ -23,6 +32,14 @@ class AjaxDashboard
         echo json_encode($prestamosmesactual);
     }
 
+    /*===================================================================*/
+    //PRESTAMOS DEL MES - BARRAS CON FILTROS
+    /*===================================================================*/
+    public function getDatosPrestamosdelmesFiltrados($sucursalId, $periodo)
+    {
+        $prestamosmesactual = DashboardControlador::ctrListaPrestamosmesactualFiltrado($sucursalId, $periodo);
+        echo json_encode($prestamosmesactual);
+    }
 
 
     /*===================================================================*/
@@ -53,6 +70,15 @@ class AjaxDashboard
         echo json_encode($Notificacion);
     }
 
+    /*===================================================================*/
+    //KPIs GERENCIALES CON FILTROS
+    /*===================================================================*/
+    public function getKpisFiltrados($sucursalId, $periodo)
+    {
+        $kpis = DashboardControlador::ctrListaKpisFiltrados($sucursalId, $periodo);
+        echo json_encode($kpis);
+    }
+
     
 }
 
@@ -78,7 +104,16 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) {        //PRESTAMOS DEL M
     $Notificacion->getNotificacion($_POST["id_usuario"]);
 
 
-}  else {
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'cargar_tarjetas_filtradas') {
+    $dashboardFiltrado = new AjaxDashboard();
+    $dashboardFiltrado->getDatosDashboardFiltrados($_POST['sucursal_id'], $_POST['periodo']);
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'cargar_grafico_filtrado') {
+    $graficoFiltrado = new AjaxDashboard();
+    $graficoFiltrado->getDatosPrestamosdelmesFiltrados($_POST['sucursal_id'], $_POST['periodo']);
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'cargar_kpis_filtrados') {
+    $kpisFiltrados = new AjaxDashboard();
+    $kpisFiltrados->getKpisFiltrados($_POST['sucursal_id'], $_POST['periodo']);
+} else {
     $datos = new AjaxDashboard();        //TRAER DATOS PARA LAS CAJAS 
     $datos->getDatosDashboard();
 }

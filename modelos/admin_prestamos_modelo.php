@@ -67,17 +67,25 @@ class AdminPrestamosModelo
         $stmt = Conexion::conectar()->prepare("SELECT
                                                 pd.pdetalle_id,
                                                 pd.pdetalle_nro_cuota,
-                                                pd.pdetalle_fecha,
+                                                CASE 
+                                                    WHEN pd.pdetalle_fecha = '0000-00-00' OR pd.pdetalle_fecha IS NULL 
+                                                    THEN DATE_FORMAT(NOW(), '%d/%m/%Y')
+                                                    ELSE DATE_FORMAT(pd.pdetalle_fecha, '%d/%m/%Y')
+                                                END as pdetalle_fecha,
                                                 pd.pdetalle_monto_cuota,
                                                 pd.pdetalle_saldo_cuota,
                                                 pd.pdetalle_estado_cuota,
-                                                pd.pdetalle_fecha_registro,
+                                                CASE 
+                                                    WHEN pd.pdetalle_fecha_registro = '0000-00-00 00:00:00' OR pd.pdetalle_fecha_registro IS NULL 
+                                                    THEN ''
+                                                    ELSE DATE_FORMAT(pd.pdetalle_fecha_registro, '%d/%m/%Y %H:%i')
+                                                END as pdetalle_fecha_registro,
                                                 pc.nro_prestamo,
                                                 pc.pres_monto,
                                                 pc.pres_monto_total,
                                                 pc.pres_interes,
                                                 pc.pres_cuotas,
-                                                pc.pres_f_emision,
+                                                DATE_FORMAT(pc.pres_f_emision, '%d/%m/%Y') as pres_f_emision,
                                                 c.cliente_nombres AS cliente_nombres,
                                                 c.cliente_dni,
                                                 fp.fpago_descripcion,
@@ -87,7 +95,8 @@ class AdminPrestamosModelo
                                             INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
                                             INNER JOIN forma_pago fp ON pc.fpago_id = fp.fpago_id
                                             INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                                            WHERE pc.nro_prestamo = :nro_prestamo");
+                                            WHERE pc.nro_prestamo = :nro_prestamo
+                                            ORDER BY pd.pdetalle_nro_cuota ASC");
         
         $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
         $stmt->execute();
@@ -179,8 +188,17 @@ class AdminPrestamosModelo
             $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
             $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$resultado) {
+                error_log("No se encontraron datos para WhatsApp - Préstamo: $nro_prestamo, Cuota: $pdetalle_nro_cuota");
+                return null;
+            }
+            
+            return $resultado;
         } catch (Exception $e) {
+            error_log("Error al obtener info para WhatsApp: " . $e->getMessage());
             return null;
         }
     }
@@ -323,54 +341,98 @@ class AdminPrestamosModelo
     }
 
     /*===================================================================*/
-    // REGISTRAR ABONO DE CUOTA
+    // REGISTRAR ABONO DE CUOTA CON ARRASTRE Y LOG DE SALDO
     /*===================================================================*/
     static public function mdlRegistrarAbono($nro_prestamo, $pdetalle_nro_cuota, $monto_a_abonar)
     {
         try {
-            $stmt = Conexion::conectar()->prepare("SELECT pdetalle_monto_cuota, pdetalle_saldo_cuota FROM prestamo_detalle WHERE nro_prestamo = :nro_prestamo AND pdetalle_nro_cuota = :pdetalle_nro_cuota");
+            $conexion = Conexion::conectar();
+            $conexion->beginTransaction();
+
+            // 1. Obtener la cuota actual
+            error_log("Buscando cuota - Préstamo: $nro_prestamo, Cuota: $pdetalle_nro_cuota");
+            
+            $stmt = $conexion->prepare("SELECT pdetalle_monto_cuota, pdetalle_saldo_cuota, pdetalle_estado_cuota FROM prestamo_detalle WHERE nro_prestamo = :nro_prestamo AND pdetalle_nro_cuota = :pdetalle_nro_cuota FOR UPDATE");
             $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
-            $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
+            $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_INT);
             $stmt->execute();
-            $cuota = $stmt->fetch(PDO::FETCH_ASSOC);
+            $cuota_actual = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$cuota) {
-                return "error_cuota_no_encontrada";
-            }
-
-            $saldo_actual = (float) $cuota["pdetalle_saldo_cuota"];
-            $nuevo_saldo = $saldo_actual - (float) $monto_a_abonar;
-
-            $estado_cuota = 'parcialmente_pagada';
-            if ($nuevo_saldo <= 0.001) { // Usar un pequeño margen para comparar flotantes/decimales
-                $estado_cuota = 'pagada';
-                $nuevo_saldo = 0; // Asegurar que el saldo no sea negativo si se paga completo o un poco más
-            }
-
-            // Actualizar el saldo y el estado de la cuota
-            $stmt = Conexion::conectar()->prepare("UPDATE prestamo_detalle SET pdetalle_saldo_cuota = :pdetalle_saldo_cuota, pdetalle_estado_cuota = :pdetalle_estado_cuota, pdetalle_fecha_registro = CURRENT_TIME() WHERE nro_prestamo = :nro_prestamo AND pdetalle_nro_cuota = :pdetalle_nro_cuota");
-            $stmt->bindParam(":pdetalle_saldo_cuota", $nuevo_saldo, PDO::PARAM_STR);
-            $stmt->bindParam(":pdetalle_estado_cuota", $estado_cuota, PDO::PARAM_STR);
-            $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
-            $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_STR);
-
-            if ($stmt->execute()) {
-                // Si la cuota se pagó completamente, verificar si el préstamo está finalizado
-                if ($estado_cuota == 'pagada') {
-                    $stmt = null;
-                    $stmt = Conexion::conectar()->prepare('call SP_CAMBIAR_ESTADO_CABECERA(:nro_prestamo)');
-                    $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
-                    $stmt->execute();
+            if (!$cuota_actual) {
+                error_log("No se encontró cuota - Préstamo: $nro_prestamo, Cuota: $pdetalle_nro_cuota");
+                
+                // Verificar si existe el préstamo
+                $stmt_check = $conexion->prepare("SELECT COUNT(*) as total FROM prestamo_detalle WHERE nro_prestamo = :nro_prestamo");
+                $stmt_check->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+                $stmt_check->execute();
+                $count = $stmt_check->fetch(PDO::FETCH_ASSOC);
+                
+                if ($count['total'] == 0) {
+                    error_log("El préstamo $nro_prestamo no existe en prestamo_detalle");
+                    $conexion->rollBack();
+                    return "error_prestamo_no_existe";
+                } else {
+                    error_log("El préstamo $nro_prestamo existe pero no tiene la cuota $pdetalle_nro_cuota");
+                    $conexion->rollBack();
+                    return "error_cuota_no_encontrada";
                 }
-                return "ok";
-            } else {
-                return "error_actualizacion_cuota";
             }
-        } catch (Exception $e) {
-            return 'Excepción capturada: ' .  $e->getMessage() . "\n";
-        }
+            
+            error_log("Cuota encontrada - Estado: " . $cuota_actual['pdetalle_estado_cuota'] . ", Saldo: " . $cuota_actual['pdetalle_saldo_cuota']);
 
-        $stmt = null;
+            $saldo_a_pagar_hoy = (float) $cuota_actual["pdetalle_saldo_cuota"];
+            $saldo_post_abono = $saldo_a_pagar_hoy - (float) $monto_a_abonar;
+            
+            // 2. Determinar estado de la cuota y si hay saldo para arrastrar
+            if ($saldo_post_abono <= 0.01) { // El pago cubre la totalidad o más de la cuota
+                // La cuota queda totalmente pagada
+                $stmt = $conexion->prepare("UPDATE prestamo_detalle SET pdetalle_saldo_cuota = 0, pdetalle_estado_cuota = 'pagada', pdetalle_fecha_registro = CURRENT_TIME() WHERE nro_prestamo = :nro_prestamo AND pdetalle_nro_cuota = :pdetalle_nro_cuota");
+                $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+                $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_INT);
+                $stmt->execute();
+
+            } else { // El pago es parcial, hay que arrastrar el saldo
+                $monto_arrastrado = $saldo_post_abono;
+                $siguiente_cuota_nro = (int)$pdetalle_nro_cuota + 1;
+
+                // Marcar la cuota actual como pagada (su deuda se mueve) y su saldo en 0
+                $stmt = $conexion->prepare("UPDATE prestamo_detalle SET pdetalle_saldo_cuota = 0, pdetalle_estado_cuota = 'pagada', pdetalle_fecha_registro = CURRENT_TIME() WHERE nro_prestamo = :nro_prestamo AND pdetalle_nro_cuota = :pdetalle_nro_cuota");
+                $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+                $stmt->bindParam(":pdetalle_nro_cuota", $pdetalle_nro_cuota, PDO::PARAM_INT);
+                $stmt->execute();
+
+                // Sumar el saldo a la siguiente cuota
+                $stmt = $conexion->prepare("UPDATE prestamo_detalle SET pdetalle_saldo_cuota = pdetalle_saldo_cuota + :monto_arrastrado WHERE nro_prestamo = :nro_prestamo AND pdetalle_nro_cuota = :siguiente_cuota_nro");
+                $stmt->bindParam(":monto_arrastrado", $monto_arrastrado, PDO::PARAM_STR);
+                $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+                $stmt->bindParam(":siguiente_cuota_nro", $siguiente_cuota_nro, PDO::PARAM_INT);
+                $stmt->execute();
+
+                // Registrar en el log
+                $stmt = $conexion->prepare("INSERT INTO log_saldos_arrastrados (nro_prestamo, cuota_origen, cuota_destino, monto_arrastrado) VALUES (:nro_prestamo, :cuota_origen, :cuota_destino, :monto_arrastrado)");
+                $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+                $stmt->bindParam(":cuota_origen", $pdetalle_nro_cuota, PDO::PARAM_INT);
+                $stmt->bindParam(":cuota_destino", $siguiente_cuota_nro, PDO::PARAM_INT);
+                $stmt->bindParam(":monto_arrastrado", $monto_arrastrado, PDO::PARAM_STR);
+                $stmt->execute();
+            }
+
+            // 3. Verificar si el préstamo está finalizado
+            $stmt_finalizado = $conexion->prepare('call SP_CAMBIAR_ESTADO_CABECERA(:nro_prestamo)');
+            $stmt_finalizado->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+            $stmt_finalizado->execute();
+
+            $conexion->commit();
+            return "ok";
+
+        } catch (Exception $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            error_log("Error en mdlRegistrarAbono: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return 'Error al registrar el abono: ' .  $e->getMessage();
+        }
     }
 
     /*===================================================================*/
@@ -823,8 +885,8 @@ class AdminPrestamosModelo
                     pc.nro_prestamo,
                     pc.cliente_id,
                     c.cliente_nombres,
-                    c.cliente_celular,
-                    c.cliente_email,
+                    c.cliente_cel as cliente_celular,
+                    c.cliente_correo as cliente_email,
                     c.cliente_dni,
                     pc.pres_monto,
                     pc.pres_interes,
@@ -849,6 +911,7 @@ class AdminPrestamosModelo
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("Error en mdlObtenerInfoPrestamo: " . $e->getMessage());
             return false;
         }
     }
@@ -871,17 +934,33 @@ class AdminPrestamosModelo
 
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
-            // Configuración del servidor (ejemplo con Gmail)
+            // Configuración del servidor de correo
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            
+            // Usar la configuración centralizada de email_config.php
+            $mail->Host       = SMTP_HOST;
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'siprestaitsolutions@gmail.com'; // Cambiar por tu email
-            $mail->Password   = 'Sipresta2025'; // Cambiar por tu password de aplicación
-            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
+            $mail->Username   = SMTP_USERNAME;
+            $mail->Password   = SMTP_PASSWORD;
+            $mail->SMTPSecure = SMTP_SECURE;
+            $mail->Port       = SMTP_PORT;
+            
+            // Configuración adicional para Gmail
+            $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                )
+            );
+            
+            // Configuración adicional para Gmail SMTP
+            $mail->SMTPDebug = 0; // Cambiar a 2 para debug detallado
+            $mail->Debugoutput = 'error_log';
+            $mail->SMTPKeepAlive = true;
 
-            // Remitente
-            $mail->setFrom('siprestaitsolutions@gmail.com', 'Sistema de Préstamos');
+            // Remitente y destinatario
+            $mail->setFrom(EMAIL_FROM_ADDRESS, EMAIL_FROM_NAME);
             $mail->addAddress($infoPrestamo['cliente_email'], $cliente_nombres);
 
             // Contenido del correo
@@ -895,6 +974,9 @@ class AdminPrestamosModelo
             $mail->send();
             return "ok";
         } catch (Exception $e) {
+            // Log detallado del error para debugging
+            error_log("Error SMTP detallado: " . $e->getMessage());
+            error_log("Configuración SMTP usada: " . json_encode($config_correo));
             return "Error al enviar correo: " . $e->getMessage();
         }
     }
@@ -986,5 +1068,58 @@ class AdminPrestamosModelo
         </html>';
         
         return $html;
+    }
+
+    /*===================================================================*/
+    // OBTENER CONFIGURACIÓN DE CORREO DESDE BD O FALLBACK
+    /*===================================================================*/
+    private static function obtenerConfiguracionCorreo()
+    {
+        try {
+            // Intentar obtener configuración desde la base de datos
+            $stmt = Conexion::conectar()->prepare("SELECT config_correo, confi_razon FROM empresa LIMIT 1");
+            $stmt->execute();
+            $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $correo_empresa = $empresa['config_correo'] ?? 'siprestaitsolutions@gmail.com';
+            $nombre_empresa = $empresa['confi_razon'] ?? 'Sistema de Préstamos';
+            
+            // Verificar si hay configuración SMTP personalizada
+            $stmt = Conexion::conectar()->prepare("SHOW TABLES LIKE 'configuracion_smtp'");
+            $stmt->execute();
+            $tabla_smtp_existe = $stmt->fetch();
+            
+            if ($tabla_smtp_existe) {
+                $stmt = Conexion::conectar()->prepare("SELECT * FROM configuracion_smtp WHERE activo = 1 LIMIT 1");
+                $stmt->execute();
+                $config_smtp = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($config_smtp) {
+                    return [
+                        'host' => $config_smtp['smtp_host'],
+                        'smtp_auth' => (bool)$config_smtp['smtp_auth'],
+                        'username' => $config_smtp['smtp_username'],
+                        'password' => $config_smtp['smtp_password'],
+                        'encryption' => $config_smtp['smtp_encryption'],
+                        'port' => (int)$config_smtp['smtp_port'],
+                        'nombre_empresa' => $nombre_empresa
+                    ];
+                }
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener configuración de correo: " . $e->getMessage());
+        }
+        
+        // Configuración por defecto (Gmail SMTP)
+        return [
+            'host' => 'smtp.gmail.com',
+            'smtp_auth' => true, // Habilitar autenticación para Gmail
+            'username' => 'siprestaitsolutions@gmail.com', // Email de autenticación
+            'password' => 'vnuk vlrs tiog srsc', // App Password de Gmail
+            'encryption' => 'tls', // Usar TLS para Gmail
+            'port' => 587,
+            'nombre_empresa' => $nombre_empresa ?? 'Sistema de Préstamos'
+        ];
     }
 }

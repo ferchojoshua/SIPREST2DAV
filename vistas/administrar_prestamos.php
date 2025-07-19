@@ -86,7 +86,7 @@
                           <div class="form-group mb-2">
                               <label for="" class="">
                                   <input type="text" id="" hidden>
-                                  <span class="small"> Nro Prestamo</span>
+                                  <span class="small"> # Prestamo</span>
                               </label>
                               <input type="text" class=" form-control form-control-sm" id="text_nro_prestamo_d" placeholder="Nro_prestamo" disabled>
 
@@ -339,7 +339,7 @@
       $(document).ready(function() {
         
           // Debug: Verificar si ID_USUARIO_GLOBAL está definido
-          console.log("Verificando ID_USUARIO_GLOBAL:", typeof ID_USUARIO_GLOBAL !== 'undefined' ? ID_USUARIO_GLOBAL : 'NO DEFINIDO');
+          //console.log("Verificando ID_USUARIO_GLOBAL:", typeof ID_USUARIO_GLOBAL !== 'undefined' ? ID_USUARIO_GLOBAL : 'NO DEFINIDO');
           
           var id_usuario = typeof ID_USUARIO_GLOBAL !== 'undefined' ? ID_USUARIO_GLOBAL : 1; // Valor por defecto para testing
           console.log("ID de usuario que se usará:", id_usuario);
@@ -422,8 +422,8 @@
                               "<span class='btnVerDetallePrestamo text-success px-1' style='cursor:pointer;' data-bs-toggle='modal' data-bs-target='#modal_detalle_prestamo' title='Ver Detalle'> " +
                               "<i class='fas fa-search fs-6'></i> " +
                               "</span> " +
-                              "<span class='btnImprimirContrato text-primary px-1' style='cursor:pointer;' data-id_prestamo='" + row.pres_id + "' title='Imprimir Contrato'> " +
-                              "<i class='fas fa-print fs-6'></i> " +
+                              "<span class='btnImprimirTablaPagos text-success px-1' style='cursor:pointer;' data-nro_prestamo='" + row.nro_prestamo + "' title='Imprimir Tabla de Pagos'> " +
+                              "<i class='fas fa-table fs-6'></i> " +
                               "</span> ";
                           
                           // Solo agregar icono de correo para préstamos aprobados
@@ -543,6 +543,126 @@
                                   title: 'Error de comunicación con el servidor'
                               });
                           }
+                      });
+                  }
+              });
+          });
+
+          /*===================================================================*/
+          // EVENTO PARA ANULAR PAGO (SOLO ADMINISTRADORES)
+          /*===================================================================*/
+          $("#prestamo_detalle tbody").on('click', '.btnAnularPago', function() {
+              var data = prestamo_detalle_dt.row($(this).parents('tr')).data();
+              var nro_prestamo = data.nro_prestamo;
+              var pdetalle_nro_cuota = data.pdetalle_nro_cuota;
+              var monto_cuota = data.pdetalle_monto_cuota;
+              
+              console.log("Datos para anular pago:", nro_prestamo, pdetalle_nro_cuota);
+
+              // Verificar permisos antes de mostrar el modal
+              $.ajax({
+                  url: "ajax/anulaciones_ajax_temp.php",
+                  method: "POST",
+                  data: {
+                      'accion': 'verificar_permisos',
+                      'tipo_documento': 'pago'
+                  },
+                  dataType: 'json',
+                  xhrFields: {
+                      withCredentials: true
+                  },
+                  success: function(verificacion) {
+                      if (verificacion.estado === 'ok' && verificacion.permisos.puede_anular) {
+                          // Mostrar modal de justificación
+                          Swal.fire({
+                              title: '⚠️ Anular Pago de Cuota',
+                              html: `
+                                  <div style="text-align: left;">
+                                      <p><strong>Préstamo:</strong> ${nro_prestamo}</p>
+                                      <p><strong>Cuota N°:</strong> ${pdetalle_nro_cuota}</p>
+                                      <p><strong>Monto:</strong> ${monto_cuota}</p>
+                                      <hr>
+                                      <label for="motivo_anulacion" style="font-weight: bold;">Justificación (obligatoria):</label>
+                                      <textarea id="motivo_anulacion" class="form-control" rows="4" 
+                                               placeholder="Indique el motivo de la anulación..." 
+                                               style="width: 100%; margin-top: 10px;"></textarea>
+                                      <small class="text-muted">Mínimo 10 caracteres</small>
+                                  </div>
+                              `,
+                              icon: 'warning',
+                              showCancelButton: true,
+                              confirmButtonColor: '#dc3545',
+                              cancelButtonColor: '#6c757d',
+                              confirmButtonText: '🗑️ Anular Pago',
+                              cancelButtonText: 'Cancelar',
+                              width: '500px',
+                              preConfirm: () => {
+                                  const motivo = document.getElementById('motivo_anulacion').value.trim();
+                                  if (motivo.length < 10) {
+                                      Swal.showValidationMessage('La justificación debe tener al menos 10 caracteres');
+                                      return false;
+                                  }
+                                  return motivo;
+                              }
+                          }).then((result) => {
+                              if (result.isConfirmed) {
+                                  // Ejecutar anulación
+                                  $.ajax({
+                                      url: "ajax/anulaciones_ajax_temp.php",
+                                      method: "POST",
+                                      data: {
+                                          'accion': 'anular_pago',
+                                          'nro_prestamo': nro_prestamo,
+                                          'nro_cuota': pdetalle_nro_cuota,
+                                          'motivo': result.value
+                                      },
+                                      dataType: 'json',
+                                      xhrFields: {
+                                          withCredentials: true
+                                      },
+                                      success: function(respuesta) {
+                                          if (respuesta.estado === 'ok') {
+                                              Toast.fire({
+                                                  icon: 'success',
+                                                  title: 'Pago anulado correctamente'
+                                              });
+                                              
+                                              prestamo_detalle_dt.ajax.reload();
+                                              CargarCantCuotasPagadas();
+                                              tbl_ls_prestamos.ajax.reload();
+                                          } else {
+                                              Swal.fire({
+                                                  icon: 'error',
+                                                  title: 'Error al anular pago',
+                                                  text: respuesta.mensaje
+                                              });
+                                          }
+                                      },
+                                      error: function(xhr, status, error) {
+                                          console.error("Error en anulación:", error);
+                                          Swal.fire({
+                                              icon: 'error',
+                                              title: 'Error de conexión',
+                                              text: 'No se pudo conectar con el servidor'
+                                          });
+                                      }
+                                  });
+                              }
+                          });
+                      } else {
+                          Swal.fire({
+                              icon: 'error',
+                              title: 'Sin permisos',
+                              text: verificacion.permisos?.mensaje || 'No tiene permisos para anular pagos'
+                          });
+                      }
+                  },
+                  error: function(xhr, status, error) {
+                      console.error("Error verificando permisos:", error);
+                      Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: 'No se pudo verificar los permisos'
                       });
                   }
               });
@@ -736,16 +856,16 @@
           });
 
           /*===================================================================*/
-          // EVENTO PARA IMPRIMIR CONTRATO
+          // EVENTO PARA IMPRIMIR TABLA DE PAGOS
           /*===================================================================*/
-          $("#tbl_ls_prestamos tbody").on('click', '.btnImprimirContrato', function() {
+          $("#tbl_ls_prestamos tbody").on('click', '.btnImprimirTablaPagos', function() {
               var data = tbl_ls_prestamos.row($(this).parents('tr')).data();
-              var id_prestamo = $(this).data('id_prestamo') || data.pres_id;
+              var nro_prestamo = $(this).data('nro_prestamo') || data.nro_prestamo;
               
-              console.log("Imprimiendo contrato para préstamo ID:", id_prestamo);
+              console.log("Imprimiendo tabla de pagos para préstamo:", nro_prestamo);
               
-              window.open("MPDF/contrato.php?codigo=" + data.nro_prestamo + "#zoom=100", 
-                         "Contrato de Préstamo", 
+              window.open("MPDF/historial_prestamo_nuevo.php?codigo=" + nro_prestamo + "#zoom=100", 
+                         "Tabla de Pagos", 
                          "scrollbars=YES,resizable=YES,width=900,height=700");
           });
 
@@ -843,6 +963,29 @@
           }
           
           try {
+              // Variable global para verificar si es administrador
+              var esAdmin = false;
+
+              // Verificar permisos de administrador vía AJAX
+              $.ajax({
+                  url: "ajax/anulaciones_ajax_temp.php",
+                  method: "POST",
+                  data: {
+                      'accion': 'verificar_permisos',
+                      'tipo_documento': 'pago'
+                  },
+                  dataType: 'json',
+                  async: false,
+                  success: function(result) {
+                      if (result.estado === 'ok' && result.permisos) {
+                          esAdmin = result.permisos.es_administrador === true;
+                      }
+                  },
+                  error: function(xhr, status, error) {
+                      esAdmin = false;
+                  }
+              });
+
               prestamo_detalle_dt = $("#prestamo_detalle").DataTable({
                   destroy: true,
                   dom: 'tp',
@@ -893,7 +1036,8 @@
                       sortable: false, 
                       render: function(data, type, row) {
                           if (row.pdetalle_estado_cuota == 'pagada') {
-                              return "<center>" +
+                              // Verificar si es administrador para mostrar botón de anular
+                              var botones = "<center>" +
                                   "<span class='text-secondary px-1 disabled' data-bs-toggle='tooltip' data-bs-placement='top' title='Cuota Pagada'> " +
                                   "<i class='fas fa-hand-holding-usd fs-6'></i> " +
                                   "</span> " +
@@ -902,8 +1046,17 @@
                                   "</span>" +
                                   "<span class='btnEnviarCorreoCuotaP text-warning px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Enviar Recibo por Correo'> " +
                                   "<i class='fas fa-envelope fs-6'></i> " +
-                                  "</span>" +
-                                  "</center>";
+                                  "</span>";
+                              
+                              // Solo mostrar botón de anular para administradores
+                              if (esAdmin === true) {
+                                  botones += "<span class='btnAnularPago text-danger px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Anular Pago (Solo Administradores)'> " +
+                                      "<i class='fas fa-ban fs-6'></i> " +
+                                      "</span>";
+                              }
+                              
+                              botones += "</center>";
+                              return botones;
                           } else if (row.pdetalle_estado_cuota == 'parcialmente_pagada') {
                               return "<center>" +
                                   "<span class='btnPagarCuota text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Pagar Cuota Completa'> " +
@@ -1075,8 +1228,8 @@
                   var telefono = datosWhatsApp.telefono.replace(/\D/g, '');
                   
                   // Asegurar formato internacional (agregar código de país si no existe)
-                  if (!telefono.startsWith('591')) { // Código de Bolivia
-                      telefono = '591' + telefono;
+                  if (!telefono.startsWith('505')) { // Código de Nicaragua 
+                      telefono = '+505' + telefono;
                   }
                   
                   // Codificar mensaje para URL

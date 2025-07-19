@@ -1,10 +1,10 @@
 <?php
 
-// Activar reporte de errores
+// 1. MANEJO DE ERRORES Y CONFIGURACIÓN
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Desactivar display_errors en producción
+ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/prestamo_ajax_fatal_error.log');
+ini_set('error_log', __DIR__ . '/prestamo_ajax_error.log');
 
 // Manejador de excepciones global
 set_exception_handler(function ($exception) {
@@ -25,13 +25,13 @@ register_shutdown_function(function () {
     }
 });
 
-ob_start(); // Iniciar buffer de salida
+ob_start();
 
-// Determinar la ruta base correcta
-$basePath = dirname(__DIR__);
-require_once $basePath . "/controladores/prestamo_controlador.php";
-require_once $basePath . "/modelos/prestamo_modelo.php";
+// 2. INCLUSIÓN DE DEPENDENCIAS
+require_once __DIR__ . '/../controladores/prestamo_controlador.php';
+require_once __DIR__ . '/../modelos/prestamo_modelo.php';
 
+// 3. DEFINICIÓN DE LA CLASE AJAX
 class AjaxPrestamo
 {
 
@@ -62,10 +62,12 @@ class AjaxPrestamo
     /*===================================================================*/
     public function ajaxObtenerTiposCalculo()
     {
-        error_log("DEBUG: Inicia ajaxObtenerTiposCalculo");
-        $tiposCalculo = PrestamoControlador::ctrObtenerTiposCalculo();
-        echo json_encode($tiposCalculo, JSON_UNESCAPED_UNICODE);
-        error_log("DEBUG: Finaliza ajaxObtenerTiposCalculo");
+        try {
+            $tiposCalculo = PrestamoControlador::ctrObtenerTiposCalculo();
+            echo json_encode($tiposCalculo, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        }
     }
 
     /*===================================================================
@@ -108,10 +110,18 @@ class AjaxPrestamo
     /*===================================================================*/
     public function ajaxCalcularAmortizacion($monto, $interes, $cuotas, $tipo_calculo, $fecha_inicio, $fpago)
     {
-        error_log("DEBUG: Inicia ajaxCalcularAmortizacion con monto: $monto, interes: $interes, cuotas: $cuotas, tipo_calculo: $tipo_calculo, fecha_inicio: $fecha_inicio, fpago: $fpago");
-        require_once "../utilitarios/calculadora_prestamos.php";
-        
+        header('Content-Type: application/json');
         try {
+            // Validar que la calculadora exista antes de incluirla
+            if (!file_exists(__DIR__ . "/../utilitarios/calculadora_prestamos.php")) {
+                throw new Exception("El archivo de la calculadora de préstamos no se encuentra.");
+            }
+            require_once __DIR__ . "/../utilitarios/calculadora_prestamos.php";
+
+            if (!class_exists('CalculadoraPrestamos')) {
+                throw new Exception("La clase CalculadoraPrestamos no está definida.");
+            }
+            
             $calculadora = new CalculadoraPrestamos();
             $resultado = $calculadora->calcularAmortizacion(
                 floatval($monto),
@@ -122,63 +132,31 @@ class AjaxPrestamo
                 $fpago
             );
             
-            // Si se solicita una página específica, paginar la tabla de amortización
-            if (isset($_POST['pagina'])) {
-                $pagina = intval($_POST['pagina']);
-                $porPagina = isset($_POST['por_pagina']) ? intval($_POST['por_pagina']) : 12;
-                
-                // Guardar la tabla completa para usar en paginación
-                $tablaCompleta = $resultado['tabla_amortizacion'];
-                
-                // Obtener solo la página solicitada
-                $paginacion = CalculadoraPrestamos::paginarTablaAmortizacion(
-                    $tablaCompleta,
-                    $pagina,
-                    $porPagina
-                );
-                
-                // Reemplazar la tabla completa por la página solicitada y añadir info de paginación
-                $resultado['tabla_amortizacion'] = $paginacion['registros'];
-                $resultado['paginacion'] = $paginacion['paginacion'];
-            }
-            
-            echo json_encode($resultado);
-            error_log("DEBUG: ajaxCalcularAmortizacion finalizada exitosamente. Resultado: " . json_encode($resultado));
+            // Asegurar que la salida sea JSON
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+
         } catch (Exception $e) {
-            error_log("ERROR en ajaxCalcularAmortizacion: " . $e->getMessage() . " on line " . $e->getLine() . " in " . $e->getFile());
+            // Capturar cualquier excepción y devolver un JSON de error
+            http_response_code(500); // Internal Server Error
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
 }
 
-// ===================================================================
-// GESTOR DE ACCIONES AJAX
-// ===================================================================
-
-$ajax = new AjaxPrestamo();
-
-// Debugging: Log the received action
-$received_action = $_POST['accion'] ?? 'Ninguna';
-error_log("DEBUG: Acción recibida en prestamo_ajax.php: " . $received_action);
-
+// 4. GESTOR DE ACCIONES (EL ROUTER)
 if (isset($_POST['accion'])) {
-
+    $ajax = new AjaxPrestamo();
     switch ($_POST['accion']) {
-
         case 'cargar_forma_pago':
             $ajax->ajaxCargarFormaPago();
             break;
-
         case 'cargar_moneda':
             $ajax->ajaxCargarMoneda();
             break;
-
         case 'obtener_tipos_calculo':
-        case '4': // Legacy support
             $ajax->ajaxObtenerTiposCalculo();
             break;
-
-        case 'guardar_prestamo':
+        case '1': // Guardar cabecera del préstamo
             $ajax->ajaxRegistrarPrestamo(
                 $_POST['nro_prestamo'],
                 $_POST['cliente_id'],
@@ -196,8 +174,7 @@ if (isset($_POST['accion'])) {
                 $_POST['tipo_calculo']
             );
             break;
-
-        case 'guardar_detalle':
+        case '2': // Guardar detalle del préstamo
             $ajax->ajaxRegistrarPrestamoDetalle(
                 $_POST['nro_prestamo'],
                 $_POST['pdetalle_nro_cuota'],
@@ -205,11 +182,9 @@ if (isset($_POST['accion'])) {
                 $_POST['pdetalle_fecha']
             );
             break;
-            
         case 'validar_monto':
             $ajax->ajaxValidarMontoPrestamo();
             break;
-
         case 'calcular_amortizacion':
             $ajax->ajaxCalcularAmortizacion(
                 $_POST['monto'],
@@ -220,20 +195,15 @@ if (isset($_POST['accion'])) {
                 $_POST['fpago']
             );
             break;
-
         default:
             error_log("Acción no reconocida en prestamo_ajax.php: " . ($_POST['accion'] ?? 'N/A') . ". POST data: " . print_r($_POST, true));
             echo json_encode(['error' => 'Acción no reconocida']);
             break;
     }
-
 } else {
     error_log("Petición sin acción especificada en prestamo_ajax.php. Request method: " . $_SERVER['REQUEST_METHOD']);
-    echo json_encode(['error' => 'Petición sin acción especificada']);
+    echo json_encode(['error' => 'No se especificó acción']);
 }
 
-// Asegurarse de que el buffer de salida se limpie al final.
-// Esto es redundante con register_shutdown_function si hay un error fatal,
-// pero es buena práctica para la salida normal.
-ob_end_clean();
+ob_end_flush();
 ?>

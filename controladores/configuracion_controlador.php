@@ -1,4 +1,5 @@
 <?php
+require_once '../modelos/configuracion_modelo.php';
 
 
 class ConfiguracionControlador {
@@ -7,8 +8,8 @@ class ConfiguracionControlador {
     //OBTENER TODOS LOS DATOS DE LA EMPRESA 
     /*===================================================================*/
     static public function ctrObtenerDataEmpresa(){
-        $DataEmpresa = ConfiguracionModelo::mdlObtenerDataEmpresa();
-        return $DataEmpresa;
+        $respuesta = ConfiguracionModelo::mdlObtenerDataEmpresa();
+        return $respuesta;
     }
 
 

@@ -77,17 +77,7 @@
                                       </div>
 
 
-                                      <div class="col-md-2">
-                                          <div class="form-group mb-2">
-                                              <label for="" class="">
-
-                                                  <span class="small">Correlativo</span><span class="text-danger">*</span>
-                                              </label>
-                                              <input type="text" class=" form-control form-control-sm" id="text_correlativo" name="text_correlativo" required>
-                                              <div class="invalid-feedback">Debe ingresar la Direccion</div>
-
-                                          </div>
-                                      </div>
+                                      <!-- Campo de correlativo removido - Ahora se maneja automáticamente por sucursal -->
                                       <div class="col-lg-4">
                                           <div class="form-group mb-2">
                                               <label for="" class="">
@@ -231,7 +221,6 @@
           /*===================================================================*/
           document.getElementById("btnGuardar").addEventListener("click", function() {
               var razon = $("#text_razon").val();
-              var correla = $("#text_correlativo").val();
               var correo = $("#text_correo").val();
               var direc = $("#text_direccion").val();
               var moneda = $("#text_moneda").val();
@@ -242,13 +231,6 @@
                       title: 'Ingresar una razon de la empresa'
                   });
                   $("#text_razon").focus();
-              } else if (correla == "") {
-                Toast.fire({
-                      icon: 'error',
-                      title: ' Ingresar el correlativo'
-                  });
-                  $("#text_correlativo").focus();
-
               } else if (correo == "") {
                 Toast.fire({
                       icon: 'error',
@@ -293,7 +275,7 @@
                           datos.append("confi_razon", $("#text_razon").val()); //nombre
                           datos.append("confi_ruc", $("#text_ruc").val()); //peso
                           datos.append("confi_direccion", $("#text_direccion").val());
-                          datos.append("confi_correlativo", $("#text_correlativo").val());
+                          // Correlativo removido - ahora se maneja por sucursal
                           datos.append("config_correo", $("#text_correo").val());
                           datos.append("config_moneda", $("#text_moneda").val());
                           
@@ -367,7 +349,7 @@
                   razon_social = respuesta["confi_razon"]; //campos de base
                   ruc = respuesta["confi_ruc"];
                   direccion = respuesta["confi_direccion"];
-                  nro_correlativo = respuesta["confi_correlativo"];
+                  // nro_correlativo removido - ahora se maneja por sucursal
                   email = respuesta["config_correo"];
                   moneda = respuesta["config_moneda"];
 
@@ -375,7 +357,7 @@
                   $("#text_razon").val(razon_social); //SETEAMOS EN LOS TEXTBOX
                   $("#text_ruc").val(ruc);
                   $("#text_direccion").val(direccion);
-                  $("#text_correlativo").val(nro_correlativo);
+                  // $("#text_correlativo").val(nro_correlativo); - removido
                   $("#text_correo").val(email);
                   $("#text_moneda").val(moneda);
                   

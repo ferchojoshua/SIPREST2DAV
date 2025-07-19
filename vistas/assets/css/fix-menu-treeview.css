@@ -1,0 +1,125 @@
+/* =========================================================
+   CORRECCIONES PARA MENU TREEVIEW CON BOOTSTRAP 5
+   ========================================================= */
+
+/* Asegurar que los submenús estén ocultos por defecto */
+.nav-treeview {
+    display: none;
+    padding-left: 1rem;
+}
+
+/* Mostrar submenús cuando el padre está abierto */
+.nav-item.menu-open > .nav-treeview {
+    display: block !important;
+}
+
+/* Animación suave para la apertura de menús */
+.nav-item.menu-is-opening > .nav-treeview {
+    overflow: hidden;
+}
+
+/* Flecha de indicación para menús desplegables */
+.nav-item.has-treeview > .nav-link .right {
+    transition: transform 0.3s ease;
+}
+
+/* Rotar flecha cuando el menú está abierto */
+.nav-item.menu-open > .nav-link .right {
+    transform: rotate(-90deg);
+}
+
+/* Estilos para elementos activos en submenús */
+.nav-treeview .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+/* Hover en submenús */
+.nav-treeview .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+/* Indentación correcta para submenús */
+.nav-treeview .nav-item {
+    padding-left: 0.5rem;
+}
+
+/* Corregir espaciado de iconos en submenús */
+.nav-treeview .nav-icon {
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+}
+
+/* Asegurar que el menú principal mantenga su comportamiento */
+.nav-sidebar .nav-item > .nav-link {
+    cursor: pointer;
+}
+
+/* Separador visual entre menús padre e hijos */
+.nav-item.has-treeview {
+    margin-bottom: 2px;
+}
+
+/* Correcciones para la sidebar en general */
+.main-sidebar {
+    z-index: 1040;
+}
+
+/* Asegurar que los tooltips funcionen correctamente */
+.nav-link[data-bs-toggle="tooltip"] {
+    pointer-events: all;
+}
+
+/* Corregir problemas de overflow en dispositivos móviles */
+@media (max-width: 767.98px) {
+    .nav-treeview {
+        padding-left: 0.5rem;
+    }
+    
+    .nav-treeview .nav-item {
+        padding-left: 0.25rem;
+    }
+}
+
+/* Estados de carga para menús dinámicos */
+.nav-item.loading > .nav-link::after {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Mejorar contraste para mejor accesibilidad */
+.nav-treeview .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.nav-treeview .nav-link:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 2px;
+}
+
+/* Estilos para elementos deshabilitados */
+.nav-link.disabled,
+.nav-link:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Corregir alineación de texto en menús largos */
+.nav-sidebar .nav-link p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 30px);
+} 

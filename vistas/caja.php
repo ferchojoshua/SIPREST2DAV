@@ -2,28 +2,65 @@
   <div class="content-header">
       <div class="container-fluid">
           <div class="row mb-2">
-              <!-- <div class="col-sm-6">
-                  <h4 class="m-0">Reporte por Cliente</h4>
-              </div> -->
-              <!-- /.col -->
-              <!-- <div class="col-sm-6">
+              <div class="col-sm-6">
+                  <h1 class="m-0">Caja</h1>
+              </div><!-- /.col -->
+              <div class="col-sm-6">
                   <ol class="breadcrumb float-sm-right">
-                      <li class="breadcrumb-item"><a href="index.php">Inicio</a></li>
-                      <li class="breadcrumb-item ">Reportes</li>
-                      <li class="breadcrumb-item active">Por Cliente</li>
+                      <li class="breadcrumb-item"><a href="#">Inicio</a></li>
+                      <li class="breadcrumb-item active">Caja</li>
                   </ol>
-              </div> -->
-              <!-- /.col -->
+              </div><!-- /.col -->
           </div><!-- /.row -->
       </div><!-- /.container-fluid -->
   </div>
   <!-- /.content-header -->
 
-
-
   <!-- Main content -->
   <div class="content pb-2">
       <div class="container-fluid">
+          
+          <!-- Botones de acción principal -->
+          <div class="row mb-3">
+              <div class="col-12">
+                  <div class="card card-outline">
+                      <div class="card-header bg-info">
+                          <h3 class="card-title">
+                              <i class="fas fa-cash-register"></i> Gestión de Caja
+                          </h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="row">
+                              <div class="col-md-3">
+                                  <button type="button" class="btn btn-success btn-lg btn-block" onclick="CargarContenido('vistas/dashboard_caja.php','content-wrapper')">
+                                      <i class="fas fa-tachometer-alt"></i><br>
+                                      Dashboard de Caja
+                                  </button>
+                              </div>
+                              <div class="col-md-3">
+                                  <button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#modal_config_sucursales">
+                                      <i class="fas fa-cogs"></i><br>
+                                      Configurar Cajas por Sucursal
+                                  </button>
+                              </div>
+                              <div class="col-md-3">
+                                  <button type="button" class="btn btn-info btn-lg btn-block" id="btnConteoFisico">
+                                      <i class="fas fa-calculator"></i><br>
+                                      Conteo Físico
+                                  </button>
+                              </div>
+                              <div class="col-md-3">
+                                  <button type="button" class="btn btn-warning btn-lg btn-block" id="btnGenerarReporteCaja">
+                                      <i class="fas fa-file-alt"></i><br>
+                                      Generar Reporte
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
@@ -80,55 +117,133 @@
   </div>
   <!-- /.content -->
 
-  <!-- Modal abrir caja -->
+  <!-- Modal abrir caja MEJORADO -->
   <div class="modal fade" id="modal_abrir_caja" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog " role="document">
+      <div class="modal-dialog modal-lg" role="document">
           <div class="modal-content">
-              <div class="modal-header bg-gray py-1 align-items-center">
-                  <h5 class="modal-title" id="titulo_modal_cliente">Registro Apertura de Caja</h5>
-                  <button type="button" class="close  text-white border-0 fs-5" id="btncerrarmodal_cliente" data-bs-dismiss="modal" aria-label="Close">
+              <div class="modal-header bg-success py-2 align-items-center">
+                  <h5 class="modal-title text-white" id="titulo_modal_cliente">
+                      <i class="fas fa-unlock"></i> Apertura de Caja Avanzada
+                  </h5>
+                  <button type="button" class="close text-white border-0 fs-5" id="btncerrarmodal_cliente" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                   </button>
               </div>
               <div class="modal-body">
-                  <form class="needs-validation" novalidate>
+                  <!-- Información de Permisos -->
+                  <div class="alert alert-info" id="info-permisos" style="display: none;">
+                      <h6><i class="fas fa-shield-alt"></i> Estado de Permisos</h6>
+                      <div id="permisos-details"></div>
+                  </div>
+                  
+                  <form class="needs-validation" novalidate id="form-apertura-caja">
+                      <div class="row">
+                          <div class="col-lg-6">
+                              <div class="form-group mb-3">
+                                  <label for="text_descripcion" class="form-label">
+                                      <i class="fas fa-tag"></i> Descripción de la Caja
+                                  </label>
+                                  <input type="text" 
+                                         class="form-control form-control-sm" 
+                                         id="text_descripcion" 
+                                         name="text_descripcion" 
+                                         value="Apertura de Caja"
+                                         required>
+                                  <div class="invalid-feedback">Debe ingresar una descripción</div>
+                              </div>
+                          </div>
+
+                          <div class="col-lg-6">
+                              <div class="form-group mb-3">
+                                  <label for="text_monto_ini" class="form-label">
+                                      <i class="fas fa-dollar-sign"></i> Monto Inicial
+                                  </label>
+                                  <input type="number" 
+                                         class="form-control form-control-sm" 
+                                         id="text_monto_ini" 
+                                         name="text_monto_ini" 
+                                         placeholder="0.00" 
+                                         step="0.01" 
+                                         min="0"
+                                         required>
+                                  <small class="text-muted">
+                                      Límite máximo: <span id="limite-usuario">Verificando...</span>
+                                  </small>
+                                  <div class="invalid-feedback">Debe ingresar un monto válido</div>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="row">
+                          <div class="col-lg-6">
+                              <div class="form-group mb-3">
+                                  <label for="select_sucursal" class="form-label">
+                                      <i class="fas fa-building"></i> Sucursal
+                                  </label>
+                                  <select class="form-control form-control-sm" id="select_sucursal" name="select_sucursal">
+                                      <option value="">Seleccionar sucursal...</option>
+                                  </select>
+                                  <small class="text-muted">Seleccione la sucursal para esta caja</small>
+                              </div>
+                          </div>
+
+                          <div class="col-lg-6">
+                              <div class="form-group mb-3">
+                                  <label for="select_tipo_caja" class="form-label">
+                                      <i class="fas fa-cash-register"></i> Tipo de Caja
+                                  </label>
+                                  <select class="form-control form-control-sm" id="select_tipo_caja" name="select_tipo_caja">
+                                      <option value="principal">Caja Principal</option>
+                                      <option value="secundaria">Caja Secundaria</option>
+                                      <option value="temporal">Caja Temporal</option>
+                                  </select>
+                              </div>
+                          </div>
+                      </div>
+
                       <div class="row">
                           <div class="col-lg-12">
-                              <div class="form-group mb-2">
-                                  <label for="" class="">
-                                      <span class="small"> Descripcion
+                              <div class="form-group mb-3">
+                                  <label for="text_observaciones" class="form-label">
+                                      <i class="fas fa-comment"></i> Observaciones
                                   </label>
-                                  <input type="text" class=" form-control form-control-sm" id="text_descripcion" name="text_descripcion" required disabled>
-
+                                  <textarea class="form-control form-control-sm" 
+                                            id="text_observaciones" 
+                                            name="text_observaciones" 
+                                            rows="3" 
+                                            placeholder="Observaciones adicionales sobre la apertura..."></textarea>
                               </div>
                           </div>
+                      </div>
 
+                      <div class="row">
                           <div class="col-lg-12">
-                              <div class="form-group mb-2">
-                                  <label for="" class="">
-                                      <span class="small"> Monto
+                              <div class="form-check">
+                                  <input type="checkbox" 
+                                         class="form-check-input" 
+                                         id="check_validacion_fisica">
+                                  <label class="form-check-label" for="check_validacion_fisica">
+                                      <i class="fas fa-calculator"></i> He realizado el conteo físico del dinero
                                   </label>
-                                  <input type="number" class=" form-control form-control-sm" id="text_monto_ini" name="text_monto_ini" placeholder="Monto Apertura" required>
-                                  <div class="invalid-feedback">Debe ingresar un monto</div>
-
+                                  <small class="form-text text-muted d-block">
+                                      Marque esta casilla si ha contado físicamente el dinero inicial
+                                  </small>
                               </div>
                           </div>
-
                       </div>
                   </form>
               </div>
               <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" id="btncerrar_cliente">Cerrar</button>
-                  <button class="btn btn-primary btn-sm btn-activa" id="btnregistrar_caja">Registrar</button>
-                  <!-- <div class="form-group m-0"> -->
-                  <!-- <a class="btn btn-primary btn-sm"  id=" btnregistrar_caja">Registrar</a> -->
-                  <!-- </div> -->
-
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" id="btncerrar_cliente">
+                      <i class="fas fa-times"></i> Cancelar
+                  </button>
+                  <button class="btn btn-success btn-sm" id="btnregistrar_caja">
+                      <i class="fas fa-unlock"></i> <span id="btn-text">Abrir Caja</span>
+                  </button>
               </div>
           </div>
       </div>
   </div>
-  <!-- fin Modal -->
 
   <!-- Modal CERRA caja -->
   <div class="modal fade" id="modal_cerrar_caja" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -296,7 +411,7 @@
                       <table id="tbl_resgitros_caja" class="table display table-hover text-nowrap compact  w-100  rounded">
                           <thead class="bg-gradient-info text-white">
                               <tr>
-                                  <th>Nro Prestamo</th>
+                                  <th>#Prestamo</th>
                                   <th>id cli</th>
                                   <th>Cliente</th>
                                   <th>Monto</th>
@@ -359,6 +474,196 @@
   </div>
   <!-- fin Modal -->
 
+  <!-- Modal Detalles del Saldo Total -->
+  <div class="modal fade" id="modal_saldo_total" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+              <div class="modal-header bg-info">
+                  <h4 class="modal-title text-white">
+                      <i class="fas fa-calculator"></i> Detalles del Saldo Total
+                  </h4>
+                  <button type="button" class="close text-white" data-dismiss="modal">
+                      <span>&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <!-- Tarjetas de resumen -->
+                  <div class="row mb-4">
+                      <div class="col-md-3">
+                          <div class="card text-white bg-success">
+                              <div class="card-body text-center">
+                                  <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                  <h5>Ingresos Hoy</h5>
+                                  <h4 id="ingresos_hoy">0,00 US$</h4>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="card text-white bg-danger">
+                              <div class="card-body text-center">
+                                  <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                                  <h5>Egresos Hoy</h5>
+                                  <h4 id="egresos_hoy">0,00 US$</h4>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="card text-white bg-warning">
+                              <div class="card-body text-center">
+                                  <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                                  <h5>Préstamos Otorgados</h5>
+                                  <h4 id="prestamos_otorgados">0,00 US$</h4>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="card text-white bg-primary">
+                              <div class="card-body text-center">
+                                  <i class="fas fa-piggy-bank fa-2x mb-2"></i>
+                                  <h5>Saldo Inicial Total</h5>
+                                  <h4 id="saldo_inicial_total">0,00 US$</h4>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Tabla de resumen por caja -->
+                  <div class="card">
+                      <div class="card-header">
+                          <h5><i class="fas fa-table"></i> Resumen por Caja</h5>
+                      </div>
+                      <div class="card-body">
+                          <div class="table-responsive">
+                              <table class="table table-striped table-hover" id="tabla_resumen_cajas">
+                                  <thead class="bg-info text-white">
+                                      <tr>
+                                          <th>Caja</th>
+                                          <th>Saldo Inicial</th>
+                                          <th>Movimientos</th>
+                                          <th>Saldo Actual</th>
+                                          <th>Estado</th>
+                                          <th>Última Apertura</th>
+                                          <th>Acciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody id="tbody_resumen_cajas">
+                                      <tr>
+                                          <td colspan="7" class="text-center">
+                                              <i class="fas fa-spinner fa-spin"></i> Cargando datos...
+                                          </td>
+                                      </tr>
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                      <i class="fas fa-times"></i> Cerrar
+                  </button>
+                  <button type="button" class="btn btn-success" id="btn_exportar_resumen">
+                      <i class="fas fa-download"></i> Exportar Reporte
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal Configuración de Cajas por Sucursal -->
+  <div class="modal fade" id="modal_config_sucursales" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-xl" role="document">
+          <div class="modal-content">
+              <div class="modal-header bg-info">
+                  <h4 class="modal-title text-white">
+                      <i class="fas fa-cogs"></i> Configuración de Cajas por Sucursal
+                  </h4>
+                  <button type="button" class="close text-white" data-dismiss="modal">
+                      <span>&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <div class="row">
+                      <div class="col-md-4">
+                          <div class="card">
+                              <div class="card-header">
+                                  <h5>Agregar Nueva Caja</h5>
+                              </div>
+                              <div class="card-body">
+                                  <form id="form-nueva-caja">
+                                      <div class="form-group">
+                                          <label>Sucursal</label>
+                                          <select class="form-control" id="nueva-caja-sucursal" required>
+                                              <option value="">Seleccionar...</option>
+                                          </select>
+                                      </div>
+                                      <div class="form-group">
+                                          <label>Nombre de Caja</label>
+                                          <input type="text" class="form-control" id="nueva-caja-nombre" 
+                                                 placeholder="Ej: Caja Principal" required>
+                                      </div>
+                                      <div class="form-group">
+                                          <label>Código</label>
+                                          <input type="text" class="form-control" id="nueva-caja-codigo" 
+                                                 placeholder="Ej: CP-001" required>
+                                      </div>
+                                      <div class="form-group">
+                                          <label>Tipo</label>
+                                          <select class="form-control" id="nueva-caja-tipo">
+                                              <option value="principal">Principal</option>
+                                              <option value="secundaria">Secundaria</option>
+                                              <option value="temporal">Temporal</option>
+                                          </select>
+                                      </div>
+                                      <div class="form-group">
+                                          <label>Ubicación Física</label>
+                                          <input type="text" class="form-control" id="nueva-caja-ubicacion" 
+                                                 placeholder="Ej: Planta baja, recepción">
+                                      </div>
+                                      <button type="submit" class="btn btn-primary">
+                                          <i class="fas fa-plus"></i> Agregar Caja
+                                      </button>
+                                  </form>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-md-8">
+                          <div class="card">
+                              <div class="card-header">
+                                  <h5>Cajas Configuradas</h5>
+                              </div>
+                              <div class="card-body">
+                                  <table class="table table-sm table-hover" id="tabla-cajas-sucursales">
+                                      <thead>
+                                          <tr>
+                                              <th>Sucursal</th>
+                                              <th>Nombre</th>
+                                              <th>Código</th>
+                                              <th>Tipo</th>
+                                              <th>Estado</th>
+                                              <th>Acciones</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody id="tbody-cajas-sucursales">
+                                          <tr>
+                                              <td colspan="6" class="text-center">
+                                                  <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                              </td>
+                                          </tr>
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
   <script>
       var accion;
       var tbl_caja, tbl_resgitros_caja, tbl_resgitros_movi;
@@ -372,6 +677,25 @@
       $(document).ready(function() {
 
           $('.js-example-basic-single').select2();
+
+          // NUEVO: Funcionalidad para botones de acción
+          $('#btnConteoFisico').on('click', function() {
+              Swal.fire({
+                  icon: 'info',
+                  title: 'Conteo Físico',
+                  text: 'Funcionalidad de conteo físico por implementar.',
+                  showConfirmButton: true
+              });
+          });
+
+          $('#btnGenerarReporteCaja').on('click', function() {
+              Swal.fire({
+                  icon: 'info',
+                  title: 'Generar Reporte',
+                  text: 'Funcionalidad de generación de reporte por implementar.',
+                  showConfirmButton: true
+              });
+          });
 
           /*===================================================================*/
           // FILTRAR CAJA POR CLIENTE AL CAMBIAR SELECTOR O HACER CLIC EN BUSCAR
@@ -430,6 +754,13 @@
                       'accion': 1
 
                   }, //LISTAR 
+                  success: function(response) {
+                      console.log('[tbl_caja] Respuesta AJAX (accion 1):', response);
+                  },
+                  error: function(xhr, status, error) {
+                      console.error('[tbl_caja] Error AJAX (accion 1):', error);
+                      console.error('[tbl_caja] Respuesta del servidor:', xhr.responseText);
+                  }
               },
               columnDefs: [{
                       targets: 0,
@@ -818,6 +1149,37 @@
       }) // FIN DOCUMENT READY
 
 
+      // NUEVO: Cargar estadísticas rápidas del día
+      function cargarEstadisticasRapidas() {
+          $.ajax({
+              url: "ajax/caja_ajax.php",
+              method: "POST",
+              dataType: "json",
+              data: { accion: 9 }, // Acción para obtener estadísticas rápidas
+              success: function(response) {
+                  console.log('[Estadisticas Rapidas] Respuesta AJAX:', response);
+                  if (response && response.success) {
+                      $('#aperturas_hoy').text(response.aperturas_hoy);
+                      $('#cierres_hoy').text(response.cierres_hoy);
+                      // Implementar lógica para eficiencia operacional si los datos están disponibles
+                      // Por ahora, se mantendrá en 0%
+                  } else {
+                      console.warn('[Estadisticas Rapidas] No se pudieron cargar las estadísticas.', response.message);
+                      $('#aperturas_hoy').text('--');
+                      $('#cierres_hoy').text('--');
+                  }
+              },
+              error: function(xhr, status, error) {
+                  console.error('[Estadisticas Rapidas] Error AJAX:', error);
+                  console.error('[Estadisticas Rapidas] Respuesta del servidor:', xhr.responseText);
+                  $('#aperturas_hoy').text('Error');
+                  $('#cierres_hoy').text('Error');
+              }
+          });
+      }
+
+      // Llamar a la función al cargar la página
+      cargarEstadisticasRapidas();
 
       // FUNCIONES
 
@@ -830,11 +1192,74 @@
               backdrop: 'static',
               keyboard: false
           });
+          
+          // CARGAR SUCURSALES ANTES DE MOSTRAR EL MODAL
+          cargarSucursalesModal();
+          
           $("#modal_abrir_caja").modal('show'); //abrimos el modal
 
           $("#text_descripcion").val('Apertura de Caja');
           $("#text_monto_ini").focus();
           accion = 2;
+      }
+      
+      /********************************************************************
+            CARGAR SUCURSALES EN EL MODAL
+      ********************************************************************/
+      function cargarSucursalesModal() {
+          console.log('[Caja] Cargando sucursales para modal de apertura...');
+          
+          // Mostrar indicador de carga
+          $("#select_sucursal").html('<option value="">🔄 Cargando sucursales...</option>');
+          
+          $.ajax({
+              url: "ajax/aprobacion_ajax.php",
+              type: "GET",
+              data: { accion: 'listar_sucursales' },
+              dataType: 'json',
+              success: function(response) {
+                  console.log('[Caja] Respuesta de sucursales:', response);
+                  
+                  let opciones = '<option value="">-- Seleccionar sucursal --</option>';
+                  
+                  if (Array.isArray(response) && response.length > 0) {
+                      response.forEach(function(sucursal) {
+                          // Usar estructura real de la tabla sucursales
+                          const sucursalId = sucursal.sucursal_id || sucursal.id;
+                          const textoDescriptivo = sucursal.texto_descriptivo || 
+                                                 sucursal.texto_completo || 
+                                                 sucursal.sucursal_nombre ||
+                                                 sucursal.nombre;
+                          
+                          if (sucursalId && textoDescriptivo) {
+                              opciones += `<option value="${sucursalId}">${textoDescriptivo}</option>`;
+                          }
+                      });
+                      console.log(`[Caja] ✅ Cargadas ${response.length} sucursales exitosamente`);
+                  } else {
+                      opciones += '<option value="">No hay sucursales disponibles</option>';
+                      console.warn('[Caja] No se encontraron sucursales');
+                  }
+                  
+                  $("#select_sucursal").html(opciones);
+              },
+              error: function(xhr, status, error) {
+                  console.error('[Caja] Error al cargar sucursales:', error);
+                  console.error('[Caja] Respuesta del servidor:', xhr.responseText);
+                  $("#select_sucursal").html('<option value="">Error al cargar sucursales</option>');
+                  
+                  // Mostrar notificación de error
+                  if (typeof Swal !== 'undefined') {
+                      Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: 'No se pudieron cargar las sucursales. Verifique su conexión.',
+                          timer: 3000,
+                          showConfirmButton: false
+                      });
+                  }
+              }
+          });
       }
 
 
@@ -1081,3 +1506,6 @@
           }
       }
   </script>
+
+  <!-- Script para correcciones de modales -->
+  <script src="vistas/assets/dist/js/caja-modales-corregidos.js"></script>

@@ -125,6 +125,16 @@ class AjaxAdminPrestamos
      public function ajaxRegistrarAbono()
      {
          try {
+             // Validar parámetros requeridos
+             if (empty($this->nro_prestamo) || empty($this->pdetalle_nro_cuota) || empty($this->monto_a_abonar)) {
+                 throw new Exception("Faltan parámetros requeridos para registrar el abono");
+             }
+             
+             // Validar que el monto sea numérico y positivo
+             if (!is_numeric($this->monto_a_abonar) || floatval($this->monto_a_abonar) <= 0) {
+                 throw new Exception("El monto del abono debe ser un número positivo");
+             }
+             
              $RegistrarAbono = AdminPrestamosControlador::ctrRegistrarAbono(
                  $this->nro_prestamo,
                  $this->pdetalle_nro_cuota,
@@ -138,7 +148,8 @@ class AjaxAdminPrestamos
              echo json_encode($RegistrarAbono);
              exit;
          } catch (Exception $e) {
-             echo json_encode(array("error" => $e->getMessage()));
+             error_log("Error en ajaxRegistrarAbono: " . $e->getMessage());
+             echo json_encode(array("status" => "error", "message" => $e->getMessage()));
              exit;
          }
      }
@@ -214,6 +225,8 @@ if (isset($_POST["accion"]) && $_POST["accion"] == 1) {             //LISTAR PRE
 
 
 } else if (isset($_POST["accion"]) && $_POST["accion"] == 6) { // REGISTRAR ABONO DE CUOTA
+    error_log("Iniciando registrar abono - Datos recibidos: " . json_encode($_POST));
+    
     $RegistrarAbono = new AjaxAdminPrestamos();
     $RegistrarAbono->nro_prestamo = $_POST["nro_prestamo"];
     $RegistrarAbono->pdetalle_nro_cuota = $_POST["pdetalle_nro_cuota"];

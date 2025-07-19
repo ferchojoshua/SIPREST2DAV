@@ -1,5 +1,16 @@
 <?php
+// Limpiar cualquier output previo
+if (ob_get_level()) {
+    ob_clean();
+}
+
+// Headers para JSON limpio
+header('Content-Type: application/json; charset=utf-8');
+
+// Iniciar sesión si no está iniciada
+if (session_status() == PHP_SESSION_NONE) {
 session_start();
+}
 
 require_once "../controladores/usuario_controlador.php";
 require_once "../modelos/usuario_modelo.php";
@@ -11,14 +22,26 @@ class AjaxUsuario
     public $usuario;
     public $clave;
     public $id_perfil_usuario;
+    public $sucursal_id;
 
     /*===================================================================*/
     //LISTAR EN DATATABLE LOS USUARIOS
     /*===================================================================*/
     public function  getListarUsuarios()
     {
+        try {
         $Usuario = UsuarioControlador::ctrListarUsuarios();
-        echo json_encode($Usuario);
+            
+            // Verificar si hay datos
+            if ($Usuario === false || $Usuario === null) {
+                echo json_encode(array('error' => 'No se pudieron obtener los usuarios'));
+                return;
+            }
+            
+            echo json_encode($Usuario, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            echo json_encode(array('error' => 'Error interno: ' . $e->getMessage()));
+        }
     }
 
     /*===================================================================*/
@@ -42,8 +65,8 @@ class AjaxUsuario
             $this->apellido_usuario,
             $this->usuario,
             $this->clave,
-            $this->id_perfil_usuario
-
+            $this->id_perfil_usuario,
+            $this->sucursal_id
         );
         echo json_encode($usuario);
     }
@@ -132,10 +155,15 @@ if(isset($_POST["loginUsuario"])){
     $registroUsuario->clave= crypt($_POST["clave"],'$2a$07$azybxcags23425sdg23sdfhsd$');
     //$registroUsuario->clave= password_hash($_POST['clave'],PASSWORD_DEFAULT,['cost'=>12]);$password = crypt($_POST["loginPassword"],'$2a$07$azybxcags23425sdg23sdfhsd$');
     $registroUsuario->id_perfil_usuario = $_POST["id_perfil_usuario"];
+    $registroUsuario->sucursal_id = $_POST["sucursal_id"];
 
     $registroUsuario->ajaxRegistrarUsuario();
 
-}else if (isset($_POST['accion']) && $_POST['accion'] == 3) { //ACTUALIZAR USUARIO
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'listar_perfiles') { //LISTAR PERFILES EN COMBOBOX
+    $Usuario = new AjaxUsuario();
+    $Usuario->ListarSelectPerfiles();
+
+} else if (isset($_POST['accion']) && $_POST['accion'] == 3) { //ACTUALIZAR USUARIO
 
     $actualizarUsuario = new AjaxUsuario();
     $data = array(
@@ -143,7 +171,8 @@ if(isset($_POST["loginUsuario"])){
         "nombre_usuario" => $_POST["nombre_usuario"],
         "apellido_usuario" => $_POST["apellido_usuario"],
         "usuario" => $_POST["usuario"],
-        "id_perfil_usuario" => $_POST["id_perfil_usuario"]
+        "id_perfil_usuario" => $_POST["id_perfil_usuario"],
+        "sucursal_id" => $_POST["sucursal_id"]
 
     );
     $actualizarUsuario->ajaxActualizarUsuario($data);
@@ -165,8 +194,7 @@ if(isset($_POST["loginUsuario"])){
     );
     $actualizarClave->ajaxActualizarClaveUsuario($data);
 
-}  else {
-    $selectPerfiles = new AjaxUsuario();
-    $selectPerfiles->ListarSelectPerfiles(); //LISTAR PERFILES EN COMBO
-
+} else {
+    // Acción no válida o no especificada
+    echo json_encode(array('error' => 'Acción no válida o no especificada'));
 }

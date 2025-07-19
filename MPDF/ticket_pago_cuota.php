@@ -3,21 +3,31 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/vendor/autoload.php';
-require '../conexion_reportes/r_conexion.php';
+// Incluir PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
-// Configuración adaptable para impresoras térmicas
-// El ancho se ajustará automáticamente según la impresora
+require_once __DIR__ . '/../PHPMailer/src/Exception.php';
+require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
+
+// Incluir dependencias del proyecto
+require_once __DIR__ . '/vendor/autoload.php';
+require_once '../conexion_reportes/r_conexion.php';
+require_once __DIR__ . '/../utilitarios/email_config.php'; // Configuración de correo
+
+// Configuración para impresora térmica de 80mm de ancho.
+// El alto se define como 'P' para que sea proporcional al contenido.
 $mpdf = new \Mpdf\Mpdf([
     'mode' => 'utf-8',
-    'format' => 'A7', // Formato pequeño que se adapta bien a impresoras térmicas
-    'margin_left' => 3,
-    'margin_right' => 3,
+    'format' => [80, 250], // Ancho de 80mm, alto variable  
+    'orientation' => 'P',
+    'margin_left' => 5,
+    'margin_right' => 5,
     'margin_top' => 5,
-    'margin_bottom' => 5,
+    'margin_bottom' => 5,   
     'margin_header' => 0,
-    'margin_footer' => 0,
-    'adjustPassiveFont' => true // Permite ajustar fuentes para mejor compatibilidad
+    'margin_footer' => 0
 ]);
 
 $query = "SELECT
@@ -26,6 +36,7 @@ $query = "SELECT
                 pc.cliente_id,
                 c.cliente_nombres,
                 c.cliente_dni,
+                c.cliente_correo,
                 pc.pres_monto,
                 pc.pres_interes,
                 pc.pres_cuotas,
@@ -76,14 +87,11 @@ if ($resultado === false) {
     die("Error en la consulta SQL: " . $mysqli->error);
 }
 
-// Fix syntax error around line 327 - removing malformed HTML/PHP mixing
-if (empty($resultados)) {
+// Verificar si se encontraron datos
+if ($resultado->num_rows === 0) {
     echo "Error: No se encontraron datos para el préstamo";
     exit();
 }
-
-// Continue with normal processing
-$datos = $resultados[0];
 
 if ($row1 = $resultado->fetch_assoc()) {
     // Verificar si existe logo de empresa personalizado
@@ -119,7 +127,14 @@ if ($row1 = $resultado->fetch_assoc()) {
 
     // Obtener nombre de la cajera desde sesión
     session_start();
-    $cajera = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : '---';
+    $cajera = '---';
+    if (isset($_SESSION['usuario'])) {
+        if (is_object($_SESSION['usuario'])) {
+            $cajera = $_SESSION['usuario']->usuario ?? $_SESSION['usuario']->nombre_usuario ?? '---';
+        } else {
+            $cajera = $_SESSION['usuario'];
+        }
+    }
 
     $html = '<!DOCTYPE html>
     <html lang="es">
@@ -217,6 +232,15 @@ if ($row1 = $resultado->fetch_assoc()) {
                 font-size: 9px;
             }
             
+            .desglose-tabla {
+                width: 100%;
+                margin-top: 4px;
+            }
+            .desglose-tabla td {
+                font-size: 9px;
+                padding: 1px 0;
+            }
+            
             .recibo-total {
                 text-align: center;
                 font-size: 11px;
@@ -252,95 +276,54 @@ if ($row1 = $resultado->fetch_assoc()) {
         <div class="recibo-container">
             <div class="recibo-header">
                 <img src="' . $logo_empresa . '" class="recibo-logo" alt="Logo">
-                <div class="recibo-empresa">' . $row1['confi_razon'] . '</div>
-                <div class="recibo-ruc">RUC: ' . $row1['confi_ruc'] . '</div>
-                <div class="recibo-direccion">' . $row1['confi_direccion'] . '</div>';
+                <div class="recibo-empresa">' . htmlspecialchars($row1['confi_razon']) . '</div>
+                <div class="recibo-ruc">RUC: ' . htmlspecialchars($row1['confi_ruc']) . '</div>
+                <div class="recibo-direccion">' . htmlspecialchars($row1['confi_direccion']) . '</div>
+                <div class="recibo-contacto">Tel: ' . htmlspecialchars($row1['config_celular']) . ' | Email: ' . htmlspecialchars($row1['config_correo']) . '</div>
+            </div>
+            
+            <div class="recibo-titulo">RECIBO DE PAGO</div>
+            
+            <div class="recibo-seccion">
+                <div class="recibo-info"><span class="recibo-info-label">Nro. Préstamo:</span><span class="recibo-info-value">' . htmlspecialchars($row1['nro_prestamo']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Fecha de Pago:</span><span class="recibo-info-value">' . htmlspecialchars($row1['pdetalle_fecha_registro_format']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Recibo N°:</span><span class="recibo-info-value">' . htmlspecialchars($row1['pres_id']) . str_pad($row1['pdetalle_nro_cuota'], 3, "0", STR_PAD_LEFT) . '</span></div>
+            </div>
+
+            <div class="recibo-seccion">
+                <div class="recibo-info"><span class="recibo-info-label">Cliente:</span><span class="recibo-info-value">' . htmlspecialchars($row1['cliente_nombres']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Cédula:</span><span class="recibo-info-value">' . htmlspecialchars($row1['cliente_dni']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Forma de Pago:</span><span class="recibo-info-value">' . htmlspecialchars($row1['fpago_descripcion']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Moneda:</span><span class="recibo-info-value">' . htmlspecialchars($row1['moneda_nombre']) . '</span></div>
+            </div>
+
+            <div class="recibo-seccion">
+                <div class="recibo-info"><span class="recibo-info-label">Cuota N°:</span><span class="recibo-info-value">' . htmlspecialchars($row1['pdetalle_nro_cuota']) . ' de ' . htmlspecialchars($row1['pres_cuotas']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Cuotas Pagadas:</span><span class="recibo-info-value">' . htmlspecialchars($row1['pres_cuotas_pagadas']) . ' de ' . htmlspecialchars($row1['pres_cuotas']) . '</span></div>
+                <div class="recibo-info"><span class="recibo-info-label">Cajera:</span><span class="recibo-info-value">' . htmlspecialchars($cajera) . '</span></div>
                 
-            // Agregar teléfono si existe
-            if (!empty($row1['config_celular'])) {
-                $html .= '<div class="recibo-contacto">Tel: ' . $row1['config_celular'] . '</div>';
-            }
-            
-            // Agregar email si existe
-            if (!empty($row1['config_correo'])) {
-                $html .= '<div class="recibo-contacto">Email: ' . $row1['config_correo'] . '</div>';
-            }
-            
-            $html .= '</div>
-            
-            <div class="recibo-titulo">RECIBO DE PAGO DE CUOTA</div>
-            
-            <div class="recibo-seccion">
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Nro. Préstamo:</span>
-                    <span class="recibo-info-value">' . $row1['nro_prestamo'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Fecha de Pago:</span>
-                    <span class="recibo-info-value">' . $row1['pdetalle_fecha_registro_format'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Recibo N°:</span>
-                    <span class="recibo-info-value">' . str_pad($row1['nro_prestamo'] . $row1['pdetalle_nro_cuota'], 8, '0', STR_PAD_LEFT) . '</span>
-                </div>
+                <table class="desglose-tabla">
+                    <tr><td>PRINCIPAL:</td><td style="text-align:right;">' . htmlspecialchars($row1['moneda_simbolo']) . ' ' . number_format($principal, 2) . '</td></tr>
+                    <tr><td>INTERESES:</td><td style="text-align:right;">' . htmlspecialchars($row1['moneda_simbolo']) . ' ' . number_format($interes, 2) . '</td></tr>
+                    <tr><td>MANT. VALOR:</td><td style="text-align:right;">' . htmlspecialchars($row1['moneda_simbolo']) . ' 0.00</td></tr>
+                    <tr><td>INT. MORAT.:</td><td style="text-align:right;">' . htmlspecialchars($row1['moneda_simbolo']) . ' 0.00</td></tr>
+                    <tr><td>COMISIÓN:</td><td style="text-align:right;">' . htmlspecialchars($row1['moneda_simbolo']) . ' 0.00</td></tr>
+                    <tr><td>TOTAL:</td><td style="text-align:right;">' . htmlspecialchars($row1['moneda_simbolo']) . ' ' . number_format($row1['pdetalle_monto_cuota'], 2) . '</td></tr>
+                </table>
             </div>
-            
-            <div class="recibo-seccion">
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Cliente:</span>
-                    <span class="recibo-info-value" style="font-size: 8px;">' . $row1['cliente_nombres'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Cedula:</span>
-                    <span class="recibo-info-value">' . $row1['cliente_dni'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Forma de Pago:</span>
-                    <span class="recibo-info-value">' . $row1['fpago_descripcion'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Moneda:</span>
-                    <span class="recibo-info-value">' . $row1['moneda_nombre'] . '</span>
-                </div>
-            </div>
-            
-            <div class="recibo-seccion">
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Cuota N°:</span>
-                    <span class="recibo-info-value">' . $row1['pdetalle_nro_cuota'] . ' de ' . $row1['pres_cuotas'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Cuotas Pagadas:</span>
-                    <span class="recibo-info-value">' . $row1['pdetalle_cant_cuota_pagada'] . ' de ' . $row1['pres_cuotas'] . '</span>
-                </div>
-                <div class="recibo-info">
-                    <span class="recibo-info-label">Saldo Pendiente:</span>
-                    <span class="recibo-info-value">' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pdetalle_saldo_cuota'], 2) . '</span>
-                </div>
-            </div>
-            
-            <div class="recibo-info"><span class="recibo-info-label">Cajera:</span><span class="recibo-info-value">' . $cajera . '</span></div>';
-            $html .= '<div class="recibo-seccion" style="margin-bottom:0;">
-    <div class="recibo-info"><span class="recibo-info-label">PRINCIPAL:</span><span class="recibo-info-value">' . number_format($principal,2) . '</span></div>
-    <div class="recibo-info"><span class="recibo-info-label">MANT. VALOR:</span><span class="recibo-info-value">' . number_format($mantenimiento,2) . '</span></div>
-    <div class="recibo-info"><span class="recibo-info-label">INTERESES:</span><span class="recibo-info-value">' . number_format($interes,2) . '</span></div>
-    <div class="recibo-info"><span class="recibo-info-label">INT. MORAT.:</span><span class="recibo-info-value">0.00</span></div>
-    <div class="recibo-info"><span class="recibo-info-label">COMISION:</span><span class="recibo-info-value">0.00</span></div>
-</div>';
             
             <div class="recibo-total">
-                MONTO PAGADO<br>
-                ' . $row1['moneda_simbolo'] . ' ' . number_format($row1['pdetalle_monto_cuota'], 2) . '
+                <div>MONTO PAGADO</div>
+                <div>' . htmlspecialchars($row1['moneda_simbolo']) . ' ' . number_format($row1['pdetalle_monto_cuota'], 2) . '</div>
             </div>
             
             <div class="recibo-firma">
                 <div class="recibo-firma-linea"></div>
-                <div style="font-size: 8px; font-weight: bold;">FIRMA AUTORIZADA</div>
-                <div style="font-size: 7px; margin-top: 2px;">' . $row1['confi_razon'] . '</div>
+             <!-- <div style="font-size: 8px; font-weight: bold;">FIRMA AUTORIZADA</div> -->
+                <div style="font-size: 7px; margin-top: 2px;">' . htmlspecialchars($row1['confi_razon']) . '</div>
             </div>
             
-            <div class="recibo-pie">
-                Documento generado automáticamente<br>
+            <div class="recibo-pie">PAGO ELECTRONICAMENTE<br>
                 ' . date('d/m/Y H:i:s') . '<br>
                 Gracias por su pago puntual
             </div>
@@ -349,12 +332,55 @@ if ($row1 = $resultado->fetch_assoc()) {
     </html>';
     
     $mpdf->WriteHTML($html);
-    
-    // Configuración para impresión directa
-    $mpdf->Output('recibo_pago.pdf', 'I'); // Enviar el PDF al navegador
-    
+
+    // --- ENVÍO DE CORREO ELECTRÓNICO ---
+    // Solo si el envío está activo, el cliente tiene email y la configuración está completa.
+    if (EMAIL_ACTIVO === true && !empty($row1['cliente_correo']) && SMTP_HOST !== 'smtp.example.com') {
+        
+        $pdf_content = $mpdf->Output('', 'S'); // Obtener el PDF como un string
+        
+        $mail = new PHPMailer(true);
+        try {
+            // Configuración del servidor
+            $mail->isSMTP();
+            $mail->Host       = SMTP_HOST;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = SMTP_USERNAME;
+            $mail->Password   = SMTP_PASSWORD;
+            $mail->SMTPSecure = SMTP_SECURE;
+            $mail->Port       = SMTP_PORT;
+            $mail->CharSet    = 'UTF-8';
+
+            // Remitente y Destinatario
+            $mail->setFrom(EMAIL_FROM_ADDRESS, EMAIL_FROM_NAME);
+            $mail->addAddress($row1['cliente_correo'], $row1['cliente_nombres']);
+
+            // Contenido del correo
+            $mail->isHTML(true);
+            $mail->Subject = 'Recibo de Pago - Préstamo Nro: ' . $row1['nro_prestamo'];
+            $mail->Body    = '
+                <p>Estimado(a) <strong>' . htmlspecialchars($row1['cliente_nombres']) . '</strong>,</p>
+                <p>Adjuntamos a este correo el recibo de pago para la cuota N° ' . htmlspecialchars($row1['pdetalle_nro_cuota']) . ' correspondiente a su préstamo.</p>
+                <p>Gracias por su preferencia.</p>
+                <p>Atentamente,<br><strong>' . htmlspecialchars($row1['confi_razon']) . '</strong></p>';
+            $mail->AltBody = 'Estimado(a) ' . htmlspecialchars($row1['cliente_nombres']) . ",\n\nAdjuntamos a este correo el recibo de pago para la cuota N° " . htmlspecialchars($row1['pdetalle_nro_cuota']) . " correspondiente a su préstamo.\n\nGracias por su preferencia.\n\nAtentamente,\n" . htmlspecialchars($row1['confi_razon']);
+
+            // Adjuntar el PDF
+            $mail->addStringAttachment($pdf_content, 'Recibo_Nro_' . $row1['nro_prestamo'] . '.pdf', 'base64', 'application/pdf');
+
+            $mail->send();
+
+        } catch (Exception $e) {
+            // No detener la ejecución si el correo falla, solo registrar el error.
+            error_log("Error al enviar correo: " . $mail->ErrorInfo);
+        }
+    }
+
+    // --- MOSTRAR PDF EN EL NAVEGADOR ---
+    $mpdf->Output('Recibo_de_Pago.pdf', 'I');
+
 } else {
-    echo "Error: No se encontraron datos para el préstamo con código: " . htmlspecialchars($_GET['codigo']) . " y cuota: " . htmlspecialchars($_GET['cuota']);
+    echo "No se encontraron datos para el préstamo con el código proporcionado.";
 }
 
 $mysqli->close();

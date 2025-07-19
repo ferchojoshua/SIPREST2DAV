@@ -56,12 +56,17 @@ class UsuarioControlador{
 
 
     /*===================================================================*/
-    //LISTAR PERFILES EN COMBO DE USUARIO
+    //LISTAR PERFILES EN COMBOBOX
     /*===================================================================*/
     static public function ctrListarSelectPerfiles()
     {
-        $perfiles = UsuarioModelo::mdlListarSelectPerfiles();
-        return $perfiles;
+        try {
+            $perfiles = UsuarioModelo::mdlListarSelectPerfiles();
+            return $perfiles;
+        } catch (Exception $e) {
+            error_log("Error en ctrListarSelectPerfiles: " . $e->getMessage());
+            return false;
+        }
     }
 
 
@@ -69,9 +74,9 @@ class UsuarioControlador{
     /*===================================================================*/
      //REGISTRAR USUARIOS
      /*===================================================================*/
-     static public function ctrRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario)
+     static public function ctrRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id)
      {
-         $registroUsuario = UsuarioModelo::mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario);
+         $registroUsuario = UsuarioModelo::mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id);
          return $registroUsuario;
      }
 
