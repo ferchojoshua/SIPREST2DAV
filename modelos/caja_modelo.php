@@ -472,4 +472,177 @@ class CajaModelo
             return (object)['aperturas_hoy' => 0, 'cierres_hoy' => 0, 'success' => false];
         }
     }
+
+    /*===================================================================*/
+    // NUEVOS MÉTODOS PARA SISTEMA DE SUCURSALES
+    /*===================================================================*/
+    
+    /*===================================================================*/
+    // LISTAR CAJAS POR SUCURSAL (ADMIN PUEDE VER TODAS)
+    /*===================================================================*/
+    static public function mdlListarCajasPorSucursal($sucursal_id, $es_admin = false)
+    {
+        $stmt = Conexion::conectar()->prepare('CALL SP_LISTAR_CAJAS_POR_SUCURSAL(:sucursal_id, :es_admin)');
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        $stmt->bindParam(":es_admin", $es_admin, PDO::PARAM_BOOL);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_NUM);
+    }
+
+    /*===================================================================*/
+    // REGISTRAR CAJA CON SUCURSAL
+    /*===================================================================*/
+    static public function mdlRegistrarCajaSucursal($caja_descripcion, $caja_monto_inicial, $usuario_id, $sucursal_id)
+    {
+        $stmt = Conexion::conectar()->prepare('CALL SP_REGISTRAR_APERTURA_CAJA_SUCURSAL(:caja_descripcion, :caja_monto_inicial, :usuario_id, :sucursal_id)');
+        $stmt->bindParam(":caja_descripcion", $caja_descripcion, PDO::PARAM_STR);
+        $stmt->bindParam(":caja_monto_inicial", $caja_monto_inicial, PDO::PARAM_STR);
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    /*===================================================================*/
+    // VERIFICAR SI USUARIO PUEDE ACCEDER A CAJA DE SUCURSAL
+    /*===================================================================*/
+    static public function mdlVerificarAccesoCajaSucursal($usuario_id, $sucursal_id)
+    {
+        // Verificar si es administrador
+        $stmt = Conexion::conectar()->prepare('SELECT p.descripcion 
+                                             FROM usuarios u 
+                                             INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
+                                             WHERE u.id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $perfil = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($perfil && $perfil['descripcion'] === 'Administrador') {
+            return ['puede_acceder' => true, 'es_admin' => true, 'razon' => 'Acceso de administrador'];
+        }
+        
+        // Verificar si pertenece a la sucursal
+        $stmt = Conexion::conectar()->prepare('SELECT sucursal_id FROM usuarios WHERE id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($usuario && ($usuario['sucursal_id'] == $sucursal_id || $usuario['sucursal_id'] === null)) {
+            return ['puede_acceder' => true, 'es_admin' => false, 'razon' => 'Usuario de la sucursal'];
+        }
+        
+        return ['puede_acceder' => false, 'es_admin' => false, 'razon' => 'Sin permisos para esta sucursal'];
+    }
+
+    /*===================================================================*/
+    // MÉTODOS PARA CIERRE DE DÍA
+    /*===================================================================*/
+    
+    /*===================================================================*/
+    // GENERAR CIERRE DE DÍA
+    /*===================================================================*/
+    static public function mdlGenerarCierreDia($sucursal_id, $fecha_cierre, $usuario_cierre, $observaciones = '')
+    {
+        $stmt = Conexion::conectar()->prepare('CALL SP_GENERAR_CIERRE_DIA(:sucursal_id, :fecha_cierre, :usuario_cierre, :observaciones)');
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        $stmt->bindParam(":fecha_cierre", $fecha_cierre, PDO::PARAM_STR);
+        $stmt->bindParam(":usuario_cierre", $usuario_cierre, PDO::PARAM_INT);
+        $stmt->bindParam(":observaciones", $observaciones, PDO::PARAM_STR);
+        
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    /*===================================================================*/
+    // LISTAR CIERRES DE DÍA POR SUCURSAL
+    /*===================================================================*/
+    static public function mdlListarCierresDia($sucursal_id, $es_admin = false)
+    {
+        $stmt = Conexion::conectar()->prepare('CALL SP_LISTAR_CIERRES_DIA(:sucursal_id, :es_admin)');
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        $stmt->bindParam(":es_admin", $es_admin, PDO::PARAM_BOOL);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /*===================================================================*/
+    // OBTENER RESUMEN DE OPERACIONES DEL DÍA (PARA CIERRE)
+    /*===================================================================*/
+    static public function mdlObtenerResumenDia($sucursal_id, $fecha)
+    {
+        $stmt = Conexion::conectar()->prepare('
+            SELECT 
+                -- Préstamos del día
+                COALESCE((SELECT COUNT(*) FROM prestamo_cabecera pc 
+                         WHERE DATE(pc.pres_fecha_registro) = :fecha 
+                         AND pc.pres_aprobacion IN ("aprobado", "finalizado")
+                         AND (pc.sucursal_asignada_id = :sucursal_id OR (pc.sucursal_asignada_id IS NULL AND :sucursal_id IS NULL))), 0) as prestamos_otorgados,
+                         
+                COALESCE((SELECT SUM(pc.pres_monto) FROM prestamo_cabecera pc 
+                         WHERE DATE(pc.pres_fecha_registro) = :fecha 
+                         AND pc.pres_aprobacion IN ("aprobado", "finalizado")
+                         AND (pc.sucursal_asignada_id = :sucursal_id OR (pc.sucursal_asignada_id IS NULL AND :sucursal_id IS NULL))), 0) as monto_prestamos,
+                
+                -- Pagos del día
+                COALESCE((SELECT COUNT(*) FROM prestamo_detalle pd
+                         INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                         WHERE DATE(pd.pdetalle_fecha_registro) = :fecha
+                         AND pd.pdetalle_estado_cuota = "pagada"
+                         AND (pc.sucursal_asignada_id = :sucursal_id OR (pc.sucursal_asignada_id IS NULL AND :sucursal_id IS NULL))), 0) as pagos_recibidos,
+                         
+                COALESCE((SELECT SUM(pd.pdetalle_monto_cuota) FROM prestamo_detalle pd
+                         INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                         WHERE DATE(pd.pdetalle_fecha_registro) = :fecha
+                         AND pd.pdetalle_estado_cuota = "pagada"
+                         AND (pc.sucursal_asignada_id = :sucursal_id OR (pc.sucursal_asignada_id IS NULL AND :sucursal_id IS NULL))), 0) as monto_pagos,
+                
+                -- Movimientos del día
+                COALESCE((SELECT COUNT(*) FROM movimientos m 
+                         WHERE DATE(m.movi_fecha) = :fecha 
+                         AND m.movi_tipo = "INGRESO"
+                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as ingresos_count,
+                         
+                COALESCE((SELECT SUM(m.movi_monto) FROM movimientos m 
+                         WHERE DATE(m.movi_fecha) = :fecha 
+                         AND m.movi_tipo = "INGRESO"
+                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as ingresos_monto,
+                         
+                COALESCE((SELECT COUNT(*) FROM movimientos m 
+                         WHERE DATE(m.movi_fecha) = :fecha 
+                         AND m.movi_tipo = "EGRESO"
+                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as egresos_count,
+                         
+                COALESCE((SELECT SUM(m.movi_monto) FROM movimientos m 
+                         WHERE DATE(m.movi_fecha) = :fecha 
+                         AND m.movi_tipo = "EGRESO"
+                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as egresos_monto,
+                
+                -- Caja activa
+                (SELECT caja_monto_inicial FROM caja 
+                 WHERE caja_estado = "VIGENTE" 
+                 AND (sucursal_id = :sucursal_id OR (sucursal_id IS NULL AND :sucursal_id IS NULL))
+                 LIMIT 1) as monto_inicial_caja
+        ');
+        
+        $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_OBJ);
+    }
+
+    /*===================================================================*/
+    // VERIFICAR SI YA EXISTE CIERRE DE DÍA
+    /*===================================================================*/
+    static public function mdlVerificarCierreDiaExiste($sucursal_id, $fecha)
+    {
+        $stmt = Conexion::conectar()->prepare('SELECT COUNT(*) as existe FROM cierre_dia WHERE sucursal_id = :sucursal_id AND fecha_cierre = :fecha');
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['existe'] > 0;
+    }
 }

@@ -316,6 +316,7 @@ class ClienteModelo
     static public function mdlBuscarClientesParaSelect($busqueda)
     {
         try {
+            $busquedaParam = "%" . $busqueda . "%";
             $stmt = Conexion::conectar()->prepare("SELECT 
                                                     cliente_id,
                                                     cliente_nombres,
@@ -323,20 +324,17 @@ class ClienteModelo
                                                 FROM 
                                                     clientes 
                                                 WHERE 
-                                                    cliente_estatus = '1'
-                                                    AND (
-                                                        cliente_nombres LIKE :busqueda 
-                                                        OR cliente_dni LIKE :busqueda
-                                                    )
+                                                    cliente_estatus = '1' AND
+                                                    (cliente_nombres LIKE :busqueda OR cliente_dni LIKE :busqueda)
                                                 ORDER BY 
-                                                    cliente_nombres ASC
-                                                LIMIT 10");
+                                                    cliente_nombres ASC");
             
-            $busqueda_param = "%" . $busqueda . "%";
-            $stmt->bindParam(":busqueda", $busqueda_param, PDO::PARAM_STR);
+            $stmt->bindParam(":busqueda", $busquedaParam, PDO::PARAM_STR);
+            
             $stmt->execute();
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $resultado;
             
         } catch (PDOException $e) {
             error_log("Error en mdlBuscarClientesParaSelect: " . $e->getMessage());

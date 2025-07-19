@@ -112,6 +112,7 @@ $(document).ready(function() {
         minimumInputLength: 2,
         ajax: {
             url: 'ajax/clientes_ajax.php',
+            type: 'POST', // <--- Añadir esta línea
             dataType: 'json',
             delay: 250,
             data: function (params) {
@@ -121,8 +122,15 @@ $(document).ready(function() {
                 };
             },
             processResults: function (data) {
+                if (data.error) {
+                    return { results: [] }; // Retorna un array vacío si hay un error
+                }
+                // Asegurarse de que 'data' sea un array. Si es un objeto con una clave 'results', usarla.
+                // Algunos Select2 esperan 'results' anidado, otros directamente el array.
+                const results = Array.isArray(data) ? data : (data.results || []);
+                
                 return {
-                    results: data
+                    results: results
                 };
             },
             cache: true
@@ -204,7 +212,7 @@ function mostrarResultados(datos) {
     // Inicializar DataTable
     $('#tabla_reporte_cliente').DataTable({
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+            url: "vistas/assets/plugins/datatables/i18n/Spanish.json" // <--- Ruta actualizada
         },
         responsive: true,
         order: [[1, "desc"]]

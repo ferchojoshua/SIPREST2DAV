@@ -145,7 +145,7 @@ $(document).ready(function() {
                 }
                 
                 // Reinicializar Select2 después de agregar opciones
-                select.select2('destroy').select2({
+                select.select2({
                     theme: 'bootstrap4',
                     placeholder: "Seleccione un cliente",
                     allowClear: true,
@@ -238,7 +238,7 @@ $(document).ready(function() {
             ],
             order: [[0, "desc"]],
             language: {
-                url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+                url: "vistas/assets/plugins/datatables/i18n/Spanish.json"
             },
             dom: 'Bfrtip',
             buttons: ['copy', 'csv', 'excel', 'pdf', 'print']

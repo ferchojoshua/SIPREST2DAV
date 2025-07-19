@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 13, 2025 at 06:18 AM
+-- Generation Time: Jul 14, 2025 at 02:42 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -246,6 +246,28 @@ END IF;
 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_ESTADISTICAS_RUTA` (IN `p_ruta_id` INT)   BEGIN
+    SELECT 
+        r.ruta_nombre,
+        r.ruta_codigo,
+        COUNT(DISTINCT cr.cliente_id) as total_clientes,
+        COUNT(DISTINCT CASE WHEN cr.estado = 'activo' THEN cr.cliente_id END) as clientes_activos,
+        COUNT(DISTINCT CASE WHEN cr.estado = 'inactivo' THEN cr.cliente_id END) as clientes_inactivos,
+        COUNT(DISTINCT pc.nro_prestamo) as prestamos_activos,
+        COALESCE(SUM(CASE WHEN pd.pdetalle_estado_cuota = 'pendiente' THEN pd.pdetalle_saldo_cuota ELSE 0 END), 0) as saldo_total_pendiente,
+        COUNT(CASE WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha < CURDATE() THEN 1 END) as cuotas_vencidas,
+        COUNT(CASE WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as cuotas_proximas_7_dias,
+        COUNT(DISTINCT ur.usuario_id) as usuarios_asignados
+    FROM rutas r
+    LEFT JOIN clientes_rutas cr ON r.ruta_id = cr.ruta_id
+    LEFT JOIN clientes c ON cr.cliente_id = c.cliente_id
+    LEFT JOIN prestamo_cabecera pc ON c.cliente_id = pc.cliente_id AND pc.pres_estado = 'VIGENTE'
+    LEFT JOIN prestamo_detalle pd ON pc.nro_prestamo = pd.nro_prestamo
+    LEFT JOIN usuarios_rutas ur ON r.ruta_id = ur.ruta_id AND ur.estado = 'activo'
+    WHERE r.ruta_id = p_ruta_id
+    GROUP BY r.ruta_id, r.ruta_nombre, r.ruta_codigo;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_ESTADO_CUENTA_CLIENTE` (IN `p_cliente_id` INT)   BEGIN
     SELECT
         -- Información del préstamo
@@ -352,6 +374,32 @@ caja_count_prestamo,
 FROM
 	caja$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_CLIENTES` (IN `_sucursal_id` INT)   BEGIN
+    SELECT
+        c.cliente_id,
+        c.cliente_nombres,
+        c.cliente_dni,
+        c.cliente_cel,
+        c.cliente_estado_prestamo,
+        c.cliente_direccion,
+        c.cliente_obs,
+        c.cliente_correo,
+        c.cliente_estatus,
+        c.cliente_cant_prestamo,
+        c.cliente_refe,
+        c.cliente_cel_refe,
+        s.nombre as sucursal_nombre
+    FROM
+        clientes c
+    INNER JOIN
+        sucursales s ON c.sucursal_id = s.id
+    WHERE
+        c.sucursal_id = _sucursal_id
+    ORDER BY
+        c.cliente_id
+    DESC;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_CLIENTES_PRESTAMO` ()   BEGIN
     SELECT
         cliente_id, 
@@ -366,6 +414,37 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_CLIENTES_PRESTAMO` ()   B
     FROM
         clientes
     ORDER BY cliente_id DESC;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_CLIENTES_RUTA` (IN `p_ruta_id` INT)   BEGIN
+    SELECT 
+        cr.cliente_ruta_id,
+        cr.cliente_id,
+        c.cliente_nombres,
+        c.cliente_dni,
+        c.cliente_cel,
+        c.cliente_direccion,
+        cr.direccion_especifica,
+        cr.orden_visita,
+        cr.observaciones,
+        cr.estado,
+        cr.fecha_asignacion,
+        
+        COUNT(DISTINCT pc.nro_prestamo) as prestamos_activos,
+        COALESCE(SUM(CASE WHEN pd.pdetalle_estado_cuota = 'pendiente' THEN pd.pdetalle_saldo_cuota ELSE 0 END), 0) as saldo_pendiente,
+        
+        MIN(CASE WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha < CURDATE() THEN pd.pdetalle_fecha END) as proxima_cuota_vencida,
+        COUNT(CASE WHEN pd.pdetalle_estado_cuota = 'pendiente' AND pd.pdetalle_fecha < CURDATE() THEN 1 END) as cuotas_vencidas,
+        '' as opciones
+    FROM clientes_rutas cr
+    INNER JOIN clientes c ON cr.cliente_id = c.cliente_id
+    LEFT JOIN prestamo_cabecera pc ON c.cliente_id = pc.cliente_id AND pc.pres_estado = 'VIGENTE'
+    LEFT JOIN prestamo_detalle pd ON pc.nro_prestamo = pd.nro_prestamo
+    WHERE cr.ruta_id = p_ruta_id
+    GROUP BY cr.cliente_ruta_id, cr.cliente_id, c.cliente_nombres, c.cliente_dni, 
+             c.cliente_cel, c.cliente_direccion, cr.direccion_especifica, 
+             cr.orden_visita, cr.observaciones, cr.estado, cr.fecha_asignacion
+    ORDER BY cr.orden_visita ASC, c.cliente_nombres ASC;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_CLIENTES_TABLE` ()   BEGIN
@@ -535,6 +614,36 @@ FROM
 	referencias
 	where cliente_id = ID$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_RUTAS` (IN `p_sucursal_id` INT)   BEGIN
+    SELECT 
+        r.ruta_id,
+        r.ruta_nombre,
+        r.ruta_descripcion,
+        r.ruta_codigo,
+        r.ruta_color,
+        r.ruta_estado,
+        r.ruta_orden,
+        r.ruta_observaciones,
+        s.nombre as sucursal_nombre,
+        COUNT(DISTINCT cr.cliente_id) as total_clientes,
+        COUNT(DISTINCT CASE WHEN cr.estado = 'activo' THEN cr.cliente_id END) as clientes_activos,
+        GROUP_CONCAT(DISTINCT CONCAT(u.nombres, ' ', u.apellidos) SEPARATOR ', ') as responsables,
+        r.fecha_creacion,
+        CONCAT(uc.nombres, ' ', uc.apellidos) as usuario_creacion_nombre,
+        '' as opciones
+    FROM rutas r
+    INNER JOIN sucursales s ON r.sucursal_id = s.id
+    LEFT JOIN clientes_rutas cr ON r.ruta_id = cr.ruta_id
+    LEFT JOIN usuarios_rutas ur ON r.ruta_id = ur.ruta_id AND ur.estado = 'activo' AND ur.tipo_asignacion = 'responsable'
+    LEFT JOIN usuarios u ON ur.usuario_id = u.id_usuario
+    LEFT JOIN usuarios uc ON r.usuario_creacion = uc.id_usuario
+    WHERE r.sucursal_id = p_sucursal_id
+    GROUP BY r.ruta_id, r.ruta_nombre, r.ruta_descripcion, r.ruta_codigo, r.ruta_color, 
+             r.ruta_estado, r.ruta_orden, r.ruta_observaciones, s.nombre, r.fecha_creacion, 
+             uc.nombres, uc.apellidos
+    ORDER BY r.ruta_orden ASC, r.ruta_nombre ASC;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_SELECT_ANIO_RECORD` ()   SELECT YEAR(pres_fecha_registro) as anio FROM prestamo_cabecera
 where pres_aprobacion IN  ('aprobado', 'finalizado' )
 GROUP BY YEAR(pres_fecha_registro)$$
@@ -568,6 +677,23 @@ FROM
 		usuarios.id_perfil_usuario = perfiles.id_perfil
 		
 		ORDER BY usuarios.id_usuario ASC$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_LISTAR_USUARIOS_DISPONIBLES` (IN `p_sucursal_id` INT)   BEGIN
+    SELECT 
+        u.id_usuario,
+        CONCAT(u.nombres, ' ', u.apellidos) as nombre_completo,
+        u.usuario,
+        p.descripcion as perfil,
+        u.estado,
+        COUNT(DISTINCT ur.ruta_id) as rutas_asignadas
+    FROM usuarios u
+    INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+    LEFT JOIN usuarios_rutas ur ON u.id_usuario = ur.usuario_id AND ur.estado = 'activo'
+    WHERE u.sucursal_id = p_sucursal_id 
+    AND u.estado = 1
+    GROUP BY u.id_usuario, u.nombres, u.apellidos, u.usuario, p.descripcion, u.estado
+    ORDER BY u.nombres ASC, u.apellidos ASC;
+END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_MONTO_POR_CUOTA_PAGADA_D` (IN `prestamo` VARCHAR(8), IN `cuota` VARCHAR(8))   BEGIN
 
@@ -838,8 +964,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_REPORTE_POR_CLIENTE` (IN `id` IN
 				pc.nro_prestamo,
 				pc.cliente_id,
 				c.cliente_nombres,
-				pc.pres_monto,
-				DATE_FORMAT(pc.pres_fecha_registro, '%d/%m/%Y') as fecha,
+				pc.pres_monto as monto_prestamo, -- Renombrado
+				DATE_FORMAT(pc.pres_fecha_registro, '%d/%m/%Y') as fecha_prestamo, -- Renombrado
 				pc.pres_monto_total,
 				pc.pres_monto_cuota,
 			  pc.pres_cuotas,
@@ -852,6 +978,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_REPORTE_POR_CLIENTE` (IN `id` IN
 				pc.pres_interes	,
 				pc.pres_monto_interes,
 				pc.pres_cuotas_pagadas,
+				(pc.pres_monto_total - (pc.pres_cuotas_pagadas * pc.pres_monto_cuota)) as saldo_pendiente, -- Añadido
 				DATE_FORMAT(pc.pres_f_emision, '%d/%m/%Y') as femision
 				 from prestamo_cabecera pc
 				 INNER JOIN clientes c on
@@ -895,6 +1022,22 @@ where pc.pres_aprobacion ='finalizado' and YEAR(pc.pres_fecha_registro) =ANIO an
 GROUP BY YEAR(pc.pres_fecha_registro),
 month(pc.pres_fecha_registro)$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_REPORTE_SALDOS_ARRASTRADOS` (IN `fecha_inicio` DATE, IN `fecha_fin` DATE)   BEGIN
+    SELECT 
+        `log_id`,
+        `nro_prestamo`,
+        `cuota_origen`,
+        `cuota_destino`,
+        `monto_arrastrado`,
+        DATE_FORMAT(`fecha_movimiento`, '%d/%m/%Y %H:%i:%s') as `fecha_movimiento`
+    FROM 
+        `log_saldos_arrastrados`
+    WHERE 
+        DATE(`fecha_movimiento`) BETWEEN `fecha_inicio` AND `fecha_fin`
+    ORDER BY 
+        `fecha_movimiento` DESC;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_VER_DETALLE_PRESTAMO` (IN `nro_prestamo` VARCHAR(8))   select pd.pdetalle_id,
 pd.nro_prestamo,
 				pd.pdetalle_nro_cuota as cuota,
@@ -907,6 +1050,21 @@ pd.nro_prestamo,
 				where pd.nro_prestamo = nro_prestamo$$
 
 DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `alertas_ruta`
+--
+
+CREATE TABLE `alertas_ruta` (
+  `alerta_id` int(11) NOT NULL,
+  `ruta_id` int(11) DEFAULT NULL,
+  `tipo_alerta` enum('retraso','meta_no_cumplida','cliente_no_encontrado','zona_riesgo') DEFAULT NULL,
+  `mensaje` text DEFAULT NULL,
+  `fecha_alerta` datetime DEFAULT NULL,
+  `estado` enum('pendiente','atendida','ignorada') DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1008,6 +1166,30 @@ INSERT INTO `clientes` (`cliente_id`, `cliente_nombres`, `cliente_dni`, `cliente
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `clientes_rutas`
+--
+
+CREATE TABLE `clientes_rutas` (
+  `cliente_ruta_id` int(11) NOT NULL,
+  `cliente_id` int(11) NOT NULL,
+  `ruta_id` int(11) NOT NULL,
+  `orden_visita` int(11) DEFAULT 0 COMMENT 'Orden sugerido de visita en la ruta',
+  `direccion_especifica` text DEFAULT NULL COMMENT 'Direcci??n espec??fica para la ruta si difiere del cliente',
+  `observaciones` text DEFAULT NULL,
+  `estado` enum('activo','inactivo') DEFAULT 'activo',
+  `fecha_asignacion` datetime DEFAULT current_timestamp(),
+  `usuario_asignacion` int(11) NOT NULL,
+  `fecha_modificacion` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `coordenadas` point DEFAULT NULL,
+  `tiempo_estimado` int(11) DEFAULT NULL COMMENT 'Tiempo estimado de visita en minutos',
+  `dia_visita` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') DEFAULT NULL,
+  `franja_horaria` varchar(20) DEFAULT NULL COMMENT 'Ej: mañana, tarde, específico',
+  `hora_preferida` time DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='Relaci??n entre clientes y rutas';
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `empresa`
 --
 
@@ -1028,7 +1210,8 @@ CREATE TABLE `empresa` (
 --
 
 INSERT INTO `empresa` (`confi_id`, `confi_razon`, `confi_ruc`, `confi_direccion`, `confi_correlativo`, `config_correo`, `config_celular`, `config_moneda`, `config_logo`) VALUES
-(1, 'CREDI-BIEN', '1020304050', 'Fundeci 2da ETAPA', '00000006', 'ferchojoshua@gmail.com', '922804671', 'C$', 'logo_empresa_1752213967.jpg');
+(1, 'CREDI-BIEN', '1020304050', 'Fundeci 2da ETAPA', '00000006', 'ferchojoshua@gmail.com', '922804671', 'C$', 'logo_empresa_1752213967.jpg'),
+(2, 'CREDI-BI', '1020304050', 'Fundeci 2da ETAPA', NULL, NULL, '922804671', NULL, 'logo_empresa_1752213967.jpg');
 
 -- --------------------------------------------------------
 
@@ -1055,6 +1238,21 @@ INSERT INTO `forma_pago` (`fpago_id`, `fpago_descripcion`, `valor`, `aplica_dias
 (5, 'Bimestral', '2', '0'),
 (6, 'Semestrual', '6', '0'),
 (7, 'Anual', '1', '0');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `log_saldos_arrastrados`
+--
+
+CREATE TABLE `log_saldos_arrastrados` (
+  `log_id` int(11) NOT NULL,
+  `nro_prestamo` varchar(8) NOT NULL,
+  `cuota_origen` int(11) NOT NULL,
+  `cuota_destino` int(11) NOT NULL,
+  `monto_arrastrado` decimal(10,2) NOT NULL,
+  `fecha_movimiento` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1100,7 +1298,9 @@ INSERT INTO `modulos` (`id`, `modulo`, `padre_id`, `vista`, `icon_menu`, `orden`
 (50, 'Estado de C. Cliente', 10, 'estado_cuenta_cliente.php', 'far fa-circle', 17),
 (51, 'Reporte Mora', 10, 'reporte_mora.php', 'far fa-circle', 18),
 (52, 'Reporte Cobro Diaria', 10, 'reporte_cobranza.php', 'far fa-circle', 19),
-(53, 'Reporte C.Mora', 10, 'reporte_cuotas_atrasadas.php', 'far fa-circle', 20);
+(53, 'Reporte C.Mora', 10, 'reporte_cuotas_atrasadas.php', 'far fa-circle', 20),
+(54, 'Sucursales', 14, 'sucursales.php', 'fas fa-store', 15),
+(55, 'Rutas', 0, 'rutas.php', 'fas fa-route', 5);
 
 -- --------------------------------------------------------
 
@@ -1238,7 +1438,10 @@ INSERT INTO `perfil_modulo` (`idperfil_modulo`, `id_perfil`, `id_modulo`, `vista
 (470, 1, 38, 0, 1),
 (471, 1, 50, 0, 1),
 (472, 1, 52, 0, 1),
-(473, 1, 53, 0, 1);
+(473, 1, 53, 0, 1),
+(474, 1, 54, 0, 1),
+(476, 1, 55, 0, 1),
+(477, 2, 55, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1481,6 +1684,62 @@ INSERT INTO `rol` (`rol_id`, `nombre_rol`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `rutas`
+--
+
+CREATE TABLE `rutas` (
+  `ruta_id` int(11) NOT NULL,
+  `ruta_nombre` varchar(100) NOT NULL,
+  `ruta_descripcion` text DEFAULT NULL,
+  `ruta_codigo` varchar(20) NOT NULL,
+  `ruta_color` varchar(7) DEFAULT '#3498db' COMMENT 'Color hexadecimal para identificar la ruta',
+  `sucursal_id` int(11) NOT NULL,
+  `ruta_estado` enum('activa','inactiva') DEFAULT 'activa',
+  `ruta_orden` int(11) DEFAULT 0 COMMENT 'Orden de recorrido sugerido',
+  `ruta_observaciones` text DEFAULT NULL,
+  `usuario_creacion` int(11) NOT NULL,
+  `fecha_creacion` datetime DEFAULT current_timestamp(),
+  `usuario_modificacion` int(11) DEFAULT NULL,
+  `fecha_modificacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='Tabla para gestionar rutas de cobranza';
+
+--
+-- Dumping data for table `rutas`
+--
+
+INSERT INTO `rutas` (`ruta_id`, `ruta_nombre`, `ruta_descripcion`, `ruta_codigo`, `ruta_color`, `sucursal_id`, `ruta_estado`, `ruta_orden`, `ruta_observaciones`, `usuario_creacion`, `fecha_creacion`, `usuario_modificacion`, `fecha_modificacion`) VALUES
+(1, 'Ruta Centro', 'Ruta de cobranza para la zona c??ntrica de la ciudad', 'RT-CENTRO', '#3498db', 11, 'activa', 0, NULL, 1, '2025-07-13 14:04:09', NULL, NULL),
+(2, 'Ruta Norte', 'Ruta de cobranza para la zona norte de la ciudad', 'RT-NORTE', '#e74c3c', 11, 'activa', 0, NULL, 1, '2025-07-13 14:04:09', NULL, NULL),
+(3, 'Ruta Sur', 'Ruta de cobranza para la zona sur de la ciudad', 'RT-SUR', '#2ecc71', 11, 'activa', 0, NULL, 1, '2025-07-13 14:04:09', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sucursales`
+--
+
+CREATE TABLE `sucursales` (
+  `id` int(11) NOT NULL,
+  `empresa_id` int(11) NOT NULL COMMENT 'Relación con empresa.confi_id',
+  `nombre` varchar(100) NOT NULL,
+  `direccion` text DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `estado` enum('activa','inactiva') DEFAULT 'activa',
+  `codigo` varchar(20) DEFAULT NULL,
+  `creado_por` int(11) DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sucursales`
+--
+
+INSERT INTO `sucursales` (`id`, `empresa_id`, `nombre`, `direccion`, `telefono`, `estado`, `codigo`, `creado_por`, `fecha_creacion`) VALUES
+(1, 1, 'Leon', 'ESA', '86595453', 'activa', 'LE001', 1, '2025-07-13 23:38:01');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tipos_calculo_interes`
 --
 
@@ -1512,6 +1771,7 @@ INSERT INTO `tipos_calculo_interes` (`tipo_calculo_id`, `tipo_calculo_nombre`, `
 
 CREATE TABLE `usuarios` (
   `id_usuario` int(11) NOT NULL,
+  `sucursal_id` int(11) DEFAULT NULL,
   `nombre_usuario` varchar(100) DEFAULT NULL,
   `apellido_usuario` varchar(100) DEFAULT NULL,
   `usuario` varchar(100) NOT NULL,
@@ -1524,13 +1784,84 @@ CREATE TABLE `usuarios` (
 -- Dumping data for table `usuarios`
 --
 
-INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `apellido_usuario`, `usuario`, `clave`, `id_perfil_usuario`, `estado`) VALUES
-(1, 'Gunner', 'User', 'Gunner', '$2a$07$azybxcags23425sdg23sdeanQZqjaf6Birm2NvcYTNtJw24CsO5uq', 1, 1),
-(2, 'Eurania ', 'Alvarez', 'Eurania ', '$2a$07$azybxcags23425sdg23sdeanQZqjaf6Birm2NvcYTNtJw24CsO5uq', 1, 1);
+INSERT INTO `usuarios` (`id_usuario`, `sucursal_id`, `nombre_usuario`, `apellido_usuario`, `usuario`, `clave`, `id_perfil_usuario`, `estado`) VALUES
+(1, 11, 'Gunner', 'User', 'Gunner', '$2a$07$azybxcags23425sdg23sdeanQZqjaf6Birm2NvcYTNtJw24CsO5uq', 1, 1),
+(2, 11, 'Eurania ', 'Alvarez', 'Eurania ', '$2a$07$azybxcags23425sdg23sdeanQZqjaf6Birm2NvcYTNtJw24CsO5uq', 1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `usuarios_rutas`
+--
+
+CREATE TABLE `usuarios_rutas` (
+  `usuario_ruta_id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `ruta_id` int(11) NOT NULL,
+  `tipo_asignacion` enum('responsable','apoyo') DEFAULT 'responsable',
+  `fecha_asignacion` datetime DEFAULT current_timestamp(),
+  `fecha_inicio` date DEFAULT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `estado` enum('activo','inactivo') DEFAULT 'activo',
+  `observaciones` text DEFAULT NULL,
+  `usuario_asignacion` int(11) NOT NULL,
+  `fecha_modificacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='Asignaci??n de usuarios (cobradores) a rutas';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `visitas_ruta`
+--
+
+CREATE TABLE `visitas_ruta` (
+  `visita_id` int(11) NOT NULL,
+  `cliente_ruta_id` int(11) DEFAULT NULL,
+  `fecha_visita` datetime DEFAULT NULL,
+  `estado_visita` enum('pendiente','realizada','no_encontrado','reprogramada') DEFAULT NULL,
+  `resultado` varchar(100) DEFAULT NULL,
+  `monto_cobrado` decimal(10,2) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `coordenadas_visita` point DEFAULT NULL,
+  `foto_visita` varchar(255) DEFAULT NULL,
+  `usuario_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_metricas_rutas`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_metricas_rutas` (
+`ruta_id` int(11)
+,`ruta_nombre` varchar(100)
+,`total_clientes` bigint(21)
+,`total_visitas` bigint(21)
+,`total_cobrado` decimal(32,2)
+,`efectividad_visitas` decimal(7,4)
+,`clientes_no_encontrados` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_metricas_rutas`
+--
+DROP TABLE IF EXISTS `v_metricas_rutas`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_metricas_rutas`  AS SELECT `r`.`ruta_id` AS `ruta_id`, `r`.`ruta_nombre` AS `ruta_nombre`, count(distinct `cr`.`cliente_id`) AS `total_clientes`, count(distinct `v`.`visita_id`) AS `total_visitas`, sum(`v`.`monto_cobrado`) AS `total_cobrado`, avg(case when `v`.`estado_visita` = 'realizada' then 1 else 0 end) * 100 AS `efectividad_visitas`, count(distinct case when `v`.`estado_visita` = 'no_encontrado' then `v`.`visita_id` end) AS `clientes_no_encontrados` FROM ((`rutas` `r` left join `clientes_rutas` `cr` on(`r`.`ruta_id` = `cr`.`ruta_id`)) left join `visitas_ruta` `v` on(`cr`.`cliente_ruta_id` = `v`.`cliente_ruta_id`)) GROUP BY `r`.`ruta_id`, `r`.`ruta_nombre` ;
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `alertas_ruta`
+--
+ALTER TABLE `alertas_ruta`
+  ADD PRIMARY KEY (`alerta_id`),
+  ADD KEY `ruta_id` (`ruta_id`);
 
 --
 -- Indexes for table `caja`
@@ -1545,6 +1876,16 @@ ALTER TABLE `clientes`
   ADD PRIMARY KEY (`cliente_id`) USING BTREE;
 
 --
+-- Indexes for table `clientes_rutas`
+--
+ALTER TABLE `clientes_rutas`
+  ADD PRIMARY KEY (`cliente_ruta_id`),
+  ADD UNIQUE KEY `uk_cliente_ruta` (`cliente_id`,`ruta_id`),
+  ADD KEY `idx_ruta` (`ruta_id`),
+  ADD KEY `idx_estado` (`estado`),
+  ADD KEY `idx_orden` (`orden_visita`);
+
+--
 -- Indexes for table `empresa`
 --
 ALTER TABLE `empresa`
@@ -1555,6 +1896,12 @@ ALTER TABLE `empresa`
 --
 ALTER TABLE `forma_pago`
   ADD PRIMARY KEY (`fpago_id`) USING BTREE;
+
+--
+-- Indexes for table `log_saldos_arrastrados`
+--
+ALTER TABLE `log_saldos_arrastrados`
+  ADD PRIMARY KEY (`log_id`);
 
 --
 -- Indexes for table `modulos`
@@ -1625,6 +1972,23 @@ ALTER TABLE `referencias`
   ADD KEY `cliente_id` (`cliente_id`) USING BTREE;
 
 --
+-- Indexes for table `rutas`
+--
+ALTER TABLE `rutas`
+  ADD PRIMARY KEY (`ruta_id`),
+  ADD UNIQUE KEY `uk_ruta_codigo_sucursal` (`ruta_codigo`,`sucursal_id`),
+  ADD KEY `idx_sucursal` (`sucursal_id`),
+  ADD KEY `idx_estado` (`ruta_estado`);
+
+--
+-- Indexes for table `sucursales`
+--
+ALTER TABLE `sucursales`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `codigo` (`codigo`),
+  ADD KEY `fk_sucursal_empresa` (`empresa_id`);
+
+--
 -- Indexes for table `tipos_calculo_interes`
 --
 ALTER TABLE `tipos_calculo_interes`
@@ -1635,11 +1999,35 @@ ALTER TABLE `tipos_calculo_interes`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id_usuario`) USING BTREE,
-  ADD KEY `id_perfil_usuario` (`id_perfil_usuario`) USING BTREE;
+  ADD KEY `id_perfil_usuario` (`id_perfil_usuario`) USING BTREE,
+  ADD KEY `fk_usuario_sucursal` (`sucursal_id`);
+
+--
+-- Indexes for table `usuarios_rutas`
+--
+ALTER TABLE `usuarios_rutas`
+  ADD PRIMARY KEY (`usuario_ruta_id`),
+  ADD UNIQUE KEY `uk_usuario_ruta_activo` (`usuario_id`,`ruta_id`,`estado`),
+  ADD KEY `idx_ruta` (`ruta_id`),
+  ADD KEY `idx_tipo` (`tipo_asignacion`),
+  ADD KEY `idx_estado` (`estado`);
+
+--
+-- Indexes for table `visitas_ruta`
+--
+ALTER TABLE `visitas_ruta`
+  ADD PRIMARY KEY (`visita_id`),
+  ADD KEY `cliente_ruta_id` (`cliente_ruta_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `alertas_ruta`
+--
+ALTER TABLE `alertas_ruta`
+  MODIFY `alerta_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `caja`
@@ -1654,10 +2042,16 @@ ALTER TABLE `clientes`
   MODIFY `cliente_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `clientes_rutas`
+--
+ALTER TABLE `clientes_rutas`
+  MODIFY `cliente_ruta_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `empresa`
 --
 ALTER TABLE `empresa`
-  MODIFY `confi_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `confi_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `forma_pago`
@@ -1666,10 +2060,16 @@ ALTER TABLE `forma_pago`
   MODIFY `fpago_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `log_saldos_arrastrados`
+--
+ALTER TABLE `log_saldos_arrastrados`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `modulos`
 --
 ALTER TABLE `modulos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `moneda`
@@ -1699,7 +2099,7 @@ ALTER TABLE `perfiles`
 -- AUTO_INCREMENT for table `perfil_modulo`
 --
 ALTER TABLE `perfil_modulo`
-  MODIFY `idperfil_modulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=474;
+  MODIFY `idperfil_modulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=478;
 
 --
 -- AUTO_INCREMENT for table `prestamo_cabecera`
@@ -1720,6 +2120,18 @@ ALTER TABLE `referencias`
   MODIFY `refe_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `rutas`
+--
+ALTER TABLE `rutas`
+  MODIFY `ruta_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `sucursales`
+--
+ALTER TABLE `sucursales`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `tipos_calculo_interes`
 --
 ALTER TABLE `tipos_calculo_interes`
@@ -1732,8 +2144,33 @@ ALTER TABLE `usuarios`
   MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `usuarios_rutas`
+--
+ALTER TABLE `usuarios_rutas`
+  MODIFY `usuario_ruta_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `visitas_ruta`
+--
+ALTER TABLE `visitas_ruta`
+  MODIFY `visita_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `alertas_ruta`
+--
+ALTER TABLE `alertas_ruta`
+  ADD CONSTRAINT `alertas_ruta_ibfk_1` FOREIGN KEY (`ruta_id`) REFERENCES `rutas` (`ruta_id`);
+
+--
+-- Constraints for table `clientes_rutas`
+--
+ALTER TABLE `clientes_rutas`
+  ADD CONSTRAINT `fk_clientes_rutas_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`cliente_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_clientes_rutas_ruta` FOREIGN KEY (`ruta_id`) REFERENCES `rutas` (`ruta_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `movimientos`
@@ -1778,10 +2215,36 @@ ALTER TABLE `referencias`
   ADD CONSTRAINT `referencias_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`cliente_id`);
 
 --
+-- Constraints for table `rutas`
+--
+ALTER TABLE `rutas`
+  ADD CONSTRAINT `fk_rutas_sucursal` FOREIGN KEY (`sucursal_id`) REFERENCES `sucursales` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `sucursales`
+--
+ALTER TABLE `sucursales`
+  ADD CONSTRAINT `fk_sucursal_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresa` (`confi_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `usuarios`
 --
 ALTER TABLE `usuarios`
+  ADD CONSTRAINT `fk_usuario_sucursal` FOREIGN KEY (`sucursal_id`) REFERENCES `sucursales` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_perfil_usuario`) REFERENCES `perfiles` (`id_perfil`);
+
+--
+-- Constraints for table `usuarios_rutas`
+--
+ALTER TABLE `usuarios_rutas`
+  ADD CONSTRAINT `fk_usuarios_rutas_ruta` FOREIGN KEY (`ruta_id`) REFERENCES `rutas` (`ruta_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_usuarios_rutas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `visitas_ruta`
+--
+ALTER TABLE `visitas_ruta`
+  ADD CONSTRAINT `visitas_ruta_ibfk_1` FOREIGN KEY (`cliente_ruta_id`) REFERENCES `clientes_rutas` (`cliente_ruta_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

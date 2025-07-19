@@ -268,7 +268,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
             function CargarContenido(pagina, contenedor, id_perfil, id_modulo) {
                 // Solución robusta para evitar errores de appendChild con contenido JavaScript
-                console.log("Cargando página:", pagina);
                 
                 // Usar una aproximación más segura para cargar el contenido
                 $.ajax({
@@ -291,12 +290,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             // Prevenir inclusiones duplicadas de scripts críticos
                             tempDiv.find('script[src]').each(function() {
                                 var scriptSrc = $(this).attr('src');
-                                if (scriptSrc && (
-                                    scriptSrc.includes('combos-mejorados.js') ||
-                                    scriptSrc.includes('jquery.min.js') ||
-                                    scriptSrc.includes('select2.full.min.js')
-                                )) {
-                                    console.log('[CargarContenido] Removiendo inclusión duplicada de:', scriptSrc);
+                                var shouldRemove = false;
+                                if (scriptSrc) {
+                                    if (scriptSrc.includes('combos-mejorados.js')) {
+                                        shouldRemove = true;
+                                    }
+                                    if (scriptSrc.includes('select2.full.min.js')) {
+                                        shouldRemove = true;
+                                    }
+                                }
+
+                                if (shouldRemove) {
                                     $(this).remove();
                                 }
                             });
@@ -306,7 +310,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             
                             // Guardar la página en localStorage solo si fue exitosa
                             localStorage.setItem("ultimaPagina", pagina);
-                            console.log("Vista cargada exitosamente: " + pagina);
                             
                         } catch (error) {
                             console.error("Error al procesar el contenido:", error);
@@ -393,8 +396,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             //     }
             // });
 
-            // Debugging básico para identificar problemas
-            console.log("Sistema iniciado - CargarContenido disponible");
+            // Sistema iniciado correctamente
         </script>
         
         <!-- PLANTILLA DE SWEETALERT -->
@@ -405,20 +407,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
             // Protección global más simple y efectiva
             if (typeof window.CombosMejoradosScriptLoaded === 'undefined') {
                 window.CombosMejoradosScriptLoaded = true;
-                console.log('[Sistema] Cargando combos-mejorados.js por primera vez');
                 
                 // Cargar el script de combos solo una vez
                 var script = document.createElement('script');
                 script.src = 'vistas/assets/dist/js/combos-mejorados.js';
-                script.onload = function() {
-                    console.log('[Sistema] combos-mejorados.js cargado exitosamente');
-                };
                 script.onerror = function() {
                     console.error('[Sistema] Error al cargar combos-mejorados.js');
                 };
                 document.head.appendChild(script);
-            } else {
-                console.log('[Sistema] combos-mejorados.js ya cargado previamente');
             }
         </script>
     </body>

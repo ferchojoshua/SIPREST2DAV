@@ -385,5 +385,172 @@ class CajaControlador
         }
     }
 
+    /*===================================================================*/
+    // NUEVOS CONTROLADORES PARA SISTEMA DE SUCURSALES
+    /*===================================================================*/
+
+    /*===================================================================*/
+    // LISTAR CAJAS POR SUCURSAL
+    /*===================================================================*/
+    static public function ctrListarCajasPorSucursal($usuario_id)
+    {
+        // Obtener información del usuario
+        $stmt = Conexion::conectar()->prepare('SELECT u.sucursal_id, p.descripcion as perfil 
+                                             FROM usuarios u 
+                                             INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
+                                             WHERE u.id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$usuario) {
+            return ['error' => true, 'mensaje' => 'Usuario no encontrado'];
+        }
+        
+        $es_admin = ($usuario['perfil'] === 'Administrador');
+        $sucursal_id = $usuario['sucursal_id'];
+        
+        $ListarCajas = CajaModelo::mdlListarCajasPorSucursal($sucursal_id, $es_admin);
+        return $ListarCajas;
+    }
+
+    /*===================================================================*/
+    // REGISTRAR CAJA CON SUCURSAL
+    /*===================================================================*/
+    static public function ctrRegistrarCajaSucursal($caja_descripcion, $caja_monto_inicial, $usuario_id)
+    {
+        // Obtener sucursal del usuario
+        $stmt = Conexion::conectar()->prepare('SELECT sucursal_id FROM usuarios WHERE id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$usuario) {
+            return ['resultado' => 3, 'mensaje' => 'Usuario no encontrado'];
+        }
+        
+        $sucursal_id = $usuario['sucursal_id'];
+        
+        $RegCaja = CajaModelo::mdlRegistrarCajaSucursal($caja_descripcion, $caja_monto_inicial, $usuario_id, $sucursal_id);
+        return $RegCaja;
+    }
+
+    /*===================================================================*/
+    // VERIFICAR ACCESO A CAJA
+    /*===================================================================*/
+    static public function ctrVerificarAccesoCaja($usuario_id, $sucursal_id = null)
+    {
+        $acceso = CajaModelo::mdlVerificarAccesoCajaSucursal($usuario_id, $sucursal_id);
+        return $acceso;
+    }
+
+    /*===================================================================*/
+    // CONTROLADORES PARA CIERRE DE DÍA
+    /*===================================================================*/
+
+    /*===================================================================*/
+    // GENERAR CIERRE DE DÍA
+    /*===================================================================*/
+    static public function ctrGenerarCierreDia($usuario_id, $fecha_cierre = null, $observaciones = '')
+    {
+        if ($fecha_cierre === null) {
+            $fecha_cierre = date('Y-m-d');
+        }
+        
+        // Obtener sucursal del usuario
+        $stmt = Conexion::conectar()->prepare('SELECT sucursal_id FROM usuarios WHERE id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$usuario) {
+            return ['resultado' => 3, 'mensaje' => 'Usuario no encontrado'];
+        }
+        
+        $sucursal_id = $usuario['sucursal_id'];
+        
+        // Verificar si ya existe cierre para la fecha
+        if (CajaModelo::mdlVerificarCierreDiaExiste($sucursal_id, $fecha_cierre)) {
+            return ['resultado' => 2, 'mensaje' => 'Ya existe un cierre de día para esta fecha'];
+        }
+        
+        $resultado = CajaModelo::mdlGenerarCierreDia($sucursal_id, $fecha_cierre, $usuario_id, $observaciones);
+        return $resultado;
+    }
+
+    /*===================================================================*/
+    // LISTAR CIERRES DE DÍA
+    /*===================================================================*/
+    static public function ctrListarCierresDia($usuario_id)
+    {
+        // Obtener información del usuario
+        $stmt = Conexion::conectar()->prepare('SELECT u.sucursal_id, p.descripcion as perfil 
+                                             FROM usuarios u 
+                                             INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
+                                             WHERE u.id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$usuario) {
+            return ['error' => true, 'mensaje' => 'Usuario no encontrado'];
+        }
+        
+        $es_admin = ($usuario['perfil'] === 'Administrador');
+        $sucursal_id = $usuario['sucursal_id'];
+        
+        $cierres = CajaModelo::mdlListarCierresDia($sucursal_id, $es_admin);
+        return $cierres;
+    }
+
+    /*===================================================================*/
+    // OBTENER RESUMEN DEL DÍA ACTUAL
+    /*===================================================================*/
+    static public function ctrObtenerResumenDiaActual($usuario_id)
+    {
+        // Obtener sucursal del usuario
+        $stmt = Conexion::conectar()->prepare('SELECT sucursal_id FROM usuarios WHERE id_usuario = :usuario_id');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$usuario) {
+            return null;
+        }
+        
+        $sucursal_id = $usuario['sucursal_id'];
+        $fecha_actual = date('Y-m-d');
+        
+        $resumen = CajaModelo::mdlObtenerResumenDia($sucursal_id, $fecha_actual);
+        
+        // Agregar información adicional
+        $resumen->puede_cerrar_dia = !CajaModelo::mdlVerificarCierreDiaExiste($sucursal_id, $fecha_actual);
+        $resumen->fecha_cierre = $fecha_actual;
+        
+        return $resumen;
+    }
+
+    /*===================================================================*/
+    // OBTENER SUCURSAL DEL USUARIO
+    /*===================================================================*/
+    static public function ctrObtenerSucursalUsuario($usuario_id)
+    {
+        $stmt = Conexion::conectar()->prepare('
+            SELECT 
+                u.sucursal_id,
+                s.nombre as sucursal_nombre,
+                s.codigo as sucursal_codigo,
+                p.descripcion as perfil_nombre,
+                CASE WHEN p.descripcion = "Administrador" THEN TRUE ELSE FALSE END as es_admin
+            FROM usuarios u 
+            LEFT JOIN sucursales s ON u.sucursal_id = s.id
+            INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
+            WHERE u.id_usuario = :usuario_id
+        ');
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 
  }

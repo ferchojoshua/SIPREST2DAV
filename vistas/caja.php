@@ -20,42 +20,95 @@
   <div class="content pb-2">
       <div class="container-fluid">
           
-          <!-- Botones de acción principal -->
+          <!-- Resumen del Día Actual -->
+          <div class="row mb-3" id="resumen-dia-actual">
+              <div class="col-lg-3 col-6">
+                  <div class="small-box bg-info">
+                      <div class="inner">
+                          <h3 id="resumen-prestamos-count">0</h3>
+                          <p>Préstamos del Día</p>
+                          <small id="resumen-prestamos-monto">$0.00</small>
+                      </div>
+                      <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
+                  </div>
+              </div>
+              <div class="col-lg-3 col-6">
+                  <div class="small-box bg-success">
+                      <div class="inner">
+                          <h3 id="resumen-pagos-count">0</h3>
+                          <p>Pagos Recibidos</p>
+                          <small id="resumen-pagos-monto">$0.00</small>
+                      </div>
+                      <div class="icon"><i class="fas fa-coins"></i></div>
+                  </div>
+              </div>
+              <div class="col-lg-3 col-6">
+                  <div class="small-box bg-warning">
+                      <div class="inner">
+                          <h3 id="resumen-ingresos-count">0</h3>
+                          <p>Ingresos Extra</p>
+                          <small id="resumen-ingresos-monto">$0.00</small>
+                      </div>
+                      <div class="icon"><i class="fas fa-plus-circle"></i></div>
+                  </div>
+              </div>
+              <div class="col-lg-3 col-6">
+                  <div class="small-box bg-danger">
+                      <div class="inner">
+                          <h3 id="resumen-egresos-count">0</h3>
+                          <p>Egresos del Día</p>
+                          <small id="resumen-egresos-monto">$0.00</small>
+                      </div>
+                      <div class="icon"><i class="fas fa-minus-circle"></i></div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Estado de Caja y Acciones -->
           <div class="row mb-3">
-              <div class="col-12">
-                  <div class="card card-outline">
+              <div class="col-md-8">
+                  <div class="card">
                       <div class="card-header bg-info">
                           <h3 class="card-title">
-                              <i class="fas fa-cash-register"></i> Gestión de Caja
+                              <i class="fas fa-cash-register"></i> Estado de Caja Actual
+                              <small class="text-light" id="info-sucursal-header"></small>
                           </h3>
                       </div>
                       <div class="card-body">
-                          <div class="row">
-                              <div class="col-md-3">
-                                  <button type="button" class="btn btn-success btn-lg btn-block" onclick="CargarContenido('vistas/dashboard_caja.php','content-wrapper')">
-                                      <i class="fas fa-tachometer-alt"></i><br>
-                                      Dashboard de Caja
-                                  </button>
+                          <div class="row text-center">
+                              <div class="col-4">
+                                  <strong>Monto Inicial:</strong><br>
+                                  <span class="h4 text-primary" id="caja-monto-inicial">$0.00</span>
                               </div>
-                              <div class="col-md-3">
-                                  <button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#modal_config_sucursales">
-                                      <i class="fas fa-cogs"></i><br>
-                                      Configurar Cajas por Sucursal
-                                  </button>
+                              <div class="col-4">
+                                  <strong>Saldo Actual:</strong><br>
+                                  <span class="h4 text-success" id="caja-saldo-actual">$0.00</span>
                               </div>
-                              <div class="col-md-3">
-                                  <button type="button" class="btn btn-info btn-lg btn-block" id="btnConteoFisico">
-                                      <i class="fas fa-calculator"></i><br>
-                                      Conteo Físico
-                                  </button>
-                              </div>
-                              <div class="col-md-3">
-                                  <button type="button" class="btn btn-warning btn-lg btn-block" id="btnGenerarReporteCaja">
-                                      <i class="fas fa-file-alt"></i><br>
-                                      Generar Reporte
-                                  </button>
+                              <div class="col-4">
+                                  <strong>Estado:</strong><br>
+                                  <span class="badge badge-secondary" id="caja-estado">Sin Caja</span>
                               </div>
                           </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-4">
+                  <div class="card">
+                      <div class="card-header bg-secondary">
+                          <h3 class="card-title">
+                              <i class="fas fa-tools"></i> Acciones Rápidas
+                          </h3>
+                      </div>
+                      <div class="card-body p-2">
+                          <button type="button" class="btn btn-warning btn-sm btn-block mb-2" id="btnCierreDiaRapido">
+                              <i class="fas fa-calendar-check"></i> Cierre de Día
+                          </button>
+                          <button type="button" class="btn btn-info btn-sm btn-block mb-2" onclick="CargarContenido('vistas/dashboard_caja.php','content-wrapper')">
+                              <i class="fas fa-tachometer-alt"></i> Dashboard
+                          </button>
+                          <button type="button" class="btn btn-secondary btn-sm btn-block" id="btnActualizarDatos">
+                              <i class="fas fa-sync"></i> Actualizar
+                          </button>
                       </div>
                   </div>
               </div>
@@ -786,16 +839,15 @@
 
                           if (rowData[9] == 'VIGENTE') {
                               return "<center>" +
-                                  "<span class='CerrarCaja  text-info px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Cerrar Caja '> " +
+                                  "<span class='btnCerrarCaja text-warning px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Cerrar Caja'> " +
                                   "<i class='fas fa-lock fs-6'></i> " +
                                   "</span> " +
-                                  "<span class='text-secondary px-1'  data-bs-toggle='tooltip' data-bs-placement='top' > " +
+                                  "<span class='text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' title='Imprimir'> " +
                                   "<i class='fa fa-print fs-6'> </i> " +
                                   "</span>" +
-                                  "<span class='btnVerRegistrosC text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Ver Registros de Caja ' > " +
+                                  "<span class='btnVerRegistrosC text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Ver Registros de Caja'> " +
                                   "<i class='fa fa-eye fs-6'> </i> " +
                                   "</span>" +
-
                                   "</center>"
                           } else { //pendiente
                               return "<center>" +
@@ -849,20 +901,10 @@
           /*===================================================================*/
           // ABRIR MODAL CERRAR CAJA
           /*===================================================================*/
-          $('#tbl_caja').on('click', '.CerrarCaja', function() { //class foto tiene que ir en el boton
-              accion = 4;
-              if (tbl_caja.row(this).child.isShown()) {
-                  var data = tbl_caja.row(this).data();
-              } else {
-                  var data = tbl_caja.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
-              }
-              $("#caja_id").val(data[0]);
-
-              AbrirModalAbrirCerrarCaja();
-
-              CargarDatosCierreCaja();
-              Sumar();
-          });
+          // CERRAR CAJA - FUNCIONALIDAD MEJORADA
+          /*===================================================================*/
+          // Este evento ahora es manejado por la función configurarEventosNuevos()
+          // en el JavaScript mejorado al final del archivo
 
           /*===================================================================*/
           // ABRIR MODAL CERRAR CAJA
@@ -1504,6 +1546,281 @@
               "sSortAscending": ": ordenar de manera Ascendente",
               "SSortDescending": ": ordenar de manera Descendente ",
           }
+      }
+
+      /*===================================================================*/
+      // NUEVAS FUNCIONALIDADES MEJORADAS
+      /*===================================================================*/
+
+      // Variables globales para información de sucursal y caja
+      let informacionSucursal = null;
+      let estadoCajaActual = null;
+
+      // Inicializar funcionalidades mejoradas al cargar
+      $(document).ready(function() {
+          inicializarSistemaCompleto();
+          configurarEventosNuevos();
+      });
+
+      function inicializarSistemaCompleto() {
+          obtenerInformacionSucursal();
+          cargarResumenDiaActual();
+          verificarEstadoCaja();
+          
+          // Actualizar cada 30 segundos
+          setInterval(function() {
+              cargarResumenDiaActual();
+              verificarEstadoCaja();
+          }, 30000);
+      }
+
+      function obtenerInformacionSucursal() {
+          $.ajax({
+              url: "ajax/caja_ajax.php",
+              method: "POST",
+              data: { accion: "obtener_sucursal_usuario" },
+              dataType: 'json',
+              success: function(response) {
+                  if (response.success) {
+                      informacionSucursal = response.sucursal;
+                      actualizarInfoSucursal();
+                  }
+              },
+              error: function() {
+                  console.error("Error al obtener información de sucursal");
+              }
+          });
+      }
+
+      function actualizarInfoSucursal() {
+          if (informacionSucursal) {
+              const textoSucursal = informacionSucursal.sucursal_nombre 
+                  ? `- ${informacionSucursal.sucursal_codigo}: ${informacionSucursal.sucursal_nombre}`
+                  : '- Sucursal Principal';
+              
+              $('#info-sucursal-header').text(textoSucursal);
+          }
+      }
+
+      function cargarResumenDiaActual() {
+          $.ajax({
+              url: "ajax/caja_ajax.php",
+              method: "POST",
+              data: { accion: "obtener_resumen_dia" },
+              dataType: 'json',
+              success: function(response) {
+                  if (response.success) {
+                      actualizarTarjetasResumen(response.resumen);
+                  }
+              },
+              error: function() {
+                  // Error silencioso para no molestar al usuario
+              }
+          });
+      }
+
+      function actualizarTarjetasResumen(resumen) {
+          // Actualizar tarjetas de resumen
+          $('#resumen-prestamos-count').text(resumen.prestamos_otorgados || 0);
+          $('#resumen-prestamos-monto').text('$' + parseFloat(resumen.monto_prestamos || 0).toFixed(2));
+          
+          $('#resumen-pagos-count').text(resumen.pagos_recibidos || 0);
+          $('#resumen-pagos-monto').text('$' + parseFloat(resumen.monto_pagos || 0).toFixed(2));
+          
+          $('#resumen-ingresos-count').text(resumen.ingresos_count || 0);
+          $('#resumen-ingresos-monto').text('$' + parseFloat(resumen.ingresos_monto || 0).toFixed(2));
+          
+          $('#resumen-egresos-count').text(resumen.egresos_count || 0);
+          $('#resumen-egresos-monto').text('$' + parseFloat(resumen.egresos_monto || 0).toFixed(2));
+
+          // Actualizar estado de caja
+          $('#caja-monto-inicial').text('$' + parseFloat(resumen.monto_inicial_caja || 0).toFixed(2));
+          
+          const saldoCalculado = parseFloat(resumen.monto_inicial_caja || 0) + 
+                                parseFloat(resumen.monto_pagos || 0) + 
+                                parseFloat(resumen.ingresos_monto || 0) - 
+                                parseFloat(resumen.egresos_monto || 0) - 
+                                parseFloat(resumen.monto_prestamos || 0);
+          
+          $('#caja-saldo-actual').text('$' + saldoCalculado.toFixed(2));
+      }
+
+      function verificarEstadoCaja() {
+          $.ajax({
+              url: "ajax/caja_ajax.php",
+              method: "POST",
+              data: { accion: "obtenerDataEstadoCaja" },
+              dataType: 'json',
+              success: function(response) {
+                  estadoCajaActual = response;
+                  actualizarEstadoCaja(response);
+              },
+              error: function() {
+                  $('#caja-estado').removeClass().addClass('badge badge-danger').text('Error');
+              }
+          });
+      }
+
+      function actualizarEstadoCaja(estado) {
+          if (estado && estado.caja_estado === 'VIGENTE') {
+              $('#caja-estado').removeClass().addClass('badge badge-success').text('ABIERTA');
+              // Habilitar botón cerrar caja si existe
+              $('.btnCerrarCaja').prop('disabled', false);
+              $('#btnCierreDiaRapido').prop('disabled', false);
+          } else {
+              $('#caja-estado').removeClass().addClass('badge badge-secondary').text('CERRADA');
+              $('#caja-monto-inicial, #caja-saldo-actual').text('$0.00');
+              $('#btnCierreDiaRapido').prop('disabled', true);
+          }
+      }
+
+      function configurarEventosNuevos() {
+          // Evento para cierre de día rápido
+          $('#btnCierreDiaRapido').on('click', function() {
+              if (estadoCajaActual && estadoCajaActual.caja_estado === 'VIGENTE') {
+                  prepararCierreDia();
+              } else {
+                  Toast.fire({
+                      icon: 'warning',
+                      title: 'No hay caja abierta para hacer cierre de día'
+                  });
+              }
+          });
+
+          // Evento para actualizar datos
+          $('#btnActualizarDatos').on('click', function() {
+              cargarResumenDiaActual();
+              verificarEstadoCaja();
+              tbl_caja.ajax.reload();
+              Toast.fire({
+                  icon: 'success',
+                  title: 'Datos actualizados'
+              });
+          });
+
+          // Mejorar función de cerrar caja existente
+          $(document).on('click', '.btnCerrarCaja', function() {
+              if (estadoCajaActual && estadoCajaActual.caja_estado === 'VIGENTE') {
+                  // Usar la función existente pero mejorada
+                  var data = tbl_caja.row($(this).parents('tr')).data();
+                  $("#caja_id").val(data[0]);
+                  AbrirModalAbrirCerrarCaja();
+                  CargarDatosCierreCaja();
+                  Sumar();
+              } else {
+                  Toast.fire({
+                      icon: 'warning',
+                      title: 'No se puede cerrar una caja que no está abierta'
+                  });
+              }
+          });
+      }
+
+      function prepararCierreDia() {
+          $.ajax({
+              url: "ajax/caja_ajax.php",
+              method: "POST",
+              data: { accion: "obtener_resumen_dia" },
+              dataType: 'json',
+              success: function(response) {
+                  if (response.success) {
+                      const resumen = response.resumen;
+                      
+                      if (!resumen.puede_cerrar_dia) {
+                          Toast.fire({
+                              icon: 'info',
+                              title: 'El día ya ha sido cerrado'
+                          });
+                          return;
+                      }
+
+                      // Crear modal dinámico para cierre de día
+                      mostrarModalCierreDia(resumen);
+                  }
+              },
+              error: function() {
+                  Toast.fire({
+                      icon: 'error',
+                      title: 'Error al obtener datos para cierre'
+                  });
+              }
+          });
+      }
+
+      function mostrarModalCierreDia(resumen) {
+          const saldoFinal = parseFloat(resumen.monto_inicial_caja || 0) + 
+                            parseFloat(resumen.monto_pagos || 0) + 
+                            parseFloat(resumen.ingresos_monto || 0) - 
+                            parseFloat(resumen.egresos_monto || 0) - 
+                            parseFloat(resumen.monto_prestamos || 0);
+
+          Swal.fire({
+              title: '<i class="fas fa-calendar-check"></i> Cierre de Día',
+              html: `
+                  <div class="row">
+                      <div class="col-md-6">
+                          <h6><i class="fas fa-chart-pie"></i> Resumen del Día</h6>
+                          <table class="table table-sm">
+                              <tr><td><strong>Préstamos:</strong></td><td>${resumen.prestamos_otorgados || 0}</td><td>$${parseFloat(resumen.monto_prestamos || 0).toFixed(2)}</td></tr>
+                              <tr><td><strong>Pagos:</strong></td><td>${resumen.pagos_recibidos || 0}</td><td>$${parseFloat(resumen.monto_pagos || 0).toFixed(2)}</td></tr>
+                              <tr><td><strong>Ingresos:</strong></td><td>${resumen.ingresos_count || 0}</td><td>$${parseFloat(resumen.ingresos_monto || 0).toFixed(2)}</td></tr>
+                              <tr><td><strong>Egresos:</strong></td><td>${resumen.egresos_count || 0}</td><td>$${parseFloat(resumen.egresos_monto || 0).toFixed(2)}</td></tr>
+                          </table>
+                      </div>
+                      <div class="col-md-6">
+                          <h6><i class="fas fa-calculator"></i> Balance</h6>
+                          <p><strong>Monto Inicial:</strong> $${parseFloat(resumen.monto_inicial_caja || 0).toFixed(2)}</p>
+                          <p><strong>Saldo Final:</strong> <span class="text-success">$${saldoFinal.toFixed(2)}</span></p>
+                          <textarea id="swal-observaciones" class="form-control" placeholder="Observaciones (opcional)" rows="3"></textarea>
+                      </div>
+                  </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: '<i class="fas fa-check"></i> Generar Cierre',
+              cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+              confirmButtonColor: '#28a745',
+              cancelButtonColor: '#6c757d',
+              width: '800px',
+              preConfirm: () => {
+                  return $('#swal-observaciones').val();
+              }
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  generarCierreDia(result.value);
+              }
+          });
+      }
+
+      function generarCierreDia(observaciones) {
+          $.ajax({
+              url: "ajax/caja_ajax.php",
+              method: "POST",
+              data: {
+                  accion: "generar_cierre_dia",
+                  observaciones: observaciones || ''
+              },
+              dataType: 'json',
+              success: function(response) {
+                  if (response.resultado == 1) {
+                      Toast.fire({
+                          icon: 'success',
+                          title: 'Cierre de día generado exitosamente'
+                      });
+                      cargarResumenDiaActual();
+                  } else {
+                      Toast.fire({
+                          icon: 'error',
+                          title: response.mensaje || 'Error al generar cierre de día'
+                      });
+                  }
+              },
+              error: function() {
+                  Toast.fire({
+                      icon: 'error',
+                      title: 'Error de conexión'
+                  });
+              }
+          });
       }
   </script>
 

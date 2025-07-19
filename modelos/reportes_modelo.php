@@ -22,29 +22,53 @@ class ReportesModelo
     /*=============================================
     Peticion LISTAR PARA MOSTRAR DATOS EN DATATABLE CON PROCEDURE
     =============================================*/
-    static public function mdlCuotasPagadasReport()
+    static public function mdlCuotasPagadasReport($fechaInicial = null, $fechaFinal = null)
     {
         try {
-            $stmt = Conexion::conectar()->prepare("
-                SELECT
-                    c.cliente_nombres,
-                    pc.nro_prestamo,
-                    pd.pdetalle_nro_cuota,
-                    pd.pdetalle_monto_cuota,
-                    pd.pdetalle_fecha_registro,
-                    pd.pdetalle_estado_cuota,
-                    m.moneda_simbolo
-                FROM prestamo_detalle pd
-                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
-                INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                WHERE pd.pdetalle_estado_cuota = 'pagada'
-                ORDER BY pd.pdetalle_fecha_registro DESC
-            ");
+            $sql = "SELECT
+                        c.cliente_nombres AS cliente_nombre,
+                        pc.nro_prestamo,
+                        pd.pdetalle_nro_cuota AS nro_cuota,
+                        COALESCE(pd.pdetalle_monto_cuota, 0) AS monto_cuota,
+                        DATE_FORMAT(pd.pdetalle_fecha_registro, '%d/%m/%Y') AS fecha_pago,
+                        pd.pdetalle_estado_cuota,
+                        m.moneda_simbolo,
+                        u.usuario AS cobrador
+                    FROM prestamo_detalle pd
+                    INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                    INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+                    INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
+                    INNER JOIN usuarios u ON pc.id_usuario = u.id_usuario
+                    WHERE pd.pdetalle_estado_cuota = 'pagada'";
+            
+            if ($fechaInicial && $fechaFinal) {
+                $sql .= " AND DATE(pd.pdetalle_fecha_registro) BETWEEN :fecha_inicial AND :fecha_final";
+            }
+
+            $sql .= " ORDER BY pd.pdetalle_fecha_registro DESC";
+
+            // --- INICIO DE CÓDIGO DE DEPURACIÓN ---
+            error_log("[DEBUG_REPORTE_PAGADAS] Fechas recibidas: Inicial = " . ($fechaInicial ?? 'NULL') . ", Final = " . ($fechaFinal ?? 'NULL'));
+            error_log("[DEBUG_REPORTE_PAGADAS] SQL construida: " . $sql);
+            // --- FIN DE CÓDIGO DE DEPURACIÓN ---
+
+            $stmt = Conexion::conectar()->prepare($sql);
+            
+            if ($fechaInicial && $fechaFinal) {
+                $stmt->bindParam(":fecha_inicial", $fechaInicial, PDO::PARAM_STR);
+                $stmt->bindParam(":fecha_final", $fechaFinal, PDO::PARAM_STR);
+            }
 
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // --- INICIO DE CÓDIGO DE DEPURACIÓN ---
+            error_log("[DEBUG_REPORTE_PAGADAS] Resultados de la BD: " . json_encode($resultado));
+            // --- FIN DE CÓDIGO DE DEPURACIÓN ---
+
+            return $resultado;
         } catch (Exception $e) {
+            error_log("Error en mdlCuotasPagadasReport: " . $e->getMessage());
             return ['error' => 'Excepción capturada: ' .  $e->getMessage()];
         }
     }

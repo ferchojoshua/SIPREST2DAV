@@ -323,6 +323,169 @@ class AjaxCaja
         $estadisticas = CajaControlador::ctrObtenerEstadisticasRapidas();
         echo json_encode($estadisticas, JSON_UNESCAPED_UNICODE);
     }
+
+    /*===================================================================*/
+    // NUEVOS ENDPOINTS PARA SISTEMA DE SUCURSALES Y CIERRE DE DÍA
+    /*===================================================================*/
+
+    /*===================================================================*/
+    // LISTAR CAJAS POR SUCURSAL
+    /*===================================================================*/
+    public function ajaxListarCajasPorSucursal()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $ListarCajas = CajaControlador::ctrListarCajasPorSucursal($_SESSION['id_usuario']);
+        echo json_encode($ListarCajas);
+    }
+
+    /*===================================================================*/
+    // REGISTRAR CAJA CON SUCURSAL
+    /*===================================================================*/
+    public function ajaxRegistrarCajaSucursal()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $resultado = CajaControlador::ctrRegistrarCajaSucursal(
+            $this->caja_descripcion,
+            $this->caja_monto_inicial,
+            $_SESSION['id_usuario']
+        );
+        
+        echo json_encode($resultado);
+    }
+
+    /*===================================================================*/
+    // VERIFICAR ACCESO A CAJA
+    /*===================================================================*/
+    public function ajaxVerificarAccesoCaja()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $sucursal_id = $this->sucursal_id ?? null;
+        $acceso = CajaControlador::ctrVerificarAccesoCaja($_SESSION['id_usuario'], $sucursal_id);
+        
+        echo json_encode([
+            'success' => true,
+            'acceso' => $acceso
+        ]);
+    }
+
+    /*===================================================================*/
+    // GENERAR CIERRE DE DÍA
+    /*===================================================================*/
+    public function ajaxGenerarCierreDia()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $fecha_cierre = $this->fecha_cierre ?? date('Y-m-d');
+        $observaciones = $this->observaciones ?? '';
+
+        $resultado = CajaControlador::ctrGenerarCierreDia(
+            $_SESSION['id_usuario'],
+            $fecha_cierre,
+            $observaciones
+        );
+        
+        echo json_encode($resultado);
+    }
+
+    /*===================================================================*/
+    // LISTAR CIERRES DE DÍA
+    /*===================================================================*/
+    public function ajaxListarCierresDia()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $cierres = CajaControlador::ctrListarCierresDia($_SESSION['id_usuario']);
+        echo json_encode($cierres);
+    }
+
+    /*===================================================================*/
+    // OBTENER RESUMEN DEL DÍA ACTUAL
+    /*===================================================================*/
+    public function ajaxObtenerResumenDia()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $resumen = CajaControlador::ctrObtenerResumenDiaActual($_SESSION['id_usuario']);
+        
+        if ($resumen) {
+            echo json_encode([
+                'success' => true,
+                'resumen' => $resumen
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se pudo obtener el resumen del día'
+            ]);
+        }
+    }
+
+    /*===================================================================*/
+    // OBTENER INFORMACIÓN DE SUCURSAL DEL USUARIO
+    /*===================================================================*/
+    public function ajaxObtenerSucursalUsuario()
+    {
+        if (!isset($_SESSION['id_usuario'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida'
+            ]);
+            return;
+        }
+
+        $sucursal = CajaControlador::ctrObtenerSucursalUsuario($_SESSION['id_usuario']);
+        
+        if ($sucursal) {
+            echo json_encode([
+                'success' => true,
+                'sucursal' => $sucursal
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se pudo obtener información de sucursal'
+            ]);
+        }
+    }
 }
 
 //instanciamos para que se ejecute la funcion
@@ -433,6 +596,32 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) {        //LISTAR CAJA EN 
 } else if (isset($_POST['accion']) && $_POST['accion'] == 'verificar_estado_sistema_caja') {
     $estadoSistemaCaja = new AjaxCaja();
     $estadoSistemaCaja->ajaxVerificarEstadoSistemaCaja();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'listar_cajas_por_sucursal') {
+    $listarCajasPorSucursal = new AjaxCaja();
+    $listarCajasPorSucursal->ajaxListarCajasPorSucursal();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'registrar_caja_sucursal') {
+    $registrarCajaSucursal = new AjaxCaja();
+    $registrarCajaSucursal->caja_descripcion = $_POST['caja_descripcion'];
+    $registrarCajaSucursal->caja_monto_inicial = $_POST['caja_monto_inicial'];
+    $registrarCajaSucursal->ajaxRegistrarCajaSucursal();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'verificar_acceso_caja') {
+    $verificarAccesoCaja = new AjaxCaja();
+    $verificarAccesoCaja->sucursal_id = $_POST['sucursal_id'] ?? null;
+    $verificarAccesoCaja->ajaxVerificarAccesoCaja();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'generar_cierre_dia') {
+    $generarCierreDia = new AjaxCaja();
+    $generarCierreDia->fecha_cierre = $_POST['fecha_cierre'] ?? date('Y-m-d');
+    $generarCierreDia->observaciones = $_POST['observaciones'] ?? '';
+    $generarCierreDia->ajaxGenerarCierreDia();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'listar_cierres_dia') {
+    $listarCierresDia = new AjaxCaja();
+    $listarCierresDia->ajaxListarCierresDia();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'obtener_resumen_dia') {
+    $obtenerResumenDia = new AjaxCaja();
+    $obtenerResumenDia->ajaxObtenerResumenDia();
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'obtener_sucursal_usuario') {
+    $obtenerSucursalUsuario = new AjaxCaja();
+    $obtenerSucursalUsuario->ajaxObtenerSucursalUsuario();
 } else {
     $datos = new AjaxCaja();        //TRAER DATOS PARA LAS CAJAS 
     $datos->getDatosDashboard();

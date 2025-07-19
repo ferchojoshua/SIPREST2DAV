@@ -253,29 +253,33 @@ function mostrarResultados(datos) {
     // Inicializar DataTable
     $('#tabla_cuotas_pagadas').DataTable({
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+            url: "vistas/assets/plugins/datatables/i18n/Spanish.json" // <--- Ruta actualizada
         },
         responsive: true,
-        order: [[0, "desc"]],
-        pageLength: 25
+        order: [[0, "desc"]] // Ordenar por fecha de pago descendente
     });
     
-    // Mostrar área de resultados
+    // Mostrar área de resultados y estadísticas
     $('#area_resultados').show();
+    $('#estadisticas').show(); // Mostrar también las estadísticas si hay resultados
 }
 
 function calcularEstadisticas(datos) {
-    var totalCuotas = datos.length;
-    var montoTotal = datos.reduce((sum, item) => sum + parseFloat(item.monto_cuota || 0), 0);
-    var clientesUnicos = [...new Set(datos.map(item => item.cliente_nombre))].length;
-    var promedioCuota = totalCuotas > 0 ? montoTotal / totalCuotas : 0;
-    
-    $('#total_cuotas').text(totalCuotas.toLocaleString());
-    $('#monto_total').text('C$ ' + montoTotal.toLocaleString('es-NI'));
-    $('#clientes_unicos').text(clientesUnicos.toLocaleString());
-    $('#promedio_cuota').text('C$ ' + promedioCuota.toLocaleString('es-NI'));
-    
-    $('#estadisticas').show();
+    let totalCuotas = datos.length;
+    let montoTotal = 0;
+    let clientesUnicos = new Set();
+
+    datos.forEach(function(item) {
+        montoTotal += parseFloat(item.monto_cuota || 0);
+        clientesUnicos.add(item.cliente_nombre);
+    });
+
+    let promedioCuota = totalCuotas > 0 ? montoTotal / totalCuotas : 0;
+
+    $('#total_cuotas').text(totalCuotas);
+    $('#monto_total').text('C$ ' + montoTotal.toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    $('#clientes_unicos').text(clientesUnicos.size);
+    $('#promedio_cuota').text('C$ ' + promedioCuota.toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 }
 
 function exportarExcel() {

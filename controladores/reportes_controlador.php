@@ -16,9 +16,9 @@ class ReportesControlador
     /*===================================================================*/
     //LISTAR REPORTE CUOTAS PAGADAS
     /*===================================================================*/
-    static public function ctrCuotasPagadasReport()
+    static public function ctrCuotasPagadasReport($fechaInicial = null, $fechaFinal = null)
     {
-        $reportecuotasPagadas =  ReportesModelo::mdlCuotasPagadasReport();
+        $reportecuotasPagadas =  ReportesModelo::mdlCuotasPagadasReport($fechaInicial, $fechaFinal);
         return $reportecuotasPagadas;
     }
 

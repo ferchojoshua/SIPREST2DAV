@@ -123,7 +123,9 @@ if (isset($_POST['accion'])) {
 
         case 2: //LISTAR  REPORTE CUOTAS PAGADAS
             $reportecuotasPagadas = new AjaxReportes();
-            $reportecuotasPagadas->ListarCuotasPagadasReport();
+            $fechaInicial = $_POST["fecha_inicial"] ?? null;
+            $fechaFinal = $_POST["fecha_final"] ?? null;
+            $reportecuotasPagadas->ListarCuotasPagadasReport($fechaInicial, $fechaFinal);
             break;
 
         case 3: //PIVOT

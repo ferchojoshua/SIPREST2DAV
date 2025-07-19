@@ -418,8 +418,6 @@
 
     // Función principal de inicialización
     function inicializarDashboard() {
-        console.log('Inicializando Dashboard de Caja...');
-        
         // Obtener contexto del usuario
         obtenerContextoUsuario();
         
@@ -440,7 +438,6 @@
             success: function(response) {
                 if (response.success) {
                     userContext = response;
-                    console.log('Contexto de usuario cargado:', userContext);
                     
                     // Actualizar UI según permisos
                     actualizarUIPermisos();
@@ -522,42 +519,84 @@
 
     // Actualizar datos del dashboard
     function actualizarDashboard() {
-        console.log('Actualizando dashboard...');
-        
         // Mostrar spinner en el botón de actualizar
         $('#refresh-icon').addClass('fa-spin');
         
+        // Usar los nuevos endpoints para obtener datos reales
         $.ajax({
             url: 'ajax/caja_ajax.php',
             method: 'POST',
-            data: { accion: 11 },
+            data: { accion: 'obtener_resumen_dia' },
             dataType: 'json',
             success: function(response) {
-                // dashboardData = response; // Removed as per edit hint
-                console.log('Datos del dashboard cargados:', response);
-                
-                // Actualizar KPIs
-                actualizarKPIs(response.estadisticas);
-                
-                // Actualizar tabla de cajas activas
-                actualizarTablaCajasActivas(response.cajas_activas);
-                
-                // Actualizar alertas
-                actualizarListaAlertas(response.alertas);
-                
-                // Actualizar estadísticas del día
-                actualizarEstadisticasDia(response.estadisticas);
-                
-                // Actualizar timestamp
-                $('#ultima-actualizacion').text(new Date().toLocaleString());
-                
+                if (response.success) {
+                    const resumen = response.resumen;
+                    
+                    // Actualizar KPIs con datos reales
+                    $('#kpi-cajas-abiertas').text(resumen.monto_inicial_caja > 0 ? '1' : '0');
+                    
+                    const saldoTotal = parseFloat(resumen.monto_inicial_caja || 0) + 
+                                      parseFloat(resumen.monto_pagos || 0) + 
+                                      parseFloat(resumen.ingresos_monto || 0) - 
+                                      parseFloat(resumen.egresos_monto || 0) - 
+                                      parseFloat(resumen.monto_prestamos || 0);
+                    
+                    $('#kpi-saldo-total').text('$' + saldoTotal.toFixed(2));
+                    
+                    const totalOperaciones = parseInt(resumen.prestamos_otorgados || 0) +
+                                           parseInt(resumen.pagos_recibidos || 0) +
+                                           parseInt(resumen.ingresos_count || 0) +
+                                           parseInt(resumen.egresos_count || 0);
+                    
+                    $('#kpi-operaciones-hoy').text(totalOperaciones);
+                    
+                    // Alertas críticas (simulada por saldo bajo)
+                    const alertasCriticas = saldoTotal < 1000 ? 1 : 0;
+                    $('#kpi-alertas-criticas').text(alertasCriticas);
+                    
+                    // Actualizar color de alerta según saldo
+                    if (alertasCriticas > 0) {
+                        $('#kpi-alertas-criticas').closest('.small-box').removeClass('bg-warning').addClass('bg-danger');
+                    } else {
+                        $('#kpi-alertas-criticas').closest('.small-box').removeClass('bg-danger').addClass('bg-warning');
+                    }
+                    
+                    // Actualizar timestamp
+                    $('#ultima-actualizacion').text(new Date().toLocaleString());
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error actualizando dashboard:', error);
-                mostrarNotificacion('Error al actualizar el dashboard', 'error');
+                // En caso de error, mostrar valores por defecto
+                $('#kpi-cajas-abiertas').text('0');
+                $('#kpi-saldo-total').text('$0.00');
+                $('#kpi-operaciones-hoy').text('0');
+                $('#kpi-alertas-criticas').text('0');
             },
             complete: function() {
                 $('#refresh-icon').removeClass('fa-spin');
+            }
+        });
+        
+        // Obtener información de sucursal para el header
+        $.ajax({
+            url: 'ajax/caja_ajax.php',
+            method: 'POST',
+            data: { accion: 'obtener_sucursal_usuario' },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    const sucursal = response.sucursal;
+                    const textoSucursal = sucursal.sucursal_nombre 
+                        ? ` - ${sucursal.sucursal_codigo}: ${sucursal.sucursal_nombre}`
+                        : ' - Sucursal Principal';
+                    
+                    // Actualizar título del dashboard solo si no se ha actualizado ya
+                    const currentTitle = $('h1').first().text();
+                    if (!currentTitle.includes(' - ')) {
+                        $('h1').first().text(currentTitle + textoSucursal);
+                    }
+                }
             }
         });
     }
