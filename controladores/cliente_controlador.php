@@ -155,4 +155,18 @@ class ClienteControlador
             return false;
         }
     }
+
+    /*===================================================================*/
+    //BUSCAR SOLO CLIENTES DISPONIBLES (SIN PRÉSTAMOS ACTIVOS)
+    /*===================================================================*/
+    static public function ctrBuscarClientesDisponibles($busqueda)
+    {
+        try {
+            $clientes = ClienteModelo::mdlBuscarClientesDisponibles($busqueda);
+            return $clientes;
+        } catch (Exception $e) {
+            error_log("Error en ctrBuscarClientesDisponibles: " . $e->getMessage());
+            return false;
+        }
+    }
 }

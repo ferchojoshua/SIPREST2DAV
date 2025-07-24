@@ -11,61 +11,64 @@ class UsuarioModelo
     /*===================================================================*/
     static public function mdlIniciarSesion($usuario, $password)
     {
-        $logFile = fopen("log.txt", 'a') or die("Error creando archivo");
-        fwrite($logFile, date("d/m/Y H:i:s") . '  ' . $usuario . '-' . $password . "\n") or die("Error escribiendo en el archivo");
-        fclose($logFile);
-
-        $stmt_user = Conexion::conectar()->prepare("select clave from usuarios where usuario = :usuario and estado = 1");
-        $stmt_user->bindParam(":usuario", $usuario, PDO::PARAM_STR);
-        $stmt_user->execute();
-        $user_hash = $stmt_user->fetch(PDO::FETCH_ASSOC);
-
-        if (!$user_hash) {
-            return []; // Usuario no encontrado
-        }
-
-        if (hash_equals($user_hash['clave'], crypt($password, $user_hash['clave']))) {
-            // Obtener datos completos del usuario (consulta corregida)image.png
-            $stmt_complete = Conexion::conectar()->prepare("SELECT u.*, 
-                                                                   COALESCE(p.descripcion, 'Usuario') as perfil_descripcion,
-                                                                   COALESCE(s.nombre, 'Sin sucursal') as sucursal_nombre
-                                                            FROM usuarios u 
-                                                            LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
-                                                            LEFT JOIN sucursales s ON u.sucursal_id = s.id
-                                                            WHERE u.usuario = :usuario AND u.estado = 1");
-            $stmt_complete->bindParam(":usuario", $usuario, PDO::PARAM_STR);
-            $stmt_complete->execute();
-            $user_complete = $stmt_complete->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt_user = Conexion::conectar()->prepare("
+                SELECT u.*, 
+                       p.descripcion as perfil,
+                       p.id_perfil,
+                       s.id as sucursal_id,
+                       s.nombre as sucursal_nombre,
+                       s.codigo as sucursal_codigo
+                FROM usuarios u 
+                LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+                LEFT JOIN sucursales s ON u.sucursal_id = s.id
+                WHERE u.usuario = :usuario 
+                AND u.estado = 1
+            ");
             
-            if ($user_complete) {
-                $user_object = (object) $user_complete;
+            $stmt_user->bindParam(":usuario", $usuario, PDO::PARAM_STR);
+            $stmt_user->execute();
+            $user_data = $stmt_user->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user_data) {
+                error_log("Usuario no encontrado: " . $usuario);
+                return null;
+            }
+
+            // Verificar la contraseña
+            if (hash_equals($user_data['clave'], crypt($password, $user_data['clave']))) {
+                // Convertir a objeto y agregar información adicional
+                $user_object = (object) $user_data;
                 
-                $stmt2 = Conexion::conectar()->prepare("SELECT m.vista
-                                                        FROM usuarios u 
-                                                        INNER JOIN perfil_modulo pm ON pm.id_perfil = u.id_perfil_usuario
-                                                        INNER JOIN modulos m ON m.id = pm.id_modulo
-                                                        WHERE u.id_usuario = :id_usuario
-                                                        AND vista_inicio = 1
-                                                        LIMIT 1");
+                // Obtener vista inicial
+                $stmt_vista = Conexion::conectar()->prepare("
+                    SELECT m.vista
+                    FROM usuarios u 
+                    INNER JOIN perfil_modulo pm ON pm.id_perfil = u.id_perfil_usuario
+                    INNER JOIN modulos m ON m.id = pm.id_modulo
+                    WHERE u.id_usuario = :id_usuario
+                    AND vista_inicio = 1
+                    LIMIT 1
+                ");
                 
-                $stmt2->bindParam(":id_usuario", $user_complete['id_usuario'], PDO::PARAM_STR);
-                $stmt2->execute();
+                $stmt_vista->bindParam(":id_usuario", $user_data['id_usuario'], PDO::PARAM_INT);
+                $stmt_vista->execute();
+                $vista_data = $stmt_vista->fetch(PDO::FETCH_ASSOC);
                 
-                $vista_data = $stmt2->fetch(PDO::FETCH_ASSOC);
+                // Agregar vista al objeto de usuario
+                $user_object->vista = $vista_data ? $vista_data['vista'] : 'dashboard.php';
                 
-                if ($vista_data) {
-                    // Agregar la vista al objeto usuario
-                    $user_object->vista = $vista_data['vista'];
-                } else {
-                    // Vista por defecto si no tiene configurada
-                    $user_object->vista = 'dashboard.php';
-                }
-                
+                error_log("Login exitoso para usuario: " . $usuario . " con perfil: " . $user_object->perfil);
                 return $user_object;
             }
+            
+            error_log("Contraseña incorrecta para usuario: " . $usuario);
+            return null;
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlIniciarSesion: " . $e->getMessage());
+            return null;
         }
-
-        return []; // Retornar array vacío si falla
     }
 
 
@@ -74,54 +77,64 @@ class UsuarioModelo
     /*===================================================================*/
     static public function mdlIniciarSesionSimple($usuario, $password)
     {
-        $logFile = fopen("log.txt", 'a') or die("Error creando archivo");
-        fwrite($logFile, date("d/m/Y H:i:s"). '  ' . $usuario.'-'.$password."\n") or die("Error escribiendo en el archivo");
-        fclose($logFile);
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT u.*, 
+                       p.descripcion as perfil,
+                       p.id_perfil,
+                       s.id as sucursal_id,
+                       s.nombre as sucursal_nombre,
+                       s.codigo as sucursal_codigo
+                FROM usuarios u 
+                LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
+                LEFT JOIN sucursales s ON u.sucursal_id = s.id
+                WHERE u.usuario = :usuario
+                AND u.estado = 1
+            ");
 
-        // Consulta simplificada y corregida
-        $stmt = Conexion::conectar()->prepare("SELECT u.*, 
-                                                      COALESCE(p.descripcion, 'Usuario') as perfil_descripcion,
-                                                      COALESCE(s.nombre, 'Sin sucursal') as sucursal_nombre
-                                                FROM usuarios u 
-                                                LEFT JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil
-                                                LEFT JOIN sucursales s ON u.sucursal_id = s.id
-                                                WHERE u.usuario = :usuario
-                                                AND u.clave = :password
-                                                AND u.estado = 1");
+            $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
+            $stmt->execute();
+            $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$user_data) {
+                error_log("Usuario no encontrado (simple): " . $usuario);
+                return null;
+            }
 
-        $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
-        $stmt->bindParam(":password", $password, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user && hash_equals($user['clave'], crypt($password, $user['clave']))) {
-            $user_object = (object) $user;
-            $stmt2 = Conexion::conectar()->prepare("SELECT m.vista
-                                                    FROM usuarios u 
-                                                    INNER JOIN perfil_modulo pm ON pm.id_perfil = u.id_perfil_usuario
-                                                    INNER JOIN modulos m ON m.id = pm.id_modulo
-                                                    WHERE u.id_usuario = :id_usuario
-                                                    AND vista_inicio = 1
-                                                    LIMIT 1");
-            
-            $stmt2->bindParam(":id_usuario", $user['id_usuario'], PDO::PARAM_STR);
-            $stmt2->execute();
-            
-            $vista_data = $stmt2->fetch(PDO::FETCH_ASSOC);
-            
-            if ($vista_data) {
-                // Agregar la vista al objeto usuario
-                $user_object->vista = $vista_data['vista'];
-            } else {
-                // Vista por defecto si no tiene configurada
-                $user_object->vista = 'dashboard.php';
+            // Verificar la contraseña
+            if (hash_equals($user_data['clave'], crypt($password, $user_data['clave']))) {
+                // Convertir a objeto y agregar información adicional
+                $user_object = (object) $user_data;
+                
+                // Obtener vista inicial
+                $stmt_vista = Conexion::conectar()->prepare("
+                    SELECT m.vista
+                    FROM usuarios u 
+                    INNER JOIN perfil_modulo pm ON pm.id_perfil = u.id_perfil_usuario
+                    INNER JOIN modulos m ON m.id = pm.id_modulo
+                    WHERE u.id_usuario = :id_usuario
+                    AND vista_inicio = 1
+                    LIMIT 1
+                ");
+                
+                $stmt_vista->bindParam(":id_usuario", $user_data['id_usuario'], PDO::PARAM_INT);
+                $stmt_vista->execute();
+                $vista_data = $stmt_vista->fetch(PDO::FETCH_ASSOC);
+                
+                // Agregar vista al objeto de usuario
+                $user_object->vista = $vista_data ? $vista_data['vista'] : 'dashboard.php';
+                
+                error_log("Login simple exitoso para usuario: " . $usuario . " con perfil: " . $user_object->perfil);
+                return $user_object;
             }
             
-            return $user_object;
+            error_log("Contraseña incorrecta (simple) para usuario: " . $usuario);
+            return null;
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlIniciarSesionSimple: " . $e->getMessage());
+            return null;
         }
-
-        return []; // Retornar array vacío si falla
     }
 
 
@@ -215,7 +228,7 @@ class UsuarioModelo
     /*===================================================================*/
     //REGISTRAR USUARIOS
     /*===================================================================*/
-    static public function mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id)
+    static public function mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id, $telefono_whatsapp, $whatsapp_activo, $whatsapp_admin, $cedula, $ciudad, $direccion, $profesion, $cargo, $celular, $fecha_ingreso, $numero_seguro, $forma_pago)
     {
         try {
             $stmt = Conexion::conectar()->prepare("INSERT INTO usuarios(
@@ -225,6 +238,18 @@ class UsuarioModelo
                 clave, 
                 id_perfil_usuario, 
                 sucursal_id,
+                telefono_whatsapp,
+                whatsapp_activo,
+                whatsapp_admin,
+                cedula,
+                ciudad,
+                direccion,
+                profesion,
+                cargo,
+                celular,
+                fecha_ingreso,
+                numero_seguro,
+                forma_pago,
                 estado
             ) VALUES (
                 :nombre_usuario, 
@@ -233,6 +258,18 @@ class UsuarioModelo
                 :clave, 
                 :id_perfil_usuario, 
                 :sucursal_id,
+                :telefono_whatsapp,
+                :whatsapp_activo,
+                :whatsapp_admin,
+                :cedula,
+                :ciudad,
+                :direccion,
+                :profesion,
+                :cargo,
+                :celular,
+                :fecha_ingreso,
+                :numero_seguro,
+                :forma_pago,
                 1
             )");
 
@@ -242,6 +279,18 @@ class UsuarioModelo
             $stmt->bindParam(":clave", $clave, PDO::PARAM_STR);
             $stmt->bindParam(":id_perfil_usuario", $id_perfil_usuario, PDO::PARAM_INT);
             $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+            $stmt->bindParam(":telefono_whatsapp", $telefono_whatsapp, PDO::PARAM_STR);
+            $stmt->bindParam(":whatsapp_activo", $whatsapp_activo, PDO::PARAM_INT);
+            $stmt->bindParam(":whatsapp_admin", $whatsapp_admin, PDO::PARAM_INT);
+            $stmt->bindParam(":cedula", $cedula, PDO::PARAM_STR);
+            $stmt->bindParam(":ciudad", $ciudad, PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $direccion, PDO::PARAM_STR);
+            $stmt->bindParam(":profesion", $profesion, PDO::PARAM_STR);
+            $stmt->bindParam(":cargo", $cargo, PDO::PARAM_STR);
+            $stmt->bindParam(":celular", $celular, PDO::PARAM_STR);
+            $stmt->bindParam(":fecha_ingreso", $fecha_ingreso, PDO::PARAM_STR);
+            $stmt->bindParam(":numero_seguro", $numero_seguro, PDO::PARAM_STR);
+            $stmt->bindParam(":forma_pago", $forma_pago, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 return "ok";
@@ -292,6 +341,34 @@ class UsuarioModelo
         }
     }
 
+
+    /*=============================================
+    ACTIVAR USUARIO
+    =============================================*/
+    static public function mdlActivarUsuario($table, $id, $nameId)
+    {
+        $stmt = Conexion::conectar()->prepare("UPDATE $table SET estado = 1 WHERE $nameId = :$nameId");
+        $stmt->bindParam(":" . $nameId, $id, PDO::PARAM_INT);
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return Conexion::conectar()->errorInfo();
+        }
+    }
+
+    /*=============================================
+    DAR DE BAJA USUARIO
+    =============================================*/
+    static public function mdlBajaUsuario($table, $id, $nameId)
+    {
+        $stmt = Conexion::conectar()->prepare("UPDATE $table SET estado = 0 WHERE $nameId = :$nameId");
+        $stmt->bindParam(":" . $nameId, $id, PDO::PARAM_INT);
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return Conexion::conectar()->errorInfo();
+        }
+    }
 
     /*=============================================
     ELIMINAR DATOS DEL USUARIO

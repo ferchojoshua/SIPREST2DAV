@@ -518,22 +518,54 @@
                                   CargarCantCuotasPagadas();
                                   tbl_ls_prestamos.ajax.reload();
 
-                                  // Generar voucher automáticamente
+                                  // GENERAR VOUCHER SIEMPRE - Incluso si hay errores de WhatsApp
                                   setTimeout(function() {
-                                      window.open("MPDF/ticket_pago_cuota.php?codigo=" + nro_prestamo + "&cuota=" + pdetalle_nro_cuota + "#zoom=100", 
-                                                 "Voucher de Pago", 
-                                                 "scrollbars=NO,resizable=YES,width=800,height=600");
-                                  }, 1000);
+                                      try {
+                                          window.open("MPDF/ticket_pago_cuota.php?codigo=" + nro_prestamo + "&cuota=" + pdetalle_nro_cuota + "#zoom=100", 
+                                                     "Voucher de Pago", 
+                                                     "scrollbars=NO,resizable=YES,width=800,height=600");
+                                      } catch (e) {
+                                          console.error("Error al abrir ticket:", e);
+                                          Toast.fire({
+                                              icon: 'warning',
+                                              title: 'Cuota pagada pero no se pudo abrir el ticket'
+                                          });
+                                      }
+                                  }, 500);
 
-                                  // Enviar mensaje por WhatsApp si están disponibles los datos
+                                  // Enviar mensaje por WhatsApp si están disponibles los datos (opcional)
                                   if (respuesta.whatsapp_data) {
-                                      enviarWhatsApp(respuesta.whatsapp_data);
+                                      try {
+                                          enviarWhatsApp(respuesta.whatsapp_data);
+                                      } catch (e) {
+                                          console.log("WhatsApp opcional falló:", e);
+                                      }
                                   }
                               } else {
+                                  // INCLUSO SI HAY ERROR, INTENTAR GENERAR TICKET
                                   Toast.fire({
                                       icon: 'error',
                                       title: 'Error al pagar la cuota: ' + (respuesta.message || 'Error desconocido')
                                   });
+                                  
+                                  // Si hay error pero contiene información del préstamo, generar ticket de emergencia
+                                  if (nro_prestamo && pdetalle_nro_cuota) {
+                                      setTimeout(function() {
+                                          Swal.fire({
+                                              title: '¿Generar ticket de emergencia?',
+                                              text: 'El pago falló pero ¿quiere generar el ticket manualmente?',
+                                              icon: 'question',
+                                              showCancelButton: true,
+                                              confirmButtonText: 'Sí, generar ticket'
+                                          }).then((result) => {
+                                              if (result.isConfirmed) {
+                                                  window.open("MPDF/ticket_pago_cuota.php?codigo=" + nro_prestamo + "&cuota=" + pdetalle_nro_cuota + "#zoom=100", 
+                                                             "Ticket de Emergencia", 
+                                                             "scrollbars=NO,resizable=YES,width=800,height=600");
+                                              }
+                                          });
+                                      }, 1000);
+                                  }
                               }
                           },
                           error: function(xhr, textStatus, errorThrown) {
@@ -683,12 +715,15 @@
                   pdetalle_saldo_cuota: data.pdetalle_saldo_cuota
               };
 
-              // Llenar los campos del modal
-              $("#nro_cuota_abono").val(data.pdetalle_nro_cuota);
-              $("#monto_cuota_original").val(data.pdetalle_monto_cuota);
-              $("#saldo_pendiente_abono").val(data.pdetalle_saldo_cuota);
+              // Llenar los campos del modal con información completa
+              $("#nro_cuota_abono").val("Cuota #" + data.pdetalle_nro_cuota + " - Préstamo " + data.nro_prestamo);
+              $("#monto_cuota_original").val("C$ " + parseFloat(data.pdetalle_monto_cuota).toFixed(2));
+              $("#saldo_pendiente_abono").val("C$ " + parseFloat(data.pdetalle_saldo_cuota).toFixed(2));
               $("#monto_a_abonar").val("");
               $("#tipo_abono").val("normal");
+              
+              // Mostrar el modal
+              $("#modal_abonar_cuota").modal('show');
           });
 
           /*===================================================================*/
@@ -1062,7 +1097,7 @@
                                   "<span class='btnPagarCuota text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Pagar Cuota Completa'> " +
                                   "<i class='fas fa-dollar-sign fs-6'></i> " +
                                   "</span> " +
-                                  "<span class='btnAbonarCuota text-warning px-1' style='cursor:pointer;' data-bs-toggle='modal' data-bs-target='#modal_abonar_cuota' title='Hacer Abono'> " +
+                                  "<span class='btnAbonarCuota text-warning px-1' style='cursor:pointer;' title='Hacer Abono'> " +
                                   "<i class='fas fa-hand-holding-usd fs-6'></i> " +
                                   "</span> " +
                                   "<span class='btnImprimirVoucherAbono text-info px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Imprimir Voucher de Abono'> " +
@@ -1074,7 +1109,7 @@
                                   "<span class='btnPagarCuota text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Pagar Cuota Completa'> " +
                                   "<i class='fas fa-dollar-sign fs-6'></i> " +
                                   "</span> " +
-                                  "<span class='btnAbonarCuota text-warning px-1' style='cursor:pointer;' data-bs-toggle='modal' data-bs-target='#modal_abonar_cuota' title='Hacer Abono'> " +
+                                  "<span class='btnAbonarCuota text-warning px-1' style='cursor:pointer;' title='Hacer Abono'> " +
                                   "<i class='fas fa-hand-holding-usd fs-6'></i> " +
                                   "</span> " +
                                   "<span class='text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' title='Sin comprobantes'> " +

@@ -20,107 +20,181 @@
   <div class="content pb-2">
       <div class="container-fluid">
           
-          <!-- Resumen del Día Actual -->
-          <div class="row mb-3" id="resumen-dia-actual">
-              <div class="col-lg-3 col-6">
-                  <div class="small-box bg-info">
-                      <div class="inner">
-                          <h3 id="resumen-prestamos-count">0</h3>
-                          <p>Préstamos del Día</p>
-                          <small id="resumen-prestamos-monto">$0.00</small>
-                      </div>
-                      <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
-                  </div>
-              </div>
-              <div class="col-lg-3 col-6">
-                  <div class="small-box bg-success">
-                      <div class="inner">
-                          <h3 id="resumen-pagos-count">0</h3>
-                          <p>Pagos Recibidos</p>
-                          <small id="resumen-pagos-monto">$0.00</small>
-                      </div>
-                      <div class="icon"><i class="fas fa-coins"></i></div>
-                  </div>
-              </div>
-              <div class="col-lg-3 col-6">
-                  <div class="small-box bg-warning">
-                      <div class="inner">
-                          <h3 id="resumen-ingresos-count">0</h3>
-                          <p>Ingresos Extra</p>
-                          <small id="resumen-ingresos-monto">$0.00</small>
-                      </div>
-                      <div class="icon"><i class="fas fa-plus-circle"></i></div>
-                  </div>
-              </div>
-              <div class="col-lg-3 col-6">
-                  <div class="small-box bg-danger">
-                      <div class="inner">
-                          <h3 id="resumen-egresos-count">0</h3>
-                          <p>Egresos del Día</p>
-                          <small id="resumen-egresos-monto">$0.00</small>
-                      </div>
-                      <div class="icon"><i class="fas fa-minus-circle"></i></div>
-                  </div>
-              </div>
-          </div>
+          <!-- INICIO DASHBOARD UNIFICADO (Migrado de dashboard_caja.php) -->
+          <!-- KPIs Uniformes y Refactorizados -->
+<div class="row mb-3">
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-success text-white mb-1"><i class="fas fa-cash-register"></i></div>
+                <h4 class="kpi-value" id="kpi-cajas-abiertas">-</h4>
+                <div class="kpi-label">Cajas Abiertas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-info text-white mb-1"><i class="fas fa-coins"></i></div>
+                <h4 class="kpi-value" id="kpi-saldo-total">-</h4>
+                <div class="kpi-label">Saldo Total Activo</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-warning text-white mb-1"><i class="fas fa-exclamation-triangle"></i></div>
+                <h4 class="kpi-value" id="kpi-alertas-criticas">-</h4>
+                <div class="kpi-label">Alertas Críticas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-primary text-white mb-1"><i class="fas fa-chart-line"></i></div>
+                <h4 class="kpi-value" id="kpi-operaciones-hoy">-</h4>
+                <div class="kpi-label">Operaciones Hoy</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-secondary text-white mb-1"><i class="fas fa-hand-holding-usd"></i></div>
+                <h4 class="kpi-value" id="kpi-prestamos-dia">-</h4>
+                <div class="kpi-label">Préstamos del Día</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-teal text-white mb-1"><i class="fas fa-coins"></i></div>
+                <h4 class="kpi-value" id="kpi-pagos-dia">-</h4>
+                <div class="kpi-label">Pagos Recibidos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-orange text-white mb-1"><i class="fas fa-plus-circle"></i></div>
+                <h4 class="kpi-value" id="kpi-ingresos-extra">-</h4>
+                <div class="kpi-label">Ingresos Extra</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card kpi-card shadow-sm h-100">
+            <div class="card-body text-center p-2">
+                <div class="kpi-icon bg-danger text-white mb-1"><i class="fas fa-minus-circle"></i></div>
+                <h4 class="kpi-value" id="kpi-egresos-dia">-</h4>
+                <div class="kpi-label">Egresos del Día</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-          <!-- Estado de Caja y Acciones -->
-          <div class="row mb-3">
+<style>
+.kpi-card { border-radius: 0.7rem; min-height: 120px; }
+.kpi-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin: 0 auto 0.2rem auto; }
+.kpi-value { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.1rem; }
+.kpi-label { font-size: 0.95rem; color: #555; }
+.bg-teal { background: #20c997 !important; }
+.bg-orange { background: #fd7e14 !important; }
+</style>
+          <!-- Acciones rápidas y estadísticas -->
+          <div class="row mb-2">
               <div class="col-md-8">
                   <div class="card">
-                      <div class="card-header bg-info">
-                          <h3 class="card-title">
-                              <i class="fas fa-cash-register"></i> Estado de Caja Actual
-                              <small class="text-light" id="info-sucursal-header"></small>
-                          </h3>
+                      <div class="card-header">
+                          <h3 class="card-title"><i class="fas fa-chart-bar"></i> Estadísticas del Día</h3>
                       </div>
                       <div class="card-body">
-                          <div class="row text-center">
-                              <div class="col-4">
-                                  <strong>Monto Inicial:</strong><br>
-                                  <span class="h4 text-primary" id="caja-monto-inicial">$0.00</span>
+                          <div class="row">
+                              <div class="col-6">
+                                  <div class="description-block">
+                                      <h5 class="description-header" id="stat-aperturas-hoy">-</h5>
+                                      <span class="description-text">Aperturas Hoy</span>
+                                  </div>
                               </div>
-                              <div class="col-4">
-                                  <strong>Saldo Actual:</strong><br>
-                                  <span class="h4 text-success" id="caja-saldo-actual">$0.00</span>
+                              <div class="col-6">
+                                  <div class="description-block">
+                                      <h5 class="description-header" id="stat-cierres-hoy">-</h5>
+                                      <span class="description-text">Cierres Hoy</span>
+                                  </div>
                               </div>
-                              <div class="col-4">
-                                  <strong>Estado:</strong><br>
-                                  <span class="badge badge-secondary" id="caja-estado">Sin Caja</span>
+                          </div>
+                          <div class="row mt-2">
+                              <div class="col-12">
+                                  <div class="progress">
+                                      <div class="progress-bar bg-success" id="progress-operaciones" style="width: 0%"></div>
+                                  </div>
+                                  <span class="float-left">Eficiencia Operacional</span>
+                                  <span class="float-right" id="porcentaje-eficiencia">0%</span>
                               </div>
                           </div>
                       </div>
                   </div>
               </div>
-              <div class="col-md-4">
-                  <div class="card">
-                      <div class="card-header bg-secondary">
-                          <h3 class="card-title">
-                              <i class="fas fa-tools"></i> Acciones Rápidas
-                          </h3>
-                      </div>
-                      <div class="card-body p-2">
-                          <button type="button" class="btn btn-warning btn-sm btn-block mb-2" id="btnCierreDiaRapido">
-                              <i class="fas fa-calendar-check"></i> Cierre de Día
-                          </button>
-                          <button type="button" class="btn btn-info btn-sm btn-block mb-2" onclick="CargarContenido('vistas/dashboard_caja.php','content-wrapper')">
-                              <i class="fas fa-tachometer-alt"></i> Dashboard
-                          </button>
-                          <button type="button" class="btn btn-secondary btn-sm btn-block" id="btnActualizarDatos">
-                              <i class="fas fa-sync"></i> Actualizar
-                          </button>
+              <div class="col-md-4 d-flex align-items-center justify-content-center">
+                  <div class="card w-100">
+                      <div class="card-body p-2 text-center">
+                          <button class="btn btn-success btn-sm mx-1" id="btn-abrir-caja"><i class="fas fa-lock-open"></i> ABRIR</button>
+                          <button class="btn btn-warning btn-sm mx-1" id="btn-cerrar-caja"><i class="fas fa-lock"></i> CERRAR</button>
+                          <button class="btn btn-info btn-sm mx-1" id="btn-realizar-conteo"><i class="fas fa-calculator"></i> CONTEO</button>
+                          <button class="btn btn-primary btn-sm mx-1" id="btn-generar-reporte"><i class="fas fa-file-alt"></i> REPORTE</button>
                       </div>
                   </div>
               </div>
           </div>
+          <!-- Grid de Cajas Activas (al final) -->
+          <div class="row mb-2">
+              <div class="col-md-12">
+                  <div class="card">
+                      <div class="card-header">
+                          <h3 class="card-title"><i class="fas fa-cash-register"></i> Cajas Activas</h3>
+                          <div class="card-tools">
+                              <span class="badge badge-success" id="badge-tiempo-real">En tiempo real</span>
+                          </div>
+                      </div>
+                      <div class="card-body table-responsive p-0">
+                          <table class="table table-hover table-sm text-nowrap animate-fade-in" id="tabla-cajas-activas">
+                              <thead>
+                                  <tr>
+                                      <th>Caja</th>
+                                      <th>Usuario</th>
+                                      <th>Apertura</th>
+                                      <th>Horas Abiertas</th>
+                                      <th>Saldo</th>
+                                      <th>Alertas</th>
+                                      <th>Acciones</th>
+                                  </tr>
+                              </thead>
+                              <tbody id="tbody-cajas-activas">
+                                  <tr>
+                                      <td colspan="7" class="text-center">
+                                          <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                      </td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <!-- FIN DASHBOARD UNIFICADO -->
 
           <div class="row p-0 m-0">
               <div class="col-md-12">
                   <div class="card card-info card-outline shadow ">
                       <div class="card-header bg-gradient-info">
                           <h3 class="card-title">Aperturar de Caja</h3>
-                          <button class="btn btn-info btn-sm float-right" id="abrirmodal_caja"><i class="fas fa-plus"></i>
-                              Aperturar</button>
+                          <button class="btn btn-info btn-sm float-right btnAbrirCaja" id="btnAbrirCaja">
+                              <i class="fas fa-plus"></i> Aperturar
+                          </button>
                       </div>
                       <div class=" card-body">
                           <!-- <div class="row align-items-end">
@@ -183,12 +257,6 @@
                   </button>
               </div>
               <div class="modal-body">
-                  <!-- Información de Permisos -->
-                  <div class="alert alert-info" id="info-permisos" style="display: none;">
-                      <h6><i class="fas fa-shield-alt"></i> Estado de Permisos</h6>
-                      <div id="permisos-details"></div>
-                  </div>
-                  
                   <form class="needs-validation" novalidate id="form-apertura-caja">
                       <div class="row">
                           <div class="col-lg-6">
@@ -219,9 +287,6 @@
                                          step="0.01" 
                                          min="0"
                                          required>
-                                  <small class="text-muted">
-                                      Límite máximo: <span id="limite-usuario">Verificando...</span>
-                                  </small>
                                   <div class="invalid-feedback">Debe ingresar un monto válido</div>
                               </div>
                           </div>
@@ -236,7 +301,6 @@
                                   <select class="form-control form-control-sm" id="select_sucursal" name="select_sucursal">
                                       <option value="">Seleccionar sucursal...</option>
                                   </select>
-                                  <small class="text-muted">Seleccione la sucursal para esta caja</small>
                               </div>
                           </div>
 
@@ -278,9 +342,6 @@
                                   <label class="form-check-label" for="check_validacion_fisica">
                                       <i class="fas fa-calculator"></i> He realizado el conteo físico del dinero
                                   </label>
-                                  <small class="form-text text-muted d-block">
-                                      Marque esta casilla si ha contado físicamente el dinero inicial
-                                  </small>
                               </div>
                           </div>
                       </div>
@@ -717,1112 +778,341 @@
       </div>
   </div>
 
-  <script>
-      var accion;
-      var tbl_caja, tbl_resgitros_caja, tbl_resgitros_movi;
-
-      var Toast = Swal.mixin({
-          toast: true,
-          position: 'top',
-          showConfirmButton: false,
-          timer: 3000
-      });
-      $(document).ready(function() {
-
-          $('.js-example-basic-single').select2();
-
-          // NUEVO: Funcionalidad para botones de acción
-          $('#btnConteoFisico').on('click', function() {
-              Swal.fire({
-                  icon: 'info',
-                  title: 'Conteo Físico',
-                  text: 'Funcionalidad de conteo físico por implementar.',
-                  showConfirmButton: true
-              });
-          });
-
-          $('#btnGenerarReporteCaja').on('click', function() {
-              Swal.fire({
-                  icon: 'info',
-                  title: 'Generar Reporte',
-                  text: 'Funcionalidad de generación de reporte por implementar.',
-                  showConfirmButton: true
-              });
-          });
-
-          /*===================================================================*/
-          // FILTRAR CAJA POR CLIENTE AL CAMBIAR SELECTOR O HACER CLIC EN BUSCAR
-          /*===================================================================*/
-          $("#btnFiltrar").on('click', function() {
-              if ($("#select_clientes").val() == '') {
-                  Toast.fire({
-                      icon: 'error',
-                      title: ' Debe Seleccionar un cliente'
-                  })
-                  $("#select_clientes").focus();
-
-              } else {
-                  tbl_caja.ajax.reload(); // Recargar la tabla de caja
-              }
-          });
-
-          $('#select_clientes').on('change', function() {
-              tbl_caja.ajax.reload(); // Recargar la tabla de caja al cambiar el cliente
-          });
-
-          /*===================================================================*/
-          // INICIAMOS EL DATATABLE
-          /*===================================================================*/
-          tbl_caja = $("#tbl_caja").DataTable({
-              responsive: true,
-
-              dom: 'Bfrtip',
-              select: true,
-              buttons: [{
-                      "extend": 'excelHtml5',
-                      "title": 'Arqueo de Caja',
-                      "exportOptions": {
-                          'columns': [1, 2, 3, 4, 5, 6, 7, 8, 9]
-                      },
-                      "text": '<i class="fa fa-file-excel"></i>',
-                      "titleAttr": 'Exportar a Excel'
-                  },
-                  {
-                      "extend": 'print',
-                      "text": '<i class="fa fa-print"></i> ',
-                      "titleAttr": 'Imprimir',
-                      "exportOptions": {
-                          'columns': [1, 2, 3, 4, 5, 6, 7, 8, 9]
-                      },
-                      "download": 'open'
-                  },
-
-                  'pageLength',
-              ],
-              ajax: {
-                  url: "ajax/caja_ajax.php",
-                  dataSrc: "",
-                  type: "POST",
-                  data: {
-                      'accion': 1
-
-                  }, //LISTAR 
-                  success: function(response) {
-                      console.log('[tbl_caja] Respuesta AJAX (accion 1):', response);
-                  },
-                  error: function(xhr, status, error) {
-                      console.error('[tbl_caja] Error AJAX (accion 1):', error);
-                      console.error('[tbl_caja] Respuesta del servidor:', xhr.responseText);
-                  }
-              },
-              columnDefs: [{
-                      targets: 0,
-                      visible: false
-
-                  },
-                  {
-                      targets: 9,
-                      //sortable: false,
-                      createdCell: function(td, cellData, rowData, row, col) {
-
-                          if (rowData[9] == 'VIGENTE') {
-                              $(td).html("<span class='badge badge-success'>VIGENTE</span>")
-                          } else {
-                              $(td).html("<span class='badge badge-danger'>CERRADO</span>")
-                          }
-
-                      }
-                  }, {
-                      targets: 10, //columna 2
-                      sortable: false, //no ordene
-                      render: function(td, cellData, rowData, row, col) {
-
-                          if (rowData[9] == 'VIGENTE') {
-                              return "<center>" +
-                                  "<span class='btnCerrarCaja text-warning px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Cerrar Caja'> " +
-                                  "<i class='fas fa-lock fs-6'></i> " +
-                                  "</span> " +
-                                  "<span class='text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' title='Imprimir'> " +
-                                  "<i class='fa fa-print fs-6'> </i> " +
-                                  "</span>" +
-                                  "<span class='btnVerRegistrosC text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Ver Registros de Caja'> " +
-                                  "<i class='fa fa-eye fs-6'> </i> " +
-                                  "</span>" +
-                                  "</center>"
-                          } else { //pendiente
-                              return "<center>" +
-                                  "<span class='text-secondary px-1' data-bs-toggle='tooltip' data-bs-placement='top' > " +
-                                  "<i class='fas fa-lock fs-6'></i> " +
-                                  "</span> " +
-                                  "<span class='ImprimirCaja text-danger px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Imprimir Cierre de Caja'> " +
-                                  "<i class='fa fa-print fs-6'> </i> " +
-                                  "</span>" +
-                                  "<span class='EnviarCorreo text-warning px-1'style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Enviar por Correo'> " +
-                                  "<i class='fas fa-envelope fs-6'> </i> " +
-                                  "</span>" +
-                                  "<span class='btnVerRegistrosC text-primary px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Ver Registros de Caja ' > " +
-                                  "<i class='fa fa-eye fs-6'> </i> " +
-                                  "</span>" +
-                                  "</center>"
-
-                          }
-                      }
-                  }
-
-              ],
-              "order": [
-                  [0, 'desc']
-              ],
-              lengthMenu: [0, 5, 10, 15, 20, 50],
-              "pageLength": 10,
-              "language": idioma_espanol,
-              // Callback para aplicar estilos a las cabeceras después de la inicialización de DataTables
-              "initComplete": function(settings, json) {
-                  $('#tbl_caja thead th').css({
-                      'background-color': '#17a2b8',
-                      'color': '#ffffff',
-                      'background-image': 'none' // Eliminar iconos de ordenamiento si los hay
-                  });
-              }
-
-          });
-
-          /*===================================================================*/
-          // ABRIR MODAL caja
-          /*===================================================================*/
-          $("#abrirmodal_caja").on('click', function() {
-              AbrirModalAbrirCaja();
-              //AbrirModalAbrirCerrarCaja()
-
-          })
-
-
-
-          /*===================================================================*/
-          // ABRIR MODAL CERRAR CAJA
-          /*===================================================================*/
-          // CERRAR CAJA - FUNCIONALIDAD MEJORADA
-          /*===================================================================*/
-          // Este evento ahora es manejado por la función configurarEventosNuevos()
-          // en el JavaScript mejorado al final del archivo
-
-          /*===================================================================*/
-          // ABRIR MODAL CERRAR CAJA
-          /*===================================================================*/
-          $('#tbl_caja').on('click', '.btnVerRegistrosC', function() { //class foto tiene que ir en el boton
-              //accion = 7;
-              if (tbl_caja.row(this).child.isShown()) {
-                  var data = tbl_caja.row(this).data();
-              } else {
-                  var data = tbl_caja.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
-              }
-
-
-              var caja_id = data[0]
-             // console.log(caja_id);
-
-              AbrirModalVerRegistrosPorCaja();
-              Traer_RegistrosporIDCaja(caja_id)
-              Traer_MovimientosporIDCaja(caja_id);
-
-          });
-
-
-
-          /*===================================================================*/
-          //EVENTO QUE GUARDAAR APERTURA CAJA
-          /*===================================================================*/
-
-          document.getElementById("btnregistrar_caja").addEventListener("click", function() {
-
-
-              var monto = $('#text_monto_ini').val();
-
-
-              if (monto == "") {
-                  Toast.fire({
-                      icon: 'warning',
-                      title: 'Digitar un monto para aperturar la caja'
-
-                  });
-                  //  $('#btnregistrar_caja').show();
-                  // document.getElementsByClassName("btn-activa")[0].focus();
-
-              } else {
-                  // console.log("Listo para registrar el producto")
-                  Swal.fire({
-                      title: 'Esta seguro de Apertura Caja',
-                      icon: 'warning',
-                      showCancelButton: true,
-                      confirmButtonColor: '#8FCE00',
-                  cancelButtonColor: '#d50',
-                      confirmButtonText: 'Si',
-                      cancelButtonText: 'Cancelar',
-                  }).then((result) => {
-
-                      if (result.isConfirmed) {
-
-                          var datos = new FormData();
-
-                          datos.append("accion", accion);
-                          datos.append("caja_descripcion", $("#text_descripcion").val());
-                          datos.append("caja_monto_inicial", $("#text_monto_ini").val());
-
-                          $.ajax({
-                              url: "ajax/caja_ajax.php",
-                              method: "POST",
-                              data: datos, //enviamos lo de la variable datos
-                              cache: false,
-                              contentType: false,
-                              processData: false,
-                              dataType: 'json',
-                              success: function(respuesta) {
-                                  // console.log(respuesta);
-
-                                  if (respuesta > 0) {
-                                      if (respuesta == 1) { //validamos la respuesta del procedure si retorna 1 o 2
-                                          Toast.fire({
-                                              icon: 'success',
-                                              title: 'Caja Aperturada'
-                                          });
-
-                                          tbl_caja.ajax.reload(); //recargamos el datatable
-                                          $("#modal_abrir_caja").modal('hide');
-                                          $("#text_monto_ini").val("");
-
-                                      } else {
-                                          Toast.fire({
-                                              icon: 'warning',
-                                              title: 'Ya tienes una caja Aperturada'
-                                          });
-                                          $("#text_monto_ini").val("");
-                                      }
-
-                                  } else {
-                                      Toast.fire({
-                                          icon: 'error',
-                                          title: 'No se pudo Aperturar la Caja'
-
-                                      });
-                                  }
-
-
-                              }
-                          });
-
-                      }
-                  })
-              }
-
-
-          });
-
-
-
-          /*===================================================================*/
-          //EVENTO QUE CIERRA LA CAJA
-          /*===================================================================*/
-          $("#btnCerrar_caja").on('click', function() {
-
-              Swal.fire({
-                  title: '¿Está seguro de Cerrar Caja?',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonColor: '#8FCE00',
-                  cancelButtonColor: '#d50',
-                  confirmButtonText: 'Sí',
-                  cancelButtonText: 'Cancelar',
-              }).then((result) => {
-
-                  if (result.isConfirmed) {
-
-                      var caja_monto_ingreso = $("#text_monto_ingreso").val();
-                      var caja_prestamo = $("#text_monto_prestamo").val();
-                      var caja__monto_egreso = $("#text_monto_egreso").val();
-                      var caja_monto_total = $("#text_monto_total").val();
-                      var caja_count_prestamo = $("#text_cant_prestamo").val();
-                      var caja_count_ingreso = $("#text_cant_ingreso").val();
-                      var caja_count_egreso = $("#text_cant_egreso").val();
-                      var caja_interes = $("#text_interes").val();
-
-                      var datos = new FormData();
-                      datos.append("accion", 4); //PARA REGISTRAR EL  CERRAR LA CAJA
-                      datos.append("caja_monto_ingreso", caja_monto_ingreso);
-                      datos.append("caja_prestamo", caja_prestamo);
-                      datos.append("caja__monto_egreso", caja__monto_egreso);
-                      datos.append("caja_monto_total", caja_monto_total);
-                      datos.append("caja_count_prestamo", caja_count_prestamo);
-                      datos.append("caja_count_ingreso", caja_count_ingreso);
-                      datos.append("caja_count_egreso", caja_count_egreso);
-                      datos.append("caja_interes", caja_interes);
-
-                      $.ajax({
-                          url: "ajax/caja_ajax.php",
-                          method: "POST",
-                          data: datos,
-                          cache: false,
-                          contentType: false,
-                          processData: false,
-                          dataType: 'json',
-                          success: function(respuesta) {
-
-                              if (respuesta == 1) { //validamos la respuesta del procedure si retorna 1 o 2
-                                  Toast.fire({
-                                      icon: 'success',
-                                      title: 'Caja Cerrada Correctamente'
-                                  });
-                                  $("#modal_cerrar_caja").modal('hide');
-                                  tbl_caja.ajax.reload(); //recargamos la tabla
-                                  $("#caja_id").val("");
-                                  $("#text_monto_ingreso").val("");
-                                  $("#text_monto_prestamo").val("");
-                                  $("#text_monto_egreso").val("");
-                                  $("#text_monto_total").val("");
-                                  $("#text_cant_prestamo").val("");
-                                  $("#text_cant_ingreso").val("");
-                                  $("#text_cant_egreso").val("");
-                                  $("#text_interes").val("");
-                              } else if (respuesta == 2) {
-                                  Toast.fire({
-                                      icon: 'warning',
-                                      title: 'Tienes Préstamos Aprobados que no han Finalizado'
-                                  });
-                              } else {
-                                  Toast.fire({
-                                      icon: 'error',
-                                      title: 'Error al cerrar la caja'
-                                  });
-                              }
-
-                          }
-                      });
-
-                  }
-              })
-
-          })
-
-
-
-          /********************************************************************
-          		IMPRIMIR COMPROBANTE
-          ********************************************************************/
-          $('#tbl_caja').on('click', '.ImprimirCaja', function() { //class foto tiene que ir en el boton
-              var data = tbl_caja.row($(this).parents('tr')).data(); //tama単o de escritorio
-              if (tbl_caja.row(this).child.isShown()) {
-                  var data = tbl_caja.row(this).data(); //para celular y usas el responsive datatable
-
-              }
-
-              window.open("MPDF/reporte_arqueocaja_mejorado.php?codigo=" + parseInt(data[0]) + "#zoom=120", "Arqueo de Caja", "scrollbards=NO");
-
-
-
-
-
-          });
-
-
-
-          /********************************************************************
-          		ENVIAR POR CORREO
-          ********************************************************************/
-          $('#tbl_caja').on('click', '.EnviarCorreo', function() { //class foto tiene que ir en el boton
-              var data = tbl_caja.row($(this).parents('tr')).data(); //tama単o de escritorio
-              if (tbl_caja.row(this).child.isShown()) {
-                  var data = tbl_caja.row(this).data(); //para celular y usas el responsive datatable
-
-              }
-
-              Swal.fire({
-                  title: 'Esta seguro de Enviar el correo?',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonColor: '#8FCE00',
-                  cancelButtonColor: '#d50',
-                  confirmButtonText: 'Si',
-                  cancelButtonText: 'Cancelar',
-              }).then((result) => {
-                  if (result.isConfirmed) {
-                      window.open("MPDF/reporte_arqueocaja_Email.php?codigo=" + parseInt(data[0]) + "#zoom=120", "Arqueo de Caja", "scrollbards=NO");
-                      Toast.fire({
-                          icon: 'success',
-                          title: 'Correo enviado correctamente'
-                      });
-
-
-                  }
-
-              })
-
-          });
-
-
-          /* ======================================================================================
-           EVENTO QUE LIMPIA EL INPUT  AL CERRAR LA VENTANA MODAL
-          =========================================================================================*/
-          $("#btncerrarmodal_caja_cierre, #btncerrar_caja_cierre").on('click', function() {
-              $("#text_monto_aper").val("");
-              $("#text_monto_prestamo").val("");
-              $("#text_cant_prestamo").val("");
-              $("#text_monto_ingreso").val("");
-              $("#text_cant_ingreso").val("");
-              $("#text_monto_egreso").val("");
-              $("#text_cant_egreso").val("");
-              $("#text_monto_total").val("");
-              $("#text_interes").val("");
-          })
-
-
-          /*===================================================================*/
-          //EVENTO QUE LIMPIA LOS MENSAJES DE ALERTA DE INGRESO DE DATOS DE CADA INPUT AL CANCELAR LA VENTANA MODAL
-          /*===================================================================*/
-          document.getElementById("btncerrar_caja_cierre").addEventListener("click", function() {
-              $(".needs-validation").removeClass("was-validated");
-          })
-          document.getElementById("btncerrarmodal_caja_cierre").addEventListener("click", function() {
-              $(".needs-validation").removeClass("was-validated");
-          })
-
-
-
-
-
-      }) // FIN DOCUMENT READY
-
-
-      // NUEVO: Cargar estadísticas rápidas del día
-      function cargarEstadisticasRapidas() {
-          $.ajax({
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              dataType: "json",
-              data: { accion: 9 }, // Acción para obtener estadísticas rápidas
-              success: function(response) {
-                  console.log('[Estadisticas Rapidas] Respuesta AJAX:', response);
-                  if (response && response.success) {
-                      $('#aperturas_hoy').text(response.aperturas_hoy);
-                      $('#cierres_hoy').text(response.cierres_hoy);
-                      // Implementar lógica para eficiencia operacional si los datos están disponibles
-                      // Por ahora, se mantendrá en 0%
-                  } else {
-                      console.warn('[Estadisticas Rapidas] No se pudieron cargar las estadísticas.', response.message);
-                      $('#aperturas_hoy').text('--');
-                      $('#cierres_hoy').text('--');
-                  }
-              },
-              error: function(xhr, status, error) {
-                  console.error('[Estadisticas Rapidas] Error AJAX:', error);
-                  console.error('[Estadisticas Rapidas] Respuesta del servidor:', xhr.responseText);
-                  $('#aperturas_hoy').text('Error');
-                  $('#cierres_hoy').text('Error');
-              }
-          });
-      }
-
-      // Llamar a la función al cargar la página
-      cargarEstadisticasRapidas();
-
-      // FUNCIONES
-
-      /********************************************************************
-            ABRIR MODAL abrir caja
-      ********************************************************************/
-      function AbrirModalAbrirCaja() {
-          //para que no se nos salga del modal haciendo click a los costados
-          $("#modal_abrir_caja").modal({
-              backdrop: 'static',
-              keyboard: false
-          });
-          
-          // CARGAR SUCURSALES ANTES DE MOSTRAR EL MODAL
-          cargarSucursalesModal();
-          
-          $("#modal_abrir_caja").modal('show'); //abrimos el modal
-
-          $("#text_descripcion").val('Apertura de Caja');
-          $("#text_monto_ini").focus();
-          accion = 2;
-      }
-      
-      /********************************************************************
-            CARGAR SUCURSALES EN EL MODAL
-      ********************************************************************/
-      function cargarSucursalesModal() {
-          console.log('[Caja] Cargando sucursales para modal de apertura...');
-          
-          // Mostrar indicador de carga
-          $("#select_sucursal").html('<option value="">🔄 Cargando sucursales...</option>');
-          
-          $.ajax({
-              url: "ajax/aprobacion_ajax.php",
-              type: "GET",
-              data: { accion: 'listar_sucursales' },
-              dataType: 'json',
-              success: function(response) {
-                  console.log('[Caja] Respuesta de sucursales:', response);
-                  
-                  let opciones = '<option value="">-- Seleccionar sucursal --</option>';
-                  
-                  if (Array.isArray(response) && response.length > 0) {
-                      response.forEach(function(sucursal) {
-                          // Usar estructura real de la tabla sucursales
-                          const sucursalId = sucursal.sucursal_id || sucursal.id;
-                          const textoDescriptivo = sucursal.texto_descriptivo || 
-                                                 sucursal.texto_completo || 
-                                                 sucursal.sucursal_nombre ||
-                                                 sucursal.nombre;
-                          
-                          if (sucursalId && textoDescriptivo) {
-                              opciones += `<option value="${sucursalId}">${textoDescriptivo}</option>`;
-                          }
-                      });
-                      console.log(`[Caja] ✅ Cargadas ${response.length} sucursales exitosamente`);
-                  } else {
-                      opciones += '<option value="">No hay sucursales disponibles</option>';
-                      console.warn('[Caja] No se encontraron sucursales');
-                  }
-                  
-                  $("#select_sucursal").html(opciones);
-              },
-              error: function(xhr, status, error) {
-                  console.error('[Caja] Error al cargar sucursales:', error);
-                  console.error('[Caja] Respuesta del servidor:', xhr.responseText);
-                  $("#select_sucursal").html('<option value="">Error al cargar sucursales</option>');
-                  
-                  // Mostrar notificación de error
-                  if (typeof Swal !== 'undefined') {
-                      Swal.fire({
-                          icon: 'error',
-                          title: 'Error',
-                          text: 'No se pudieron cargar las sucursales. Verifique su conexión.',
-                          timer: 3000,
-                          showConfirmButton: false
-                      });
-                  }
-              }
-          });
-      }
-
-
-      /********************************************************************
-            ABRIR MODAL  VER PRESTAMOS POR CAJA 
-      ********************************************************************/
-      function AbrirModalVerRegistrosPorCaja() {
-          $("#modal_registros_caja").modal({
-              backdrop: 'static',
-              keyboard: false
-          });
-          $("#modal_registros_caja").modal('show'); //abrimos el modal
-
-          $("#text_descripcion").val('Ver Registros de Caja');
-
-          // accion = 2;
-
-      }
-
-
-      /********************************************************************
-            ABRIR MODAL CERRAR CAJA 
-      ********************************************************************/
-      function AbrirModalAbrirCerrarCaja() {
-          //para que no se nos salga del modal haciendo click a los costados
-          $("#modal_cerrar_caja").modal({
-              backdrop: 'static',
-              keyboard: false
-          });
-          $("#modal_cerrar_caja").modal('show'); //abrimos el modal
-          //suma();
-
-      }
-
-
-      /*===================================================================*/
-      //FUNCION PARA CARGAR DATOS CANTIDADES
-      /*===================================================================*/
-      function CargarDatosCierreCaja() {
-          $.ajax({
-              async: false,
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              data: {
-                  'accion': 3
-              },
-              dataType: 'json',
-              success: function(respuesta) {
-
-                  // console.log(respuesta);
-
-
-                  monto_inicial_caja = respuesta["monto_inicial_caja"];
-                   suma_prestamo_capital = respuesta["suma_prestamo_capital"]; 
-                  suma_total = respuesta["suma_total"];
-                  cant_prestamo = respuesta["cant_prestamo"];
-                  cant_ingresos = respuesta["cant_ingresos"];
-                  suma_ingresos = respuesta["suma_ingresos"];
-                  suma_egresos = respuesta["suma_egresos"];
-                  cant_egresos = respuesta["cant_egresos"];
-                  suma_prestamo_interes = respuesta["suma_prestamo_interes"];
-
-                  $("#text_monto_aper").val(monto_inicial_caja);
-                  $("#text_monto_prestamo").val(suma_prestamo_capital); //SETEAMOS EN LOS TEXTBOX
-                  //$("#text_monto_prestamo").val(suma_total);
-                  $("#text_cant_prestamo").val(cant_prestamo);
-                  $("#text_monto_ingreso").val(suma_ingresos);
-                  $("#text_cant_ingreso").val(cant_ingresos);
-                  $("#text_monto_egreso").val(suma_egresos);
-                  $("#text_cant_egreso").val(cant_egresos);
-                  $("#text_interes").val(suma_prestamo_interes);
-
-
-              }
-          });
-      }
-
-
-
-      function Sumar() {
-          //var suma = 0;
-          monto_inicial_caja = $("#text_monto_aper").val();
-          suma_prestamo_capital = $("#text_monto_prestamo").val();
-          suma_ingresos = $("#text_monto_ingreso").val();
-          suma_egresos = $("#text_monto_egreso").val();
-          interes = $("#text_interes").val();
-
-          // suma = monto_inicial_caja + suma_prestamo_capital + suma_ingresos;
-          //console.log(suma);
-          ope = (parseFloat(monto_inicial_caja) + parseFloat(interes) + parseFloat(suma_ingresos));
-
-          suma = (parseFloat(ope - suma_egresos).toFixed(2));
-
-
-
-          $("#text_monto_total").val(suma);
-
-      }
-
-      /*===================================================================*/
-      //TRAER TODOS LOS PRESTAMOS FINALIZADOS DE LA CAJA ACTUAL
-      /*===================================================================*/
-      function Traer_RegistrosporIDCaja(caja_id) {
-          tbl_resgitros_caja = $("#tbl_resgitros_caja").DataTable({
-              responsive: true,
-              destroy: true,
-              searching: false,
-              dom: 'tp',
-              ajax: {
-                  url: "ajax/caja_ajax.php",
-                  dataSrc: "",
-                  type: "POST",
-                  data: {
-                      'accion': 7,
-                      'caja_id': caja_id
-                  }, //LISTAR 
-              },
-              columnDefs: [
-                 {
-                      targets: 1,
-                      visible: false
-
-                  },{
-                      targets: 7,
-                      visible: false
-
-                  },
-                  {
-                  targets: 8,
-                  //sortable: false,
-                  createdCell: function(td, cellData, rowData, row, col) {
-
-                      if (rowData[8] == 'aprobado') {
-                          $(td).html("<span class='badge badge-success'>aprobado</span>")
-                      } else if (rowData[8] == 'finalizado') {
-                          $(td).html("<span class='badge badge-info'>finalizado</span>")
-                      }else {
-                          $(td).html("<span class='badge badge-warning'>pendiente</span>")
-                      }
-
-                  }
-              }
-
-              ],
-              "footerCallback": function(row, data, start, end, display) {
-                  var api = this.api(),
-                      data;
-                  var intval = function(i) {
-                      return typeof i === 'string' ?
-                          i.replace(/[\$,]/g, '') * 1 :
-                          typeof i === 'number' ?
-                          i : 0;
-                  };
-                  total = api
-                      .column(5)
-                      .data()
-                      .reduce(function(a, b) {
-                          return intval(a) + intval(b);
-                      }, 0);
-                  pageTotal = api
-                      .column(5, {
-                          page: 'current'
-                      })
-                      .data()
-                      .reduce(function(a, b) {
-                          return intval(a) + intval(b);
-                      }, 0);
-                  $(api.column(5).footer()).html(
-                    '' + pageTotal 
-                    //   '' + pageTotal + ' ( ' + total + ' total)'
-                  );
-
-              },
-              
-
-              "language": idioma_espanol,
-              select: true
-          });
-      }
-
-
-      /*===================================================================*/
-      //TRAER TODOS LOS MOVIMIENTOS DE LA CAJA ACTUAL
-      /*===================================================================*/
-      function Traer_MovimientosporIDCaja(caja_id) {
-        tbl_resgitros_movi = $("#tbl_resgitros_movi").DataTable({
-              responsive: true,
-              destroy: true,
-              searching: false,
-              dom: 'tp',
-              ajax: {
-                  url: "ajax/caja_ajax.php",
-                  dataSrc: "",
-                  type: "POST",
-                  data: {
-                      'accion': 8,
-                      'caja_id': caja_id
-                  }, 
-              },
-              columnDefs: [
-                 {
-                      targets: 4,
-                      visible: false
-
-                  }
-                  
-
-              ],
-              
-             
-
-              "language": idioma_espanol,
-              select: true
-          });
-      }
-
-
-
-      var idioma_espanol = {
-          select: {
-              rows: "%d fila seleccionada"
-          },
-          "sProcessing": "Procesando...",
-          "sLengthMenu": "Ver _MENU_ ",
-          "sZeroRecords": "No se encontraron resultados",
-          "sEmptyTable": "No hay informacion en esta tabla",
-          "sInfo": "Mostrando (_START_ a _END_) total de _TOTAL_ registros",
-          "sInfoEmpty": "Registros del (0 al 0) total de 0 registros",
-          "sInfoFiltered": "(Filtrado de un total de _MAX_ registros)",
-          "SInfoPostFix": "",
-          "sSearch": "Buscar:",
-          "sUrl": "",
-          "sInfoThousands": ",",
-          "sLoadingRecords": "<b>No se encontraron datos</b>",
-          "oPaginate": {
-              "sFirst": "Primero",
-              "sLast": "Ultimo",
-              "sNext": "Siguiente",
-              "sPrevious": "Anterior"
-          },
-          "aria": {
-              "sSortAscending": ": ordenar de manera Ascendente",
-              "SSortDescending": ": ordenar de manera Descendente ",
-          }
-      }
-
-      /*===================================================================*/
-      // NUEVAS FUNCIONALIDADES MEJORADAS
-      /*===================================================================*/
-
-      // Variables globales para información de sucursal y caja
-      let informacionSucursal = null;
-      let estadoCajaActual = null;
-
-      // Inicializar funcionalidades mejoradas al cargar
-      $(document).ready(function() {
-          inicializarSistemaCompleto();
-          configurarEventosNuevos();
-      });
-
-      function inicializarSistemaCompleto() {
-          obtenerInformacionSucursal();
-          cargarResumenDiaActual();
-          verificarEstadoCaja();
-          
-          // Actualizar cada 30 segundos
-          setInterval(function() {
-              cargarResumenDiaActual();
-              verificarEstadoCaja();
-          }, 30000);
-      }
-
-      function obtenerInformacionSucursal() {
-          $.ajax({
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              data: { accion: "obtener_sucursal_usuario" },
-              dataType: 'json',
-              success: function(response) {
-                  if (response.success) {
-                      informacionSucursal = response.sucursal;
-                      actualizarInfoSucursal();
-                  }
-              },
-              error: function() {
-                  console.error("Error al obtener información de sucursal");
-              }
-          });
-      }
-
-      function actualizarInfoSucursal() {
-          if (informacionSucursal) {
-              const textoSucursal = informacionSucursal.sucursal_nombre 
-                  ? `- ${informacionSucursal.sucursal_codigo}: ${informacionSucursal.sucursal_nombre}`
-                  : '- Sucursal Principal';
-              
-              $('#info-sucursal-header').text(textoSucursal);
-          }
-      }
-
-      function cargarResumenDiaActual() {
-          $.ajax({
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              data: { accion: "obtener_resumen_dia" },
-              dataType: 'json',
-              success: function(response) {
-                  if (response.success) {
-                      actualizarTarjetasResumen(response.resumen);
-                  }
-              },
-              error: function() {
-                  // Error silencioso para no molestar al usuario
-              }
-          });
-      }
-
-      function actualizarTarjetasResumen(resumen) {
-          // Actualizar tarjetas de resumen
-          $('#resumen-prestamos-count').text(resumen.prestamos_otorgados || 0);
-          $('#resumen-prestamos-monto').text('$' + parseFloat(resumen.monto_prestamos || 0).toFixed(2));
-          
-          $('#resumen-pagos-count').text(resumen.pagos_recibidos || 0);
-          $('#resumen-pagos-monto').text('$' + parseFloat(resumen.monto_pagos || 0).toFixed(2));
-          
-          $('#resumen-ingresos-count').text(resumen.ingresos_count || 0);
-          $('#resumen-ingresos-monto').text('$' + parseFloat(resumen.ingresos_monto || 0).toFixed(2));
-          
-          $('#resumen-egresos-count').text(resumen.egresos_count || 0);
-          $('#resumen-egresos-monto').text('$' + parseFloat(resumen.egresos_monto || 0).toFixed(2));
-
-          // Actualizar estado de caja
-          $('#caja-monto-inicial').text('$' + parseFloat(resumen.monto_inicial_caja || 0).toFixed(2));
-          
-          const saldoCalculado = parseFloat(resumen.monto_inicial_caja || 0) + 
-                                parseFloat(resumen.monto_pagos || 0) + 
-                                parseFloat(resumen.ingresos_monto || 0) - 
-                                parseFloat(resumen.egresos_monto || 0) - 
-                                parseFloat(resumen.monto_prestamos || 0);
-          
-          $('#caja-saldo-actual').text('$' + saldoCalculado.toFixed(2));
-      }
-
-      function verificarEstadoCaja() {
-          $.ajax({
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              data: { accion: "obtenerDataEstadoCaja" },
-              dataType: 'json',
-              success: function(response) {
-                  estadoCajaActual = response;
-                  actualizarEstadoCaja(response);
-              },
-              error: function() {
-                  $('#caja-estado').removeClass().addClass('badge badge-danger').text('Error');
-              }
-          });
-      }
-
-      function actualizarEstadoCaja(estado) {
-          if (estado && estado.caja_estado === 'VIGENTE') {
-              $('#caja-estado').removeClass().addClass('badge badge-success').text('ABIERTA');
-              // Habilitar botón cerrar caja si existe
-              $('.btnCerrarCaja').prop('disabled', false);
-              $('#btnCierreDiaRapido').prop('disabled', false);
-          } else {
-              $('#caja-estado').removeClass().addClass('badge badge-secondary').text('CERRADA');
-              $('#caja-monto-inicial, #caja-saldo-actual').text('$0.00');
-              $('#btnCierreDiaRapido').prop('disabled', true);
-          }
-      }
-
-      function configurarEventosNuevos() {
-          // Evento para cierre de día rápido
-          $('#btnCierreDiaRapido').on('click', function() {
-              if (estadoCajaActual && estadoCajaActual.caja_estado === 'VIGENTE') {
-                  prepararCierreDia();
-              } else {
-                  Toast.fire({
-                      icon: 'warning',
-                      title: 'No hay caja abierta para hacer cierre de día'
-                  });
-              }
-          });
-
-          // Evento para actualizar datos
-          $('#btnActualizarDatos').on('click', function() {
-              cargarResumenDiaActual();
-              verificarEstadoCaja();
-              tbl_caja.ajax.reload();
-              Toast.fire({
-                  icon: 'success',
-                  title: 'Datos actualizados'
-              });
-          });
-
-          // Mejorar función de cerrar caja existente
-          $(document).on('click', '.btnCerrarCaja', function() {
-              if (estadoCajaActual && estadoCajaActual.caja_estado === 'VIGENTE') {
-                  // Usar la función existente pero mejorada
-                  var data = tbl_caja.row($(this).parents('tr')).data();
-                  $("#caja_id").val(data[0]);
-                  AbrirModalAbrirCerrarCaja();
-                  CargarDatosCierreCaja();
-                  Sumar();
-              } else {
-                  Toast.fire({
-                      icon: 'warning',
-                      title: 'No se puede cerrar una caja que no está abierta'
-                  });
-              }
-          });
-      }
-
-      function prepararCierreDia() {
-          $.ajax({
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              data: { accion: "obtener_resumen_dia" },
-              dataType: 'json',
-              success: function(response) {
-                  if (response.success) {
-                      const resumen = response.resumen;
-                      
-                      if (!resumen.puede_cerrar_dia) {
-                          Toast.fire({
-                              icon: 'info',
-                              title: 'El día ya ha sido cerrado'
-                          });
-                          return;
-                      }
-
-                      // Crear modal dinámico para cierre de día
-                      mostrarModalCierreDia(resumen);
-                  }
-              },
-              error: function() {
-                  Toast.fire({
-                      icon: 'error',
-                      title: 'Error al obtener datos para cierre'
-                  });
-              }
-          });
-      }
-
-      function mostrarModalCierreDia(resumen) {
-          const saldoFinal = parseFloat(resumen.monto_inicial_caja || 0) + 
-                            parseFloat(resumen.monto_pagos || 0) + 
-                            parseFloat(resumen.ingresos_monto || 0) - 
-                            parseFloat(resumen.egresos_monto || 0) - 
-                            parseFloat(resumen.monto_prestamos || 0);
-
-          Swal.fire({
-              title: '<i class="fas fa-calendar-check"></i> Cierre de Día',
-              html: `
-                  <div class="row">
-                      <div class="col-md-6">
-                          <h6><i class="fas fa-chart-pie"></i> Resumen del Día</h6>
-                          <table class="table table-sm">
-                              <tr><td><strong>Préstamos:</strong></td><td>${resumen.prestamos_otorgados || 0}</td><td>$${parseFloat(resumen.monto_prestamos || 0).toFixed(2)}</td></tr>
-                              <tr><td><strong>Pagos:</strong></td><td>${resumen.pagos_recibidos || 0}</td><td>$${parseFloat(resumen.monto_pagos || 0).toFixed(2)}</td></tr>
-                              <tr><td><strong>Ingresos:</strong></td><td>${resumen.ingresos_count || 0}</td><td>$${parseFloat(resumen.ingresos_monto || 0).toFixed(2)}</td></tr>
-                              <tr><td><strong>Egresos:</strong></td><td>${resumen.egresos_count || 0}</td><td>$${parseFloat(resumen.egresos_monto || 0).toFixed(2)}</td></tr>
-                          </table>
-                      </div>
-                      <div class="col-md-6">
-                          <h6><i class="fas fa-calculator"></i> Balance</h6>
-                          <p><strong>Monto Inicial:</strong> $${parseFloat(resumen.monto_inicial_caja || 0).toFixed(2)}</p>
-                          <p><strong>Saldo Final:</strong> <span class="text-success">$${saldoFinal.toFixed(2)}</span></p>
-                          <textarea id="swal-observaciones" class="form-control" placeholder="Observaciones (opcional)" rows="3"></textarea>
-                      </div>
-                  </div>
-              `,
-              showCancelButton: true,
-              confirmButtonText: '<i class="fas fa-check"></i> Generar Cierre',
-              cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-              confirmButtonColor: '#28a745',
-              cancelButtonColor: '#6c757d',
-              width: '800px',
-              preConfirm: () => {
-                  return $('#swal-observaciones').val();
-              }
-          }).then((result) => {
-              if (result.isConfirmed) {
-                  generarCierreDia(result.value);
-              }
-          });
-      }
-
-      function generarCierreDia(observaciones) {
-          $.ajax({
-              url: "ajax/caja_ajax.php",
-              method: "POST",
-              data: {
-                  accion: "generar_cierre_dia",
-                  observaciones: observaciones || ''
-              },
-              dataType: 'json',
-              success: function(response) {
-                  if (response.resultado == 1) {
-                      Toast.fire({
-                          icon: 'success',
-                          title: 'Cierre de día generado exitosamente'
-                      });
-                      cargarResumenDiaActual();
-                  } else {
-                      Toast.fire({
-                          icon: 'error',
-                          title: response.mensaje || 'Error al generar cierre de día'
-                      });
-                  }
-              },
-              error: function() {
-                  Toast.fire({
-                      icon: 'error',
-                      title: 'Error de conexión'
-                  });
-              }
-          });
-      }
-  </script>
-
+  <!-- Modal para Abrir Caja con Validaciones -->
+<div class="modal fade" id="modal-abrir-caja-avanzado" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h4 class="modal-title">
+                    <i class="fas fa-unlock"></i> Apertura de Caja Avanzada
+                </h4>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form-abrir-caja-avanzado">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Descripción de la Caja</label>
+                                <input type="text" class="form-control" id="caja-descripcion" 
+                                       value="Apertura de Caja" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Monto Inicial</label>
+                                <input type="number" class="form-control" id="caja-monto-inicial" 
+                                       step="0.01" min="0" required>
+                                <small class="text-muted">Límite máximo: <span id="limite-apertura">-</span></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Observaciones</label>
+                                <textarea class="form-control" id="caja-observaciones" rows="3" 
+                                          placeholder="Observaciones adicionales sobre la apertura..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="validacion-fisica-apertura">
+                                <label class="form-check-label" for="validacion-fisica-apertura">
+                                    He realizado el conteo físico del dinero
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="confirmarAperturaCaja()">
+                    <i class="fas fa-unlock"></i> Abrir Caja
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Conteo Físico con Denominaciones -->
+<div class="modal fade" id="modal-conteo-fisico" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info p-2">
+        <h5 class="modal-title">
+          <i class="fas fa-calculator"></i> Conteo Físico
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-2">
+        <form id="form-conteo-fisico">
+          <div class="form-group mb-2">
+            <label class="mb-1">Tipo de Conteo</label>
+            <select class="form-control form-control-sm" id="tipo-conteo">
+              <option value="INTERMEDIO">Intermedio</option>
+              <option value="CIERRE">Cierre</option>
+              <option value="SUPERVISION">Supervisión</option>
+            </select>
+          </div>
+          <div class="form-group mb-2">
+            <label class="mb-1">Saldo Físico</label>
+            <input type="number" class="form-control form-control-sm" id="saldo-fisico" step="0.01" min="0" required>
+          </div>
+          <div class="form-group mb-2">
+            <label class="mb-1">Denominaciones</label>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered mb-2" id="tabla-denominaciones" style="font-size:0.95em;">
+                <thead>
+                  <tr>
+                    <th style="width:35%">Denom.</th>
+                    <th style="width:35%">Cant.</th>
+                    <th style="width:30%">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>500</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="500"></td><td class="denom-total">0</td></tr>
+                  <tr><td>200</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="200"></td><td class="denom-total">0</td></tr>
+                  <tr><td>100</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="100"></td><td class="denom-total">0</td></tr>
+                  <tr><td>50</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="50"></td><td class="denom-total">0</td></tr>
+                  <tr><td>20</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="20"></td><td class="denom-total">0</td></tr>
+                  <tr><td>10</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="10"></td><td class="denom-total">0</td></tr>
+                  <tr><td>5</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="5"></td><td class="denom-total">0</td></tr>
+                  <tr><td>1</td><td><input type="number" min="0" class="form-control form-control-sm input-denom" data-valor="1"></td><td class="denom-total">0</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="text-right font-weight-bold">Total: <span id="total-denominaciones">0</span></div>
+          </div>
+          <div class="form-group mb-2">
+            <label class="mb-1">Observaciones</label>
+            <textarea class="form-control form-control-sm" id="observaciones-conteo" rows="2" placeholder="Detalles..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer p-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-info btn-sm" onclick="window.confirmarConteoFisico()">
+          <i class="fas fa-save"></i> Registrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Generar Reporte -->
+<div class="modal fade" id="modal-generar-reporte" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary p-2">
+        <h5 class="modal-title">
+          <i class="fas fa-file-alt"></i> Generar Reporte
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-2">
+        <form id="form-generar-reporte">
+          <div class="form-group mb-2">
+            <label class="mb-1">Tipo de Reporte</label>
+            <select class="form-control form-control-sm" id="tipo-reporte">
+              <option value="resumen">Resumen de Caja</option>
+              <option value="movimientos">Movimientos</option>
+              <option value="prestamos">Préstamos</option>
+            </select>
+          </div>
+          <div class="form-group mb-2">
+            <label class="mb-1">Formato</label>
+            <select class="form-control form-control-sm" id="formato-reporte">
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+              <option value="csv">CSV</option>
+            </select>
+          </div>
+          <div class="form-group mb-2">
+            <label class="mb-1">Enviar por correo (opcional)</label>
+            <input type="email" class="form-control form-control-sm" id="email-reporte" placeholder="correo@ejemplo.com">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer p-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-info btn-sm" id="btn-descargar-reporte">
+          <i class="fas fa-download"></i> Descargar
+        </button>
+        <button type="button" class="btn btn-success btn-sm" id="btn-enviar-reporte">
+          <i class="fas fa-envelope"></i> Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Detalle de Caja -->
+<div class="modal fade" id="modal-detalle-caja" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info p-2">
+        <h5 class="modal-title">
+          <i class="fas fa-eye"></i> Detalle de Caja
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-2" id="detalle-caja-body">
+        <!-- Aquí se cargan los detalles dinámicamente -->
+        <div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+      </div>
+      <div class="modal-footer p-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="vistas/js/caja_page_functions.js"></script>
   <!-- Script para correcciones de modales -->
   <script src="vistas/assets/dist/js/caja-modales-corregidos.js"></script>
+  <script src="vistas/js/dashboard_caja_funciones.js"></script>
+  <script>
+// Función para cargar sucursales en el modal
+function cargarSucursalesModal() {
+     $.ajax({
+        url: 'ajax/aprobacion_ajax.php',
+        type: 'GET',
+        data: { accion: 'listar_sucursales' },
+        dataType: 'json',
+        success: function(response) {
+            const select = $('#select_sucursal');
+            select.empty().append('<option value="">Seleccionar sucursal...</option>');
+            
+            if (response && Array.isArray(response) && response.length > 0) {
+                response.forEach(function(sucursal) {
+                    const sucursalId = sucursal.sucursal_id || sucursal.id;
+                    const sucursalNombre = sucursal.sucursal_nombre || sucursal.nombre;
+                    
+                    if (sucursalId && sucursalNombre) {
+                        select.append(`<option value="${sucursalId}">${sucursalNombre}</option>`);
+                    }
+                });
+               } else {
+                console.warn('No se encontraron sucursales');
+                select.append('<option value="">No hay sucursales disponibles</option>');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al cargar sucursales:', error);
+            $('#select_sucursal').empty().append('<option value="">Error al cargar sucursales</option>');
+        }
+    });
+}
+
+// Función global para abrir caja
+window.abrirCaja = function() {
+    // Verificar permisos primero
+    $.ajax({
+        url: "ajax/caja_ajax.php",
+        method: "POST",
+        data: {
+            accion: "verificar_permisos_caja",
+            sub_accion: "ABRIR_CAJA"
+        },
+        dataType: 'json',
+        success: function(response) {
+            // CORRECCIÓN: La lógica ahora busca dentro de response.permisos
+            if (response.success && response.permisos && response.permisos.puede_ejecutar) {
+                // Mostrar el modal de apertura
+                $("#modal_abrir_caja").modal('show');
+                
+                // Cargar sucursales si es necesario
+                if (typeof cargarSucursalesModal === 'function') {
+                    cargarSucursalesModal();
+                }
+                
+                // Establecer valores por defecto
+                $("#text_descripcion").val('Apertura de Caja');
+                $("#text_monto_ini").focus();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Permisos',
+                    // CORRECCIÓN: Usar el mensaje correcto de la respuesta
+                    text: response.permisos ? response.permisos.mensaje : 'No tiene los permisos necesarios para abrir caja'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error al verificar permisos:", error);
+            console.error("Respuesta del servidor:", xhr.responseText);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron verificar los permisos. Por favor, intente nuevamente.'
+            });
+        }
+    });
+}
+
+// Asignar eventos cuando el documento esté listo
+$(document).ready(function() {
+    // Asignar el evento al botón de apertura
+    $("#btnAbrirCaja, .btnAbrirCaja").on('click', function(e) {
+        e.preventDefault();
+        abrirCaja();
+    });
+});
+
+// Lógica para ocultar la caja principal a usuarios que no sean administradores
+$(document).ready(function() {
+    // Suponiendo que tienes una variable global userContext o similar con el perfil
+    // Si no, deberás obtener el perfil del usuario vía AJAX o PHP
+    function esAdmin() {
+        // Puedes reemplazar esto por la lógica real de tu sistema
+        return window.userContext && window.userContext.perfil && window.userContext.perfil.toLowerCase() === 'administrador';
+    }
+
+    // Ocultar filas de la grid de cajas activas que sean tipo principal si no es admin
+    function filtrarCajasActivasPorRol() {
+        if (!esAdmin()) {
+            $('#tabla-cajas-activas tbody tr').each(function() {
+                var tipo = $(this).find('td').eq(0).text().toLowerCase();
+                // Suponiendo que el tipo de caja está en la primera columna o puedes ajustar el selector
+                if (tipo.includes('principal')) {
+                    $(this).hide();
+                }
+            });
+        }
+    }
+
+    // Llamar al filtrar después de cargar la tabla
+    setTimeout(filtrarCajasActivasPorRol, 500); // Ajusta el timeout según tu carga de datos
+
+    // Si usas DataTables, puedes usar drawCallback para filtrar dinámicamente
+    if ($.fn.DataTable && $('#tabla-cajas-activas').hasClass('dataTable')) {
+        $('#tabla-cajas-activas').on('draw.dt', function() {
+            filtrarCajasActivasPorRol();
+        });
+    }
+});
+
+$(document).ready(function() {
+    function esAdmin() {
+        return window.userContext && window.userContext.perfil && window.userContext.perfil.toLowerCase() === 'administrador';
+    }
+
+    // Mostrar u ocultar la grid de cajas activas según el rol
+    if (!esAdmin()) {
+        // Ocultar la grid completa para no administradores
+        $('.card:has(#tabla-cajas-activas)').hide();
+    }
+});
+</script>

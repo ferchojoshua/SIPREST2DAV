@@ -865,7 +865,7 @@ $(document).ready(function() {
             }
         ],
         "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+            "url": "vistas/assets/plugins/datatables/i18n/Spanish.json"
         },
         "responsive": true,
         "order": [[0, "asc"]]
@@ -1287,7 +1287,7 @@ $(document).ready(function() {
                 }
             ],
             "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                "url": "vistas/assets/plugins/datatables/i18n/Spanish.json"
             },
             "pageLength": 10,
             "order": [[0, "asc"]]

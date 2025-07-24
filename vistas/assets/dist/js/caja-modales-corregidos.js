@@ -6,7 +6,6 @@
  */
 
 $(document).ready(function() {
-    console.log('🔧 Cargando correcciones para modales de caja...');
 
     /* ===================================================================
     MODAL: CONFIGURACIÓN DE CAJAS POR SUCURSAL
@@ -40,7 +39,6 @@ $(document).ready(function() {
                             select.append(`<option value="${sucursalId}">${sucursalNombre}</option>`);
                         }
                     });
-                    console.log(`✅ Cargadas ${response.length} sucursales en modal`);
                 } else {
                     console.warn('⚠️ No se encontraron sucursales');
                     select.append('<option value="">No hay sucursales disponibles</option>');
@@ -348,9 +346,7 @@ $(document).ready(function() {
 
     // Evento para filtro de sucursal en configuración
     $(document).on('change', '#filtro_sucursal_config', function() {
-        console.log('🔄 Filtrando por sucursal:', $(this).val());
         cargarCajasConfiguracion();
     });
 
-    console.log('✅ Correcciones de modales de caja cargadas correctamente');
 }); 

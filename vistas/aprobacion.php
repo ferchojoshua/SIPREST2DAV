@@ -212,22 +212,65 @@
                         </div>
                     </div>
                 </div>
+                <!-- Resumen del Préstamo -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="card card-outline card-info">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-info-circle"></i> Resumen del Préstamo
+                                </h6>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Monto Prestado:</small><br>
+                                        <strong id="resumen_monto_prestado">S/ 0.00</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Total a Pagar:</small><br>
+                                        <strong id="resumen_monto_total">S/ 0.00</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Interés Total:</small><br>
+                                        <strong id="resumen_interes_total">S/ 0.00</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Estado:</small><br>
+                                        <span id="resumen_estado" class="badge badge-info">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="row">
                     <div class="table-responsive">
                         <table id="tbl_detalle_prestamo" class="table display table-hover text-nowrap compact  w-100  rounded" style="width:100%;">
                             <thead class="bg-gradient-info text-white">
                                 <tr>
                                     <th>Id</th>
-                                    <th style="width:40%;">Nro prestamo</th>
+                                    <th>Nro prestamo</th>
                                     <th>Cuota</th>
-                                    <th style="width:10%;">Fecha</th>
+                                    <th>Fecha</th>
                                     <th>Monto</th>
+                                    <th>Saldo</th>
                                     <th>Estado</th>
-                                    <!-- <th class="text-cetner">Opciones</th> -->
+                                    <th class="text-center">Opciones</th>
                                 </tr>
                             </thead>
                             <tbody class="small text left">
                             </tbody>
+                            <tfoot class="bg-gradient-secondary text-white">
+                                <tr>
+                                    <th colspan="4" class="text-right"><strong>TOTALES:</strong></th>
+                                    <th id="total_monto"><strong>S/ 0.00</strong></th>
+                                    <th id="total_saldo"><strong>S/ 0.00</strong></th>
+                                    <th id="total_cuotas"><strong>0 cuotas</strong></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
                         </table>
 
                     </div>
@@ -958,38 +1001,79 @@
             VER DETALLE DE PAGOS  -
           =========================================================================================*/
           $("#tbl_aprobacion_pres tbody").on('click', '.btnVerDetalle', function() {
-              //tbl_report_cliente.destroy();
-              //accion = 2; //seteamos la accion para Eliminar
-
+              console.log("[DEBUG] Click en btnVerDetalle detectado");
+              
               if (tbl_aprobacion_pres.row(this).child.isShown()) {
                   var data = tbl_aprobacion_pres.row(this).data();
               } else {
                   var data = tbl_aprobacion_pres.row($(this).parents('tr')).data(); //OBTENER EL ARRAY CON LOS DATOS DE CADA COLUMNA DEL DATATABLE
-                  // console.log(data);
+              }
+              
+              console.log("[DEBUG] Datos obtenidos de la fila:", data);
+              console.log("[DEBUG] Número de préstamo (data[1]):", data[1]);
+
+              // Verificar que tenemos datos
+              if (!data || !data[1]) {
+                  console.error("[ERROR] No se pudieron obtener los datos de la fila");
+                  Toast.fire({
+                      icon: 'error',
+                      title: 'Error al cargar datos del préstamo'
+                  });
+                  return;
               }
 
+                             // Obtener datos completos del préstamo
+               var nro_prestamo = data[1];
+               console.log("[DEBUG] Obteniendo datos completos del préstamo:", nro_prestamo);
+               
+               // Llamar a la función que obtiene todos los datos
+               obtenerDatosCompletoPrestamo(nro_prestamo, function(datosCompletos) {
+                   if (datosCompletos) {
+                       console.log("[DEBUG] Datos completos recibidos:", datosCompletos);
+                       
+                       // Poblar los campos del modal con datos completos
+                       $("#text_nro_prestamo_d").val(datosCompletos.nro_prestamo || '');
+                       $("#text_cliente_d").val(datosCompletos.cliente_nombres || '');
+                       $("#text_monto_d").val((datosCompletos.pres_monto || '0') + ".00");
+                       $("#text_interes_d").val((datosCompletos.pres_interes || '0') + " %");
+                       $("#text_cuota_d").val(datosCompletos.pres_cuotas || '');
+                       $("#text_fpago__d").val(datosCompletos.fpago_descripcion || '');
+                       $("#text_fecha__d").val(datosCompletos.pres_f_emision || '');
+                       $("#text_monto_cuota__d").val(datosCompletos.pres_monto_cuota || '');
+                       $("#text_monto_interes__d").val(datosCompletos.pres_monto_interes || '');
+                       $("#text_monto_total__d").val(datosCompletos.pres_monto_total || '');
+                       $("#text_cuotas_pagadas__d").val('0'); // Este valor viene del detalle
+                       
+                       console.log("[DEBUG] Campos del modal poblados con datos completos");
+                   } else {
+                       console.warn("[WARNING] No se pudieron obtener datos completos, usando datos de la tabla");
+                       
+                       // Fallback: usar datos de la tabla
+                       $("#text_nro_prestamo_d").val(data[1] || '');
+                       $("#text_cliente_d").val(data[3] || '');
+                       $("#text_monto_d").val((data[4] || '0') + ".00");
+                       $("#text_interes_d").val((data[5] || '0') + " %");
+                       $("#text_cuota_d").val(data[6] || '');
+                       $("#text_fpago__d").val(data[8] || '');
+                       $("#text_fecha__d").val(data[11] || '');
+                       $("#text_monto_cuota__d").val(data[14] || '');
+                       $("#text_monto_interes__d").val(data[15] || '');
+                       $("#text_monto_total__d").val(data[16] || '');
+                       $("#text_cuotas_pagadas__d").val(data[17] || '');
+                   }
+                   
+                   // Cargar el detalle del préstamo
+                   Traer_Detalle(nro_prestamo);
+               });
+
+              // Mostrar el modal
               $("#modal_detalle_prestamo").modal({
                   backdrop: 'static',
                   keyboard: false
               });
-              $("#modal_detalle_prestamo").modal('show'); //abrimos el modal*/
-
-               $("#text_nro_prestamo_d").val(data[1]);
-               $("#text_cliente_d").val(data[3]);
-               $("#text_monto_d").val(data[4] + ".00");
-              $("#text_interes_d").val(data[5] + " %");
-              $("#text_cuota_d").val(data[6]);
-              $("#text_fpago__d").val(data[8]);
-              $("#text_fecha__d").val(data[11]);
-               $("#text_monto_cuota__d").val(data[14]);
-              $("#text_monto_interes__d").val(data[15]);
-              $("#text_monto_total__d").val(data[16]);
-              $("#text_cuotas_pagadas__d").val(data[17]);
-
-
-               Traer_Detalle(data[1]);
-
-
+              $("#modal_detalle_prestamo").modal('show');
+              
+              console.log("[DEBUG] Modal mostrado");
           })
 
 
@@ -1159,20 +1243,23 @@
 
 
     function Traer_Detalle(nro_prestamo) {
-        tbl_detalle_prestamo = $("#tbl_detalle_prestamo").DataTable({
-            responsive: true,
-            destroy: true,
-            searching: false,
-            dom: 'tp',
-            ajax: {
-                url: "ajax/admin_prestamos_ajax.php",
-                dataSrc: "",
-                type: "POST",
-                data: {
-                    'accion': 2,
-                    'nro_prestamo': nro_prestamo
-                }, //LISTAR 
-            },
+        console.log("[DEBUG] Traer_Detalle iniciado con nro_prestamo:", nro_prestamo);
+        
+        // Verificar que el elemento existe
+        if ($("#tbl_detalle_prestamo").length === 0) {
+            console.error("[ERROR] Elemento #tbl_detalle_prestamo no encontrado");
+            return;
+        }
+        
+        console.log("[DEBUG] Elemento tabla encontrado, inicializando DataTable...");
+        
+        try {
+            // Inicializar DataTable vacío
+            tbl_detalle_prestamo = $("#tbl_detalle_prestamo").DataTable({
+                responsive: true,
+                destroy: true,
+                searching: false,
+                dom: 'tp',
             columns: [
                 { data: 'pdetalle_id' },
                 { data: 'nro_prestamo' },
@@ -1183,19 +1270,45 @@
                 { data: 'pdetalle_estado_cuota' },
                 { data: null }
             ],
-            dataSrc: function(json) {
-                return json;
-            },
             columnDefs: [{
                     targets: [0, 1],
                     visible: false
 
-                }, {
-                    targets: 4, // Monto
-                    render: function(data, type, row) {
-                        return row.moneda_simbolo + ' ' + data;
-                    }
-                }, {
+                                    }, {
+                        targets: 4, // Monto
+                        render: function(data, type, row) {
+                            let monto = parseFloat(data || 0);
+                            let montoFormateado = new Intl.NumberFormat('es-PE', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(monto);
+                            
+                            // Verificar que existe el símbolo de moneda
+                            if (!row.moneda_simbolo) {
+                                console.warn("[WARNING] No hay símbolo de moneda en fila:", row);
+                                return '-- ' + montoFormateado;
+                            }
+                            
+                            return row.moneda_simbolo + ' ' + montoFormateado;
+                        }
+                    }, {
+                        targets: 5, // Saldo
+                        render: function(data, type, row) {
+                            let saldo = parseFloat(data || 0);
+                            let saldoFormateado = new Intl.NumberFormat('es-PE', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(saldo);
+                            
+                            // Verificar que existe el símbolo de moneda
+                            if (!row.moneda_simbolo) {
+                                console.warn("[WARNING] No hay símbolo de moneda en fila:", row);
+                                return '-- ' + saldoFormateado;
+                            }
+                            
+                            return row.moneda_simbolo + ' ' + saldoFormateado;
+                        }
+                    }, {
                     targets: 6, // Estado
                     createdCell: function(td, cellData, rowData, row, col) {
 
@@ -1223,8 +1336,186 @@
             "language": idioma_espanol,
             select: true
         });
+        
+        console.log("[DEBUG] DataTable inicializado correctamente");
+        
+        // Ahora cargar los datos por separado
+        cargarDatosDetalle(nro_prestamo);
+        
+        } catch (error) {
+            console.error("[ERROR] Error al inicializar DataTable:", error);
+        }
     }
 
+    function cargarDatosDetalle(nro_prestamo) {
+        console.log("[DEBUG] Cargando datos del detalle para:", nro_prestamo);
+        
+        $.ajax({
+            url: "ajax/admin_prestamos_ajax.php",
+            type: "POST",
+            data: {
+                'accion': 2,
+                'nro_prestamo': nro_prestamo
+            },
+            beforeSend: function() {
+                console.log("[DEBUG] Enviando petición AJAX para detalle...");
+            },
+            success: function(data) {
+                console.log("[DEBUG] Datos del detalle recibidos:", data);
+                console.log("[DEBUG] Tipo de datos recibidos:", typeof data);
+                console.log("[DEBUG] Es array?:", Array.isArray(data));
+                console.log("[DEBUG] Longitud:", data ? data.length : 'N/A');
+                
+                // Inspeccionar el primer elemento para ver la estructura
+                if (Array.isArray(data) && data.length > 0) {
+                    console.log("[DEBUG] Primer elemento:", data[0]);
+                    console.log("[DEBUG] Campos disponibles:", Object.keys(data[0]));
+                    console.log("[DEBUG] Moneda símbolo:", data[0].moneda_simbolo);
+                    
+                    // Limpiar DataTable y agregar nuevos datos
+                    tbl_detalle_prestamo.clear();
+                    tbl_detalle_prestamo.rows.add(data);
+                    tbl_detalle_prestamo.draw();
+                    console.log("[DEBUG] Datos agregados al DataTable exitosamente");
+                    
+                    // Calcular y mostrar totales
+                    calcularTotalesDetalle(data);
+                } else {
+                    console.log("[DEBUG] No hay datos para mostrar");
+                    // Resetear totales si no hay datos
+                    resetearTotales();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("[ERROR] Error al cargar detalle:", error);
+                console.error("[ERROR] Status:", status);
+                console.error("[ERROR] Response:", xhr.responseText);
+                console.error("[ERROR] XHR completo:", xhr);
+            }
+        });
+    }
+
+            function calcularTotalesDetalle(data) {
+            console.log("[DEBUG] Calculando totales del detalle...");
+            console.log("[DEBUG] Data recibida para totales:", data);
+            
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                console.log("[WARNING] No hay datos para calcular totales");
+                resetearTotales();
+                return;
+            }
+            
+            let totalMonto = 0;
+            let totalSaldo = 0;
+            let totalCuotas = data.length;
+            let simboloMoneda = null; // Se obtendrá de los datos
+            
+            // Variables para el resumen (tomamos del primer elemento)
+            let primerElemento = data[0];
+            let montoPrestado = 0;
+            let montoTotal = 0;
+            let interesTotal = 0;
+            
+            // Primero obtener la moneda del primer elemento
+            if (primerElemento && primerElemento.moneda_simbolo) {
+                simboloMoneda = primerElemento.moneda_simbolo;
+                console.log("[DEBUG] Símbolo de moneda obtenido:", simboloMoneda);
+            } else {
+                console.error("[ERROR] No se pudo obtener el símbolo de moneda de los datos");
+                console.log("[DEBUG] Primer elemento:", primerElemento);
+                // No establecer un valor por defecto, usar null para detectar el error
+            }
+            
+            // Calcular totales de cuotas
+            data.forEach(function(cuota, index) {
+                let montoCuota = parseFloat(cuota.pdetalle_monto_cuota || 0);
+                let saldoCuota = parseFloat(cuota.pdetalle_saldo_cuota || 0);
+                
+                totalMonto += montoCuota;
+                totalSaldo += saldoCuota;
+                
+                if (index === 0) {
+                    console.log("[DEBUG] Primera cuota - Monto:", montoCuota, "Saldo:", saldoCuota);
+                }
+            });
+            
+            // Obtener datos del préstamo (están repetidos en cada cuota)
+            if (primerElemento) {
+                montoPrestado = parseFloat(primerElemento.pres_monto || 0);
+                montoTotal = parseFloat(primerElemento.pres_monto_total || 0);
+                interesTotal = montoTotal - montoPrestado;
+                
+                console.log("[DEBUG] Datos del préstamo - Prestado:", montoPrestado, "Total:", montoTotal, "Interés:", interesTotal);
+            }
+                    
+            // Formatear números con comas para miles
+            function formatearNumero(numero) {
+                return new Intl.NumberFormat('es-PE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(numero);
+            }
+            
+            // Verificar que tenemos símbolo de moneda antes de mostrar
+            if (!simboloMoneda) {
+                console.error("[ERROR] No hay símbolo de moneda disponible. No se pueden mostrar los totales.");
+                resetearTotales();
+                return;
+            }
+            
+            // Actualizar los totales en el footer de la tabla
+            $('#total_monto').html(`<strong>${simboloMoneda} ${formatearNumero(totalMonto)}</strong>`);
+            $('#total_saldo').html(`<strong>${simboloMoneda} ${formatearNumero(totalSaldo)}</strong>`);
+            $('#total_cuotas').html(`<strong>${totalCuotas} cuotas</strong>`);
+            
+            // Actualizar el resumen del préstamo
+            $('#resumen_monto_prestado').text(`${simboloMoneda} ${formatearNumero(montoPrestado)}`);
+            $('#resumen_monto_total').text(`${simboloMoneda} ${formatearNumero(montoTotal)}`);
+            $('#resumen_interes_total').text(`${simboloMoneda} ${formatearNumero(interesTotal)}`);
+            
+            // Calcular estado basado en saldos
+            let estadoBadge = '';
+            if (totalSaldo <= 0) {
+                estadoBadge = '<span class="badge badge-success">Pagado Completo</span>';
+            } else if (totalSaldo < totalMonto) {
+                estadoBadge = '<span class="badge badge-warning">Pago Parcial</span>';
+            } else {
+                estadoBadge = '<span class="badge badge-danger">Pendiente</span>';
+            }
+            $('#resumen_estado').html(estadoBadge);
+            
+            console.log("[DEBUG] Totales calculados - Monto:", totalMonto, "Saldo:", totalSaldo, "Cuotas:", totalCuotas);
+            console.log("[DEBUG] Resumen - Prestado:", montoPrestado, "Total:", montoTotal, "Interés:", interesTotal);
+            console.log("[DEBUG] Símbol de moneda usado:", simboloMoneda);
+        }
+
+            function resetearTotales(simboloMoneda = null) {
+            console.log("[DEBUG] Reseteando totales con moneda:", simboloMoneda);
+            
+            // Si no hay símbolo de moneda, mostrar placeholders sin moneda
+            if (!simboloMoneda) {
+                $('#total_monto').html('<strong>-- 0.00</strong>');
+                $('#total_saldo').html('<strong>-- 0.00</strong>');
+                $('#total_cuotas').html('<strong>0 cuotas</strong>');
+                
+                $('#resumen_monto_prestado').text('-- 0.00');
+                $('#resumen_monto_total').text('-- 0.00');
+                $('#resumen_interes_total').text('-- 0.00');
+                $('#resumen_estado').html('<span class="badge badge-secondary">Sin datos</span>');
+                return;
+            }
+            
+            // Resetear totales de la tabla con moneda
+            $('#total_monto').html(`<strong>${simboloMoneda} 0.00</strong>`);
+            $('#total_saldo').html(`<strong>${simboloMoneda} 0.00</strong>`);
+            $('#total_cuotas').html('<strong>0 cuotas</strong>');
+            
+            // Resetear resumen del préstamo
+            $('#resumen_monto_prestado').text(`${simboloMoneda} 0.00`);
+            $('#resumen_monto_total').text(`${simboloMoneda} 0.00`);
+            $('#resumen_interes_total').text(`${simboloMoneda} 0.00`);
+            $('#resumen_estado').html('<span class="badge badge-secondary">-</span>');
+        }
 
     function fechas() {
         var f = new Date();
@@ -1434,29 +1725,95 @@
 
     // Función para obtener datos completos del préstamo
     function obtenerDatosCompletoPrestamo(nro_prestamo, callback) {
+        console.log('[DEBUG] ==========================================');
+        console.log('[DEBUG] Iniciando obtenerDatosCompletoPrestamo con nro_prestamo:', nro_prestamo);
+        console.log('[DEBUG] Tipo de nro_prestamo:', typeof nro_prestamo);
+        console.log('[DEBUG] ¿nro_prestamo está vacío?', !nro_prestamo);
+        
+        if (!nro_prestamo) {
+            console.log('[DEBUG] ERROR: nro_prestamo está vacío');
+            $("#tbl_amortizacion_aprobacion tbody").html(`
+                <tr><td colspan="3" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Error: Número de préstamo no válido
+                </td></tr>
+            `);
+            return;
+        }
+        
+        const url = 'ajax/aprobacion_ajax.php';
+        const data = {
+            accion: 9,
+            nro_prestamo: nro_prestamo
+        };
+        
+        console.log('[DEBUG] URL de la petición:', url);
+        console.log('[DEBUG] Datos de la petición:', data);
+        
         $.ajax({
-            url: 'ajax/aprobacion_ajax.php',
-            type: 'GET',
-            data: {
-                accion: 'obtener_datos_prestamo',
-                nro_prestamo: nro_prestamo
-            },
+            url: url,
+            type: 'POST',
+            data: data,
             dataType: 'json',
+            beforeSend: function() {
+                console.log('[DEBUG] Enviando petición AJAX...');
+                $("#tbl_amortizacion_aprobacion tbody").html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Obteniendo datos del préstamo...</td></tr>');
+            },
             success: function(response) {
+                console.log('[DEBUG] Respuesta del servidor:', response);
+                console.log('[DEBUG] Tipo de respuesta:', typeof response);
+                console.log('[DEBUG] ¿response es string?', typeof response === 'string');
+                
+                // Si la respuesta es string, intentar parsear JSON
+                if (typeof response === 'string') {
+                    try {
+                        response = JSON.parse(response);
+                        console.log('[DEBUG] Respuesta parseada:', response);
+                    } catch (e) {
+                        console.log('[DEBUG] Error al parsear JSON:', e);
+                        $("#tbl_amortizacion_aprobacion tbody").html(`
+                            <tr><td colspan="3" class="text-center text-danger">
+                                <i class="fas fa-exclamation-triangle"></i> Error: Respuesta del servidor no válida
+                            </td></tr>
+                        `);
+                        return;
+                    }
+                }
+                
                 if (response.estado === 'ok' && response.data) {
+                    console.log('[DEBUG] Datos del préstamo obtenidos exitosamente:', response.data);
                     callback(response.data);
                 } else {
+                    console.log('[DEBUG] Error en respuesta del servidor:', response);
                     $("#tbl_amortizacion_aprobacion tbody").html(`
                         <tr><td colspan="3" class="text-center text-warning">
-                            <i class="fas fa-exclamation-triangle"></i> No se pudieron obtener los datos del préstamo
+                            <i class="fas fa-exclamation-triangle"></i> No se pudieron obtener los datos del préstamo: ${response.mensaje || 'Error desconocido'}
                         </td></tr>
                     `);
                 }
             },
             error: function(xhr, status, error) {
+                console.log('[DEBUG] Error AJAX:', {xhr: xhr, status: status, error: error});
+                console.log('[DEBUG] Status HTTP:', xhr.status);
+                console.log('[DEBUG] Status Text:', xhr.statusText);
+                console.log('[DEBUG] Respuesta del servidor:', xhr.responseText);
+                
+                let errorMsg = 'Error de comunicación';
+                if (xhr.status === 404) {
+                    errorMsg = 'Archivo no encontrado';
+                } else if (xhr.status === 500) {
+                    errorMsg = 'Error interno del servidor';
+                } else if (xhr.responseText) {
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        errorMsg = errorResponse.mensaje || errorMsg;
+                    } catch (e) {
+                        errorMsg = xhr.responseText.substring(0, 100) + '...';
+                    }
+                }
+                
                 $("#tbl_amortizacion_aprobacion tbody").html(`
                     <tr><td colspan="3" class="text-center text-danger">
-                        <i class="fas fa-exclamation-triangle"></i> Error de comunicación
+                        <i class="fas fa-exclamation-triangle"></i> ${errorMsg}
                     </td></tr>
                 `);
             }
@@ -1481,6 +1838,9 @@
         $("#form_asignacion")[0].reset();
         $("#form_asignacion").removeClass('was-validated');
         $("#tbl_amortizacion_aprobacion tbody").html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Obteniendo datos...</td></tr>');
+        
+        // Habilitar botón de aprobar por defecto
+        $("#btn_aprobar_asignacion").prop('disabled', false).text('✔ APROBAR Y ASIGNAR');
         
         // Configurar Select2 para los combos con los mismos templates del Dashboard
         $('#select_sucursal_asignacion').select2({
@@ -1574,16 +1934,42 @@
         $('#select_cobrador_asignacion').html('<option value="">-- Primero seleccione ruta --</option>');
 
         // Obtener datos completos del préstamo y cargar el plan de pago
+        console.log('[DEBUG] ==========================================');
+        console.log('[DEBUG] Iniciando obtenerDatosCompletoPrestamo para nro_prestamo:', nro_prestamo);
+        console.log('[DEBUG] URL de la petición AJAX:', 'ajax/aprobacion_ajax.php?accion=obtener_datos_prestamo&nro_prestamo=' + nro_prestamo);
+        
         obtenerDatosCompletoPrestamo(nro_prestamo, function(datos) {
+            console.log('[DEBUG] Datos del préstamo recibidos:', datos);
+            console.log('[DEBUG] Tipo de datos:', typeof datos);
+            console.log('[DEBUG] ¿datos es null/undefined?', datos === null || datos === undefined);
+            
+            if (!datos) {
+                console.log('[DEBUG] ERROR: No se recibieron datos del préstamo');
+                $("#tbl_amortizacion_aprobacion tbody").html(`
+                    <tr><td colspan="3" class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Error: No se pudieron obtener los datos del préstamo
+                    </td></tr>
+                `);
+                return;
+            }
+            
+            console.log('[DEBUG] Datos específicos del préstamo:');
+            console.log('- pres_monto:', datos.pres_monto);
+            console.log('- pres_interes:', datos.pres_interes);
+            console.log('- pres_cuotas:', datos.pres_cuotas);
+            console.log('- tipo_calculo:', datos.tipo_calculo);
+            console.log('- pres_f_emision:', datos.pres_f_emision);
+            
             cargarPlanPagoModal(
                 nro_prestamo, 
                 datos.pres_monto || monto, 
                 datos.pres_interes, 
                 datos.pres_cuotas, 
                 datos.fpago_id, 
-                datos.pres_f_emision || datos.fecha,
-                datos.tipo_calculo || 'FRANCES'
+                datos.pres_f_emision || datos.fecha,            
+                datos.tipo_calculo // Usar el tipo de cálculo real de la BD
             );
+            console.log('[DEBUG] ==========================================');
         });
 
         $("#modal_asignacion_ruta").modal('show');
@@ -1656,13 +2042,12 @@
                 
                 if (response && Array.isArray(response) && response.length > 0) {
                     response.forEach(function(ruta) {
-                        const rutaId = ruta.ruta_id || ruta.id;
-                        const rutaNombre = ruta.ruta_nombre || ruta.nombre;
-                        const rutaCodigo = ruta.ruta_codigo || ruta.codigo || '';
-                        const textoCompleto = ruta.texto_descriptivo || ruta.texto_completo || rutaNombre;
-                        
+                        // USAR SIEMPRE ruta_id y ruta_nombre
+                        const rutaId = ruta.ruta_id;
+                        const rutaNombre = ruta.ruta_nombre;
+                        const rutaCodigo = ruta.ruta_codigo || '';
+                        const textoCompleto = rutaCodigo ? (rutaCodigo + ' - ' + rutaNombre) : rutaNombre;
                         if (rutaId && rutaNombre) {
-                            // Agregar atributos data para el template de Select2
                             const option = `<option value="${rutaId}" data-codigo="${rutaCodigo}" data-nombre="${rutaNombre}">${textoCompleto}</option>`;
                             selectRuta.append(option);
                         }
@@ -1670,7 +2055,6 @@
                 } else {
                     selectRuta.append('<option value="">No hay rutas en esta sucursal</option>');
                 }
-                
                 // Limpiar combo de cobradores cuando cambia la ruta
                 $('#select_cobrador_asignacion').empty().append('<option value="">-- Primero seleccione ruta --</option>');
             },
@@ -1745,6 +2129,8 @@
 
     // Función para cargar el plan de pago en el modal de asignación
     function cargarPlanPagoModal(nro_prestamo, monto, interes, cuotas, fpago_id, fecha_emision, tipo_calculo = 'FRANCES') {
+        console.log('[DEBUG] cargarPlanPagoModal - tipo_calculo:', tipo_calculo);
+        
         // Mostrar indicador de carga
         $("#tbl_amortizacion_aprobacion tbody").html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Calculando plan de pago...</td></tr>');
         
@@ -1753,10 +2139,22 @@
         const interesFloat = parseFloat(interes);
         const cuotasInt = parseInt(cuotas);
         
-        // Cálculo simple de cuota fija
-        const interesTotal = (montoFloat * interesFloat / 100);
-        const montoTotal = montoFloat + interesTotal;
-        const cuotaMensual = montoTotal / cuotasInt;
+        // Cálculo según el tipo de cálculo real de la BD
+        let interesTotal, montoTotal, cuotaMensual;
+        
+        if (tipo_calculo === 'FRANCES') {
+            // Cálculo francés (cuota fija)
+            const tasaMensual = interesFloat / 100 / 12;
+            const factor = Math.pow(1 + tasaMensual, cuotasInt);
+            cuotaMensual = (montoFloat * tasaMensual * factor) / (factor - 1);
+            montoTotal = cuotaMensual * cuotasInt;
+            interesTotal = montoTotal - montoFloat;
+        } else {
+            // Cálculo simple (interés directo)
+            interesTotal = (montoFloat * interesFloat / 100);
+            montoTotal = montoFloat + interesTotal;
+            cuotaMensual = montoTotal / cuotasInt;
+        }
         
         // Limpiar tabla
         $("#tbl_amortizacion_aprobacion tbody").empty();
@@ -1823,6 +2221,43 @@
             </tr>
         `);
     }
+
+    // Al abrir el modal de asignación de ruta y cobrador
+    $(document).on('show.bs.modal', '#modal_asignacion_ruta', function() {
+        var esAdmin = window.userContext && window.userContext.usuario && window.userContext.usuario.es_admin;
+        var sucursalUsuario = window.userContext && window.userContext.sucursal_id;
+
+        if (esAdmin) {
+            $('#select_sucursal_asignacion').closest('.col-lg-4').show();
+            $('#select_sucursal_asignacion').prop('disabled', false);
+            cargarSucursales('#select_sucursal_asignacion');
+            $('#select_sucursal_asignacion').val('');
+            $('#select_ruta_asignacion').html('<option value="">-- Primero seleccione sucursal --</option>');
+            $('#select_cobrador_asignacion').html('<option value="">-- Primero seleccione ruta --</option>');
+        } else {
+            $('#select_sucursal_asignacion').closest('.col-lg-4').hide();
+            $('#select_sucursal_asignacion').prop('disabled', true);
+            if (sucursalUsuario) {
+                $('#select_sucursal_asignacion').val(sucursalUsuario);
+                cargarRutasPorSucursal(sucursalUsuario, '#select_ruta_asignacion');
+                $('#select_ruta_asignacion').html('<option value="">-- Seleccione Ruta --</option>');
+                $('#select_cobrador_asignacion').html('<option value="">-- Primero seleccione ruta --</option>');
+            }
+        }
+    });
+
+    // Evitar que el evento de cambio de sucursal se ejecute si el combo está oculto/deshabilitado
+    $('#select_sucursal_asignacion').on('change', function() {
+        if ($(this).is(':visible') && !$(this).prop('disabled')) {
+            const sucursal_id = $(this).val();
+            cargarRutasPorSucursal(sucursal_id, '#select_ruta_asignacion');
+            $('#select_cobrador_asignacion').html('<option value="">Primero seleccione una ruta</option>');
+        }
+    });
+
+    $('#select_ruta_asignacion').on('change', function() {
+        cargarCobradores('#select_cobrador_asignacion');
+    });
 
 </script>
 

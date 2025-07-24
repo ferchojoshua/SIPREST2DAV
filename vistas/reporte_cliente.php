@@ -66,17 +66,20 @@ if (isset($_SESSION["usuario"])) {
                         <h3 class="card-title" id="titulo_reporte">
                             <i class="fas fa-table"></i> Historial del Cliente
                         </h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-success btn-sm" onclick="exportarExcel()">
-                                <i class="fas fa-file-excel"></i> Excel
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="exportarPDF()">
-                                <i class="fas fa-file-pdf"></i> PDF
-                            </button>
-                            <button type="button" class="btn btn-info btn-sm" onclick="imprimirReporte()">
-                                <i class="fas fa-print"></i> Imprimir
-                            </button>
-                        </div>
+                                                 <div class="card-tools">
+                             <button type="button" class="btn btn-success btn-sm" onclick="exportarExcel()">
+                                 <i class="fas fa-file-excel"></i> Excel
+                             </button>
+                             <button type="button" class="btn btn-danger btn-sm" onclick="exportarPDF()">
+                                 <i class="fas fa-file-pdf"></i> PDF
+                             </button>
+                             <button type="button" class="btn btn-info btn-sm" onclick="imprimirReporte()">
+                                 <i class="fas fa-print"></i> Imprimir
+                             </button>
+                             <button type="button" class="btn btn-warning btn-sm" onclick="enviarCorreoReporteCliente()">
+                                 <i class="fas fa-envelope"></i> Enviar por Correo
+                             </button>
+                         </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -84,7 +87,9 @@ if (isset($_SESSION["usuario"])) {
                                 <thead class="bg-primary text-white">
                                     <tr>
                                         <th>Préstamo</th>
-                                        <th>Fecha</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha Apertura</th>
+                                        <th>Fecha Vencimiento</th>
                                         <th>Monto</th>
                                         <th>Estado</th>
                                         <th>Saldo</th>
@@ -192,13 +197,18 @@ function mostrarResultados(datos) {
     
     // Llenar tabla con datos
     datos.forEach(function(item) {
+        // Obtener símbolo de moneda (si está disponible, sino usar por defecto)
+        var simboloMoneda = item.moneda_simbolo || 'C$';
+        
         var fila = `
             <tr>
                 <td>${item.nro_prestamo || ''}</td>
-                <td>${item.fecha_prestamo || ''}</td>
-                <td>C$ ${parseFloat(item.monto_prestamo || 0).toLocaleString('es-NI')}</td>
-                <td><span class="badge badge-${item.estado === 'Pagado' ? 'success' : 'warning'}">${item.estado || ''}</span></td>
-                <td>C$ ${parseFloat(item.saldo_pendiente || 0).toLocaleString('es-NI')}</td>
+                <td>${item.cliente_nombres || ''}</td>
+                <td>${item.fecha_apertura || item.femision || ''}</td>
+                <td>${item.fecha_vencimiento || 'No calculada'}</td>
+                <td>${simboloMoneda} ${parseFloat(item.monto_prestamo || 0).toLocaleString('es-NI')}</td>
+                <td><span class="badge badge-${item.estado === 'Pagado' || item.estado === 'finalizado' ? 'success' : item.estado === 'aprobado' ? 'info' : 'warning'}">${item.estado || ''}</span></td>
+                <td>${simboloMoneda} ${parseFloat(item.saldo_pendiente || 0).toLocaleString('es-NI')}</td>
                 <td>
                     <button class="btn btn-info btn-sm" onclick="verDetalle('${item.nro_prestamo}')">
                         <i class="fas fa-eye"></i> Ver
@@ -215,7 +225,21 @@ function mostrarResultados(datos) {
             url: "vistas/assets/plugins/datatables/i18n/Spanish.json" // <--- Ruta actualizada
         },
         responsive: true,
-        order: [[1, "desc"]]
+        order: [[2, "desc"]], // Ordenar por fecha de apertura descendente
+        columnDefs: [
+            {
+                targets: [4, 6], // Columnas de monto y saldo
+                className: 'text-right'
+            },
+            {
+                targets: [5], // Columna de estado
+                className: 'text-center'
+            },
+            {
+                targets: [7], // Columna de acciones
+                orderable: false
+            }
+        ]
     });
     
     // Mostrar área de resultados
@@ -223,21 +247,253 @@ function mostrarResultados(datos) {
 }
 
 function verDetalle(nroPrestamo) {
-    // Redirigir o abrir modal con detalle del préstamo
-    Swal.fire('Información', `Ver detalle del préstamo: ${nroPrestamo}`, 'info');
+    if (!nroPrestamo) {
+        Swal.fire('Error', 'Número de préstamo no válido.', 'error');
+        return;
+    }
+    
+    // Abrir ventana con el detalle completo del préstamo
+    var url = `MPDF/historial_prestamo_nuevo.php?codigo=${nroPrestamo}`;
+    var ventanaDetalle = window.open(url, 'detalle_prestamo', 'width=900,height=700,scrollbars=yes,resizable=yes');
+    
+    if (!ventanaDetalle) {
+        Swal.fire('Error', 'No se pudo abrir la ventana de detalle. Verifique que no esté bloqueada por el navegador.', 'error');
+    }
 }
 
 function exportarExcel() {
-    Swal.fire('Información', 'Función de exportar a Excel en desarrollo.', 'info');
+    var clienteId = $('#select_cliente').val();
+    var clienteNombre = $('#select_cliente option:selected').text();
+    
+    if (!clienteId) {
+        Swal.fire('Atención', 'Debe seleccionar un cliente primero.', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Generando Excel...',
+        text: 'Por favor espere.',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    $.ajax({
+        url: 'ajax/reportes_ajax.php',
+        method: 'POST',
+        data: {
+            accion: 'exportar_excel_cliente',
+            cliente_id: clienteId,
+            cliente_nombre: clienteNombre
+        },
+        xhrFields: {
+            responseType: 'blob'
+        },
+        success: function(data, status, xhr) {
+            Swal.close();
+            
+            // Crear URL para descarga
+            var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            var url = window.URL.createObjectURL(blob);
+            
+            // Crear elemento de descarga
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = `Historial_Cliente_${clienteNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            Toast.fire({
+                icon: 'success',
+                title: 'Excel generado exitosamente'
+            });
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire('Error', 'Error al generar el archivo Excel.', 'error');
+        }
+    });
 }
 
 function exportarPDF() {
-    Swal.fire('Información', 'Función de exportar a PDF en desarrollo.', 'info');
+    var clienteId = $('#select_cliente').val();
+    var clienteNombre = $('#select_cliente option:selected').text();
+    
+    if (!clienteId) {
+        Swal.fire('Atención', 'Debe seleccionar un cliente primero.', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Generando PDF...',
+        text: 'Por favor espere.',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    $.ajax({
+        url: 'ajax/reportes_ajax.php',
+        method: 'POST',
+        data: {
+            accion: 'exportar_pdf_cliente',
+            cliente_id: clienteId,
+            cliente_nombre: clienteNombre
+        },
+        xhrFields: {
+            responseType: 'blob'
+        },
+        success: function(data, status, xhr) {
+            Swal.close();
+            
+            // Crear URL para descarga
+            var blob = new Blob([data], { type: 'application/pdf' });
+            var url = window.URL.createObjectURL(blob);
+            
+            // Crear elemento de descarga
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = `Historial_Cliente_${clienteNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            Toast.fire({
+                icon: 'success',
+                title: 'PDF generado exitosamente'
+            });
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire('Error', 'Error al generar el archivo PDF.', 'error');
+        }
+    });
 }
 
 function imprimirReporte() {
-    window.print();
-}
+    var clienteId = $('#select_cliente').val();
+    var clienteNombre = $('#select_cliente option:selected').text();
+    
+    if (!clienteId) {
+        Swal.fire('Atención', 'Debe seleccionar un cliente primero.', 'warning');
+        return;
+    }
+    
+    // Abrir ventana de impresión con reporte profesional
+    var url = `ajax/reportes_ajax.php?accion=imprimir_cliente&cliente_id=${clienteId}&cliente_nombre=${encodeURIComponent(clienteNombre)}`;
+    var ventanaImpresion = window.open(url, 'impresion', 'width=800,height=600,scrollbars=yes');
+    
+    if (ventanaImpresion) {
+        ventanaImpresion.addEventListener('load', function() {
+            ventanaImpresion.print();
+        });
+    } else {
+                 Swal.fire('Error', 'No se pudo abrir la ventana de impresión. Verifique que no esté bloqueada por el navegador.', 'error');
+     }
+ }
+ 
+ function enviarCorreoReporteCliente() {
+     var clienteId = $('#select_cliente').val();
+     var clienteNombre = $('#select_cliente option:selected').text();
+     
+     if (!clienteId) {
+         Swal.fire('Atención', 'Debe seleccionar un cliente primero.', 'warning');
+         return;
+     }
+     
+     Swal.fire({
+         title: 'Enviar Reporte por Correo',
+         html: `
+             <div class="form-group text-left">
+                 <label for="emailDestino">Correo electrónico de destino:</label>
+                 <input type="email" id="emailDestino" class="form-control" placeholder="ejemplo@correo.com">
+             </div>
+             <div class="form-group text-left">
+                 <label for="asuntoCorreo">Asunto:</label>
+                 <input type="text" id="asuntoCorreo" class="form-control" value="Historial del Cliente - ${clienteNombre}">
+             </div>
+             <div class="form-group text-left">
+                 <label for="mensajeCorreo">Mensaje (opcional):</label>
+                 <textarea id="mensajeCorreo" class="form-control" rows="3" placeholder="Mensaje adicional..."></textarea>
+             </div>
+         `,
+         showCancelButton: true,
+         confirmButtonText: 'Enviar',
+         cancelButtonText: 'Cancelar',
+         focusConfirm: false,
+         preConfirm: () => {
+             const email = document.getElementById('emailDestino').value;
+             const asunto = document.getElementById('asuntoCorreo').value;
+             const mensaje = document.getElementById('mensajeCorreo').value;
+             
+             if (!email) {
+                 Swal.showValidationMessage('Debe ingresar un correo electrónico');
+                 return false;
+             }
+             
+             if (!asunto) {
+                 Swal.showValidationMessage('Debe ingresar un asunto');
+                 return false;
+             }
+             
+             return { email: email, asunto: asunto, mensaje: mensaje };
+         }
+     }).then((result) => {
+         if (result.isConfirmed) {
+             Swal.fire({
+                 title: 'Enviando correo...',
+                 text: 'Por favor espere.',
+                 allowOutsideClick: false,
+                 showConfirmButton: false,
+                 willOpen: () => {
+                     Swal.showLoading();
+                 }
+             });
+             
+             $.ajax({
+                 url: 'ajax/reportes_ajax.php',
+                 method: 'POST',
+                 data: {
+                     accion: 'enviar_correo_reporte_cliente',
+                     cliente_id: clienteId,
+                     cliente_nombre: clienteNombre,
+                     email_destino: result.value.email,
+                     asunto: result.value.asunto,
+                     mensaje: result.value.mensaje
+                 },
+                 dataType: 'json',
+                 success: function(respuesta) {
+                     Swal.close();
+                     
+                     if (respuesta.success) {
+                         Swal.fire({
+                             icon: 'success',
+                             title: 'Correo enviado exitosamente',
+                             text: respuesta.mensaje
+                         });
+                     } else {
+                         Swal.fire({
+                             icon: 'error',
+                             title: 'Error al enviar correo',
+                             text: respuesta.mensaje || 'Ocurrió un error inesperado'
+                         });
+                     }
+                 },
+                 error: function() {
+                     Swal.close();
+                     Swal.fire('Error', 'Error al enviar el correo electrónico.', 'error');
+                 }
+             });
+         }
+     });
+ }
 </script>
 
 <?php 

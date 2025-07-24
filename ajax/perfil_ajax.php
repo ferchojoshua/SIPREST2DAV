@@ -88,4 +88,15 @@ if(isset($_POST['accion']) && $_POST['accion'] == 1){
     $eliminarPerfil -> ajaxEliminarPerfil();
 
 
+} else if (isset($_POST['accion']) && $_POST['accion'] == 'obtener_perfil') {
+    $id_perfil = $_POST['id_perfil'];
+    $stmt = Conexion::conectar()->prepare("
+        SELECT id_perfil, descripcion 
+        FROM perfiles 
+        WHERE id_perfil = :id_perfil
+    ");
+    $stmt->bindParam(":id_perfil", $id_perfil, PDO::PARAM_INT);
+    $stmt->execute();
+    $perfil = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode($perfil);
 }

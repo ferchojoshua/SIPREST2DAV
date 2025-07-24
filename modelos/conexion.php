@@ -6,7 +6,7 @@ class Conexion {
     static public function conectar(){
 
         try {
-           $conn = new PDO("mysql:host=localhost;dbname=dbprestamo;charset=utf8",
+           $conn = new PDO("mysql:host=localhost;dbname=credicrece;charset=utf8",
                           "root",
                           "",
                           array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
@@ -18,7 +18,5 @@ class Conexion {
             throw new PDOException('Fallo la conexion: '.$e->getMessage());
         }
     }
-
-
 
 }

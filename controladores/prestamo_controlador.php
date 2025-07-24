@@ -6,10 +6,59 @@ class PrestamoControlador
   /*===================================================================*/
   // REGISTRAR CABECERA PRESTAMO
   /*===================================================================*/
-  static public function ctrRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo)
+  static public function ctrRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo, $sucursal_id = null)
   {
-
-    $prestamo = PrestamoModelo::mdlRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo);
+    require_once __DIR__ . "/../modelos/caja_modelo.php";
+    session_start();
+    $perfil = $_SESSION['perfil'] ?? '';
+    $usuario_id = $_SESSION['id_usuario'] ?? null;
+    
+    // Para administradores: mayor flexibilidad
+    if (strtolower($perfil) === 'administrador') {
+        if ($sucursal_id) {
+            // Admin seleccionó sucursal específica: buscar caja principal abierta en esa sucursal
+            $cajaAbierta = CajaModelo::mdlObtenerCajaPrincipalAbiertaPorSucursal($sucursal_id);
+        } else {
+            // Admin sin sucursal específica: buscar cualquier caja principal abierta
+            $stmt = Conexion::conectar()->prepare('
+                SELECT caja_id, caja_estado, tipo_caja, sucursal_id 
+                FROM caja 
+                WHERE caja_estado = "VIGENTE" AND LOWER(tipo_caja) = "principal" 
+                LIMIT 1
+            ');
+            $stmt->execute();
+            $cajaAbierta = $stmt->fetch(PDO::FETCH_OBJ);
+        }
+        
+        if (!$cajaAbierta || $cajaAbierta->caja_estado !== 'VIGENTE') {
+            return [
+                'success' => false,
+                'message' => 'No hay cajas principales abiertas disponibles para registrar préstamos.'
+            ];
+        }
+    } else {
+        // Usuario normal: validación estándar por su sucursal
+        $stmt = Conexion::conectar()->prepare('SELECT sucursal_id FROM usuarios WHERE id_usuario = :usuario_id');
+        $stmt->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $sucursal = $row ? $row['sucursal_id'] : null;
+        
+        $cajaAbierta = CajaModelo::mdlObtenerCajaPrincipalAbiertaPorSucursal($sucursal);
+        
+        if (!$cajaAbierta || $cajaAbierta->caja_estado !== 'VIGENTE' || strtolower($cajaAbierta->tipo_caja) !== 'principal') {
+            return [
+                'success' => false,
+                'message' => 'Debe tener una caja principal abierta para registrar préstamos.'
+            ];
+        }
+    }
+    
+    // Registrar el préstamo usando la caja encontrada
+    // Si no se especificó sucursal, usar la de la caja encontrada
+    $sucursal_final = $sucursal_id ?? $cajaAbierta->sucursal_id;
+    
+    $prestamo = PrestamoModelo::mdlRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $cajaAbierta->caja_id, $tipo_calculo, $sucursal_final);
     return $prestamo;
   }
 
@@ -76,7 +125,7 @@ class PrestamoControlador
   /*===================================================================*/
   static public function ctrCalcularAmortizacion($monto, $interes, $cuotas, $tipoCalculo, $fechaInicio, $formaPago)
   {
-    require_once "utilitarios/calculadora_prestamos.php";
+    require_once __DIR__ . "/../utilitarios/calculadora_prestamos.php";
     
     try {
       $calculadora = new CalculadoraPrestamos();

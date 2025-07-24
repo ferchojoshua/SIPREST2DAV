@@ -1315,7 +1315,6 @@
 
 
 	function iniciarArbolModulos() {
-
 		$.ajax({
 			async: false,
 			url: "ajax/modulo_ajax.php",
@@ -1325,12 +1324,8 @@
 			},
 			dataType: 'json',
 			success: function(respuesta) {
-
 				modulos_sistema = respuesta;
 
-				// console.log(respuesta);
-
-				// inline data demo
 				$('#modulos').jstree({
 					'core': {
 						"check_callback": true,
@@ -1338,44 +1333,104 @@
 					},
 					"checkbox": {
 						"keep_selected_style": true,
+						"three_state": false,
+						"cascade": "up+undetermined+down"
 					},
 					"types": {
 						"default": {
 							"icon": "fas fa-laptop text-warning"
 						}
 					},
-					"plugins": ["wholerow", "checkbox", "types", "changed"]
-
-				}).bind("loaded.jstree", function(event, data) {
-					// you get two params - event & data - check the core docs for a detailed description
+					"plugins": ["wholerow", "checkbox", "types", "changed", "state"],
+					"state": { "key": "modulos_state" }
+				}).on('ready.jstree', function() {
 					$(this).jstree("open_all");
-				});
+				}).on('changed.jstree', function(e, data) {
+					// Actualizar el select de módulos
+					$("#select_modulos option").remove();
+					var selectedElms = $('#modulos').jstree("get_selected", true);
+					
+					$.each(selectedElms, function() {
+						for (let i = 0; i < modulos_sistema.length; i++) {
+							if (modulos_sistema[i]["id"] == this.id && modulos_sistema[i]["vista"]) {
+								$('#select_modulos').append($('<option>', {
+									value: this.id,
+									text: this.text
+								}));
+							}
+						}
+					});
 
+					if ($("#select_modulos").has('option').length <= 0) {
+						$('#select_modulos').append($('<option>', {
+							value: 0,
+							text: "--No hay modulos seleccionados--"
+						}));
+					}
+				});
 			}
-		})
+		});
 	}
 
 	function seleccionarModulosPerfil(pin_idPerfil) {
+		try {
+			$('#modulos').jstree('deselect_all');
+			
+			// Obtener los módulos asignados al perfil
+			$.ajax({
+				async: false,
+				url: "ajax/modulo_ajax.php",
+				method: 'POST',
+				data: {
+					accion: 2,
+					id_perfil: pin_idPerfil
+				},
+				dataType: 'json',
+				success: function(modulos_asignados) {
+					if (modulos_asignados && modulos_asignados.length > 0) {
+						// Marcar los módulos que están asignados al perfil
+						modulos_asignados.forEach(function(modulo) {
+							if (modulo.sel === '1') {
+								$("#modulos").jstree("select_node", modulo.id);
+							}
+						});
+						
+						// Actualizar el select de módulos de inicio
+						actualizarSelectModulos();
+					} else {
+						console.warn("No se encontraron módulos asignados para el perfil:", pin_idPerfil);
+					}
+				},
+				error: function(error) {
+					console.error("Error al obtener módulos asignados:", error);
+				}
+			});
+		} catch (error) {
+			console.error("Error en seleccionarModulosPerfil:", error);
+		}
+	}
 
-		$('#modulos').jstree('deselect_all');
-		// console.log("modulos_sistema",modulos_sistema);
-		// console.log("modulos_usuario",modulos_usuario);
-		//console.log("pin_idPerfil", pin_idPerfil);
-
-		for (let i = 0; i < modulos_sistema.length; i++) {
-			//console.log("modulos_sistema[i]['id']", modulos_sistema[i]["id"]);
-			if (parseInt(modulos_sistema[i]["id"]) == parseInt(modulos_usuario[i]["id"]) && parseInt(modulos_usuario[i]["sel"]) == 1) {
-				$("#modulos").jstree("select_node", modulos_sistema[i]["id"]);
+	function actualizarSelectModulos() {
+		$("#select_modulos option").remove();
+		var selectedElms = $('#modulos').jstree("get_selected", true);
+		
+		$.each(selectedElms, function() {
+			for (let i = 0; i < modulos_sistema.length; i++) {
+				if (modulos_sistema[i]["id"] == this.id && modulos_sistema[i]["vista"]) {
+					$('#select_modulos').append($('<option>', {
+						value: this.id,
+						text: this.text
+					}));
+				}
 			}
-		}
+		});
 
-		/*OCULTAMOS LA OPCION DE MODULOS Y PERFILES PARA EL PERFIL DE ADMINISTRADOR*/
-		if (pin_idPerfil == 1) { //SOLO PERFIL ADMINISTRADOR
-			$("#modulos").jstree(true).hide_node(13);
-		} else {
-			$('#modulos').jstree(true).show_all();
+		if ($("#select_modulos").has('option').length <= 0) {
+			$('#select_modulos').append($('<option>', {
+				value: 0,
+				text: "--No hay modulos seleccionados--"
+			}));
 		}
-
 	}
 
 	function actualizarArbolModulosPerfiles() {

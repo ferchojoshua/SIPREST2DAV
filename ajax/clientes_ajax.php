@@ -126,6 +126,34 @@ try {
             echo json_encode($clientesFormateados);
             break;
             
+        case 'buscar_clientes_disponibles': // BUSCAR SOLO CLIENTES DISPONIBLES PARA PRÉSTAMOS
+            if (!isset($_POST['busqueda']) || strlen($_POST['busqueda']) < 2) {
+                echo json_encode([]);
+                break;
+            }
+            
+            $busqueda = $_POST['busqueda'];
+            $clientes = ClienteControlador::ctrBuscarClientesDisponibles($busqueda);
+            
+            if ($clientes === false || $clientes === null) {
+                echo json_encode([]);
+                break;
+            }
+            
+            // Formatear para Select2 (id, text) solo clientes sin préstamos
+            $clientesFormateados = [];
+            foreach ($clientes as $cliente) {
+                $clientesFormateados[] = [
+                    'id' => $cliente['cliente_id'],
+                    'text' => $cliente['cliente_nombres'] . ' - ' . ($cliente['cliente_dni'] ?? 'Sin DNI'),
+                    'telefono' => $cliente['cliente_cel'] ?? ''
+                ];
+            }
+            
+            error_log("clientes_ajax.php - Clientes disponibles encontrados: " . count($clientesFormateados));
+            echo json_encode($clientesFormateados);
+            break;
+            
         default:
             // Si la acción no es reconocida, devolver un error JSON
             echo json_encode(['error' => true, 'message' => 'Acción no válida: ' . $_POST['accion']]);

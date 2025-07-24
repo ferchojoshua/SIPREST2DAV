@@ -134,6 +134,50 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
     <script type="text/javascript" src="vistas/assets/plugins/select2/js/select2.full.min.js"></script>
+    
+    <!-- Script global para manejar conflictos Select2 -->
+    <script>
+        // Función global para inicializar Select2 de forma segura
+        window.SafeSelect2Init = function(selector, options) {
+            try {
+                if (typeof $.fn.select2 === 'undefined') {
+                    console.warn('Select2 no está disponible en este momento');
+                    return false;
+                }
+                
+                var element = $(selector);
+                if (element.length === 0) {
+                    console.warn('Elemento no encontrado:', selector);
+                    return false;
+                }
+                
+                // Destruir instancia existente si la hay
+                if (element.hasClass('select2-hidden-accessible')) {
+                    element.select2('destroy');
+                }
+                
+                // Inicializar con opciones por defecto mejoradas
+                var defaultOptions = {
+                    allowClear: true,
+                    width: '100%',
+                    language: 'es'
+                };
+                
+                var finalOptions = $.extend({}, defaultOptions, options || {});
+                element.select2(finalOptions);
+                
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Select2:', error);
+                return false;
+            }
+        };
+        
+        // Función para verificar si Select2 está disponible
+        window.IsSelect2Available = function() {
+            return typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined';
+        };
+    </script>
 
     <!-- CSS personalizado para corregir espaciado del dashboard -->
     <link rel="stylesheet" href="vistas/assets/css/fix-dashboard-spacing.css">
@@ -148,8 +192,125 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 window.ID_USUARIO_GLOBAL = <?php echo json_encode($_SESSION["usuario"]->id_usuario); ?>;
                 //console.log("ID_USUARIO_GLOBAL inicializado: ", ID_USUARIO_GLOBAL);
             }
+            
+            // Definir contexto de usuario global
+            if (typeof window.userContext === 'undefined') {
+                window.userContext = {
+                    usuario: {
+                        id: <?php echo json_encode($_SESSION["usuario"]->id_usuario); ?>,
+                        nombre: <?php echo json_encode($_SESSION["usuario"]->nombre_usuario ?? ''); ?>,
+                        perfil: <?php echo json_encode($_SESSION["perfil"] ?? ''); ?>,
+                        es_admin: <?php echo json_encode(strtolower($_SESSION["perfil"] ?? '') === 'administrador'); ?>,
+                    },
+                    sucursal_id: <?php echo json_encode($_SESSION["usuario"]->sucursal_id ?? null); ?>,
+                    perfil: <?php echo json_encode($_SESSION["perfil"] ?? ''); ?>
+                };
+                console.log('✅ UserContext inicializado:', window.userContext);
+            }
         </script>
     <?php endif; ?>
+
+    <!-- Manejador de contenido -->
+    <script src="vistas/assets/dist/js/content-loader.js"></script>
+    
+    <!-- Script de protección global -->
+    <script>
+        // Variables globales seguras
+        window.SistemaConfig = {
+            scriptsCargados: {},
+            marcarScriptCargado: function(nombre) {
+                this.scriptsCargados[nombre] = true;
+            },
+            estaScriptCargado: function(nombre) {
+                return this.scriptsCargados[nombre] === true;
+            },
+            cargarScriptSeguro: function(src, callback) {
+                if (this.estaScriptCargado(src)) {
+                    if (callback) callback();
+                    return;
+                }
+                
+                var script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    this.marcarScriptCargado(src);
+                    if (callback) callback();
+                };
+                script.onerror = (error) => {
+                    console.error('[Sistema] Error al cargar script:', src, error);
+                };
+                document.head.appendChild(script);
+            }
+        };
+
+        // Función segura para cargar contenido
+        window.CargarContenido = function(pagina, contenedor) {
+            try {
+                // Mostrar indicador de carga
+                $("." + contenedor).html(`
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando contenido...</p>
+                    </div>
+                `);
+
+                // Cargar el contenido
+                $.ajax({
+                    url: pagina,
+                    method: 'GET',
+                    cache: false,
+                    success: function(response) {
+                        try {
+                            // Limpiar el contenedor
+                            $("." + contenedor).empty();
+                            
+                            // Insertar el contenido de forma segura
+                            $("." + contenedor).html(response);
+                            
+                            // Inicializar componentes
+                            if (typeof initializeComponents === 'function') {
+                                initializeComponents();
+                            }
+                            
+                            // Guardar la página
+                            localStorage.setItem("ultimaPagina", pagina);
+                        } catch (error) {
+                            console.error("Error al procesar contenido:", error);
+                            mostrarErrorCarga(contenedor, pagina, error.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error cargando contenido:", error);
+                        mostrarErrorCarga(contenedor, pagina, error);
+                    }
+                });
+            } catch (error) {
+                console.error("Error en CargarContenido:", error);
+                mostrarErrorCarga(contenedor, pagina, error.message);
+            }
+        };
+
+        // Función para mostrar errores de carga
+        function mostrarErrorCarga(contenedor, pagina, error) {
+            $("." + contenedor).html(`
+                <div class="alert alert-danger m-3">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Error</h4>
+                    <p>No se pudo cargar: ${pagina}</p>
+                    <p>Error: ${error}</p>
+                    <div class="mt-3">
+                        <button class="btn btn-primary" onclick="location.reload();">
+                            <i class="fas fa-sync-alt"></i> Recargar
+                        </button>
+                        <button class="btn btn-secondary" onclick="CargarContenido('vistas/dashboard.php', '${contenedor}');">
+                            <i class="fas fa-home"></i> Inicio
+                        </button>
+                    </div>
+                </div>
+            `);
+        }
+    </script>
 </head>
 <!-- usuario campo de la base -->
 <?php 

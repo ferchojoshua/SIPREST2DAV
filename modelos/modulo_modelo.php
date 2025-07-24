@@ -8,18 +8,92 @@ class ModuloModelo{
     //OBTENER MODULOS
     /*===================================================================*/
     static public function mdlObtenerModulos(){
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                WITH RECURSIVE ModulosJerarquia AS (
+                    -- Obtener módulos padre
+                    SELECT 
+                        id,
+                        modulo,
+                        padre_id,
+                        vista,
+                        icon_menu,
+                        orden,
+                        0 as nivel
+                    FROM modulos 
+                    WHERE (padre_id IS NULL OR padre_id = 0)
+                    
+                    UNION ALL
+                    
+                    -- Obtener módulos hijos
+                    SELECT 
+                        m.id,
+                        m.modulo,
+                        m.padre_id,
+                        m.vista,
+                        m.icon_menu,
+                        m.orden,
+                        mj.nivel + 1
+                    FROM modulos m
+                    INNER JOIN ModulosJerarquia mj ON m.padre_id = mj.id
+                )
+                SELECT 
+                    id as id,
+                    CASE 
+                        WHEN padre_id IS NULL OR padre_id = 0 THEN '#'
+                        ELSE CAST(padre_id AS CHAR)
+                    END as parent,
+                    modulo as text,
+                    vista,
+                    COALESCE(icon_menu, 'fas fa-circle') as icon_menu,
+                    orden,
+                    nivel
+                FROM ModulosJerarquia
+                ORDER BY nivel, orden
+            ");
 
-        $stmt = Conexion::conectar()->prepare("select id as id,
-                                                        (case when (padre_id is null or padre_id = 0 ) then '#' else padre_id end) as parent,
-                                                        modulo as text,
-                                                        vista
-                                                from modulos m
-                                                order by m.orden");
+            if (!$stmt->execute()) {
+                $error = $stmt->errorInfo();
+                error_log("Error al obtener módulos: " . print_r($error, true));
+                return array(
+                    'error' => true,
+                    'mensaje' => 'Error al consultar módulos: ' . $error[2]
+                );
+            }
 
-        $stmt -> execute();
+            $resultados = $stmt->fetchAll(PDO::FETCH_OBJ);
+            
+            if (empty($resultados)) {
+                return array(
+                    array(
+                        'id' => '1',
+                        'parent' => '#',
+                        'text' => 'No hay módulos configurados',
+                        'vista' => '',
+                        'icon_menu' => 'fas fa-exclamation-triangle',
+                        'orden' => 1,
+                        'nivel' => 0
+                    )
+                );
+            }
 
-        return $stmt->fetchAll(PDO::FETCH_OBJ);
+            // Formatear los resultados para el árbol
+            foreach ($resultados as &$modulo) {
+                $modulo->state = array(
+                    'opened' => true
+                );
+                $modulo->icon = $modulo->icon_menu;
+            }
 
+            return $resultados;
+
+        } catch (Exception $e) {
+            error_log("Excepción al obtener módulos: " . $e->getMessage());
+            return array(
+                'error' => true,
+                'mensaje' => 'Error del sistema: ' . $e->getMessage()
+            );
+        }
     }
 
 
@@ -27,20 +101,41 @@ class ModuloModelo{
      //MODULOS SEGUN EL PERFIL - ADMIN O VENDE
      /*===================================================================*/
     static public function mdlObtenerModulosPorPerfil($id_perfil){
-
-        $stmt = Conexion::conectar()->prepare("select id,
-                                                    modulo,
-                                                    IFNULL(case when (m.vista is null or m.vista = '') then '0' else (
-                                                        (select '1' from perfil_modulo pm where pm.id_modulo = m.id and pm.id_perfil = :id_perfil)) end, 0) as sel
-                                                from modulos m
-                                                order by m.orden");
-
-        $stmt -> bindParam(":id_perfil",$id_perfil,PDO::PARAM_INT);
-
-        $stmt -> execute();
-
-        return $stmt->fetchAll(PDO::FETCH_OBJ);
-
+        try {
+            // Consulta para obtener los módulos asignados al perfil
+            $stmt = Conexion::conectar()->prepare("
+                SELECT 
+                    m.id,
+                    m.modulo,
+                    CASE 
+                        WHEN pm.id_perfil IS NOT NULL THEN '1'
+                        WHEN p.descripcion IN ('Administrador', 'Developer Senior', 'Super Administrador') THEN '1'
+                        ELSE '0'
+                    END as sel
+                FROM modulos m
+                LEFT JOIN perfil_modulo pm ON m.id = pm.id_modulo AND pm.id_perfil = :id_perfil
+                LEFT JOIN perfiles p ON p.id_perfil = :id_perfil
+                ORDER BY m.orden
+            ");
+            
+            $stmt->bindParam(":id_perfil", $id_perfil, PDO::PARAM_INT);
+            
+            if (!$stmt->execute()) {
+                error_log("Error al ejecutar consulta de módulos por perfil: " . print_r($stmt->errorInfo(), true));
+                return [];
+            }
+            
+            $resultados = $stmt->fetchAll(PDO::FETCH_OBJ);
+            
+            if (empty($resultados)) {
+                error_log("No se encontraron módulos para el perfil " . $id_perfil);
+            }
+            
+            return $resultados;
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerModulosPorPerfil: " . $e->getMessage());
+            return [];
+        }
     }
 
 

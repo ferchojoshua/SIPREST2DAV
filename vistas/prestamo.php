@@ -99,6 +99,22 @@
                                           <br>
                                           <hr>
                                           <h5 style="text-align:center;">Informacion del Prestamo</h5>
+                                          
+                                          <!-- COMBO SUCURSALES SOLO PARA ADMINISTRADORES -->
+                                          <div class="row" id="combo-sucursal-container" style="display: none;">
+                                              <div class="col-md-12">
+                                                  <div class="form-group mb-3">
+                                                      <label for="combo-sucursales" class="">
+                                                          <i class="fas fa-building"></i> <span class="small">Sucursal para el Préstamo</span>
+                                                      </label>
+                                                      <select class="form-control form-control-sm" id="combo-sucursales" required>
+                                                          <option value="">-- Seleccione Sucursal --</option>
+                                                      </select>
+                                                      <div class="invalid-feedback">Debe seleccionar una sucursal</div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          
                                           <br>
                                           <!-- PARA CALCULAR LAS CUOTAS E INTERES DEL PRESTAMO -->
                                           <!-- <form class="needs-validation" novalidate>  -->
@@ -217,9 +233,6 @@
                                                   </div>
                                               </div>
                                               <div class="col-12 d-flex justify-content-end mt-3">
-                                                  <button type="button" class="btn btn-info mr-2" id="btnCalcular">
-                                                      <i class="fas fa-calculator"></i> CALCULAR
-                                                  </button>
                                                   <button type="button" class="btn btn-danger" id="btnLimpiarCampos" hidden>
                                                       <i class="fas fa-broom"></i> LIMPIAR
                                                   </button>
@@ -234,22 +247,23 @@
                                         <div class="row">
 
                                               <div class="table-responsive">
-                                                  <table id="tbl_prestamo" class="table-bordered display compact"
-                                                      style="width: 100%">
+                                                  <table id="tbl_prestamo" class="table table-bordered table-striped table-sm compact" style="width: 100%">
                                                       <thead class="bg-gradient-info text-white">
                                                           <tr>
-                                                              <th>Nro. C</th>
-                                                              <th>Fecha</th>
-                                                              <th>Monto</th>
-                                                              <th>Capital</th>
-                                                              <th>Interes Cuota</th>
-                                                              <th>Saldo Capital</th>
-                                                              <!-- <th>accion</th> -->
-
+                                                              <th class="text-center">Nro. C</th>
+                                                              <th class="text-center">Fecha</th>
+                                                              <th class="text-center">Monto</th>
+                                                              <th class="text-center">Capital</th>
+                                                              <th class="text-center">Interés Cuota</th>
+                                                              <th class="text-center">Saldo Capital</th>
                                                           </tr>
                                                       </thead>
                                                       <tbody id="tbody_tabla_detalle_pro">
-
+                                                          <tr>
+                                                              <td colspan="6" class="text-center text-muted">
+                                                                  <i class="fas fa-calculator"></i> Complete los datos y calcule para ver la tabla de amortización
+                                                              </td>
+                                                          </tr>
                                                       </tbody>
                                                   </table>
                                               </div>
@@ -537,6 +551,11 @@
   <!-- fin Modal -->
 
   <script>
+// ============================================================================
+// FUNCIONES GLOBALES - DEFINIDAS ANTES DE TODO EL RESTO DEL CÓDIGO
+// ============================================================================
+
+// Variables globales
 var accion;
 var tbl_prestamo, tbl_lista_cliente, fecha_emision, corre;
 
@@ -546,14 +565,134 @@ var Toast = Swal.mixin({
     showConfirmButton: false,
     timer: 3000
 });
+
+// Función para verificar si es administrador
+function esAdmin() {
+    return window.userContext && window.userContext.usuario && window.userContext.usuario.es_admin === true;
+}
+
+// Función para cargar sucursales para administradores
+function cargarSucursalesAdmin() {
+    $.ajax({
+        url: 'ajax/aprobacion_ajax.php',
+        type: 'GET',
+        data: { accion: 'listar_sucursales' },
+        dataType: 'json',
+        success: function(response) {
+            const select = $('#combo-sucursales');
+            select.empty().append('<option value="">-- Seleccione Sucursal --</option>');
+            
+            if (response && Array.isArray(response) && response.length > 0) {
+                response.forEach(function(sucursal) {
+                    const sucursalId = sucursal.sucursal_id || sucursal.id;
+                    const sucursalNombre = sucursal.sucursal_nombre || sucursal.nombre;
+                    const sucursalTexto = sucursal.texto_descriptivo || sucursalNombre;
+                    
+                    if (sucursalId && sucursalNombre) {
+                        select.append('<option value="' + sucursalId + '">' + sucursalTexto + '</option>');
+                    }
+                });
+                console.log('✅ Sucursales cargadas para admin');
+            } else {
+                select.append('<option value="">No hay sucursales disponibles</option>');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al cargar sucursales:', error);
+            $('#combo-sucursales').empty().append('<option value="">Error al cargar sucursales</option>');
+            Toast.fire({
+                icon: 'error',
+                title: 'Error al cargar sucursales'
+            });
+        }
+    });
+}
+
+// Función para mostrar u ocultar combo según el rol
+function configurarComboSucursales() {
+    if (esAdmin()) {
+        $('#combo-sucursal-container').show();
+        cargarSucursalesAdmin();
+        $('#combo-sucursales').prop('required', true);
+    } else {
+        $('#combo-sucursal-container').hide();
+        $('#combo-sucursales').prop('required', false);
+    }
+}
+
+// Función para validar caja para administradores
+function CargarEstadoCajaAdmin() {
+    if (esAdmin()) {
+        $.ajax({
+            async: false,
+            url: "ajax/caja_ajax.php",
+            method: "POST",
+            data: {
+                'accion': 'verificar_caja_admin'
+            },
+            dataType: 'json',
+            success: function(respuesta) {
+                if (respuesta && respuesta.puede_operar === true) {
+                    console.log('Admin puede operar con cajas disponibles');
+                } else {
+                    mostrarErrorCajaNoDisponible();
+                }
+            },
+            error: function() {
+                CargarEstadoCaja();
+            }
+        });
+    } else {
+        CargarEstadoCaja();
+    }
+}
+
+function mostrarErrorCajaNoDisponible() {
+    Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Mensaje de Error',
+        text: 'Debe aperturar una caja, se redireccionara a la ventana',
+        showConfirmButton: false,
+    });
+
+    $("#text_monto").attr('disabled', true);
+    $("#text_interes").attr('disabled', true);
+    $("#text_cuotas").attr('disabled', true);
+    $("#select_f_pago").attr('disabled', true);
+    $("#select_moneda").attr('disabled', true);
+    $("#text_fecha").attr('disabled', true);
+    CargarContenido('vistas/caja.php', 'content-wrapper');
+}
+
+// ============================================================================
+// DOCUMENT READY - INICIALIZACIÓN PRINCIPAL
+// ============================================================================
 $(document).ready(function() {
 
-    //fechas();
+    // Cargar datos iniciales
     CargarCorrelativo();
-    CargarEstadoCaja();
+    CargarEstadoCajaAdmin();
     CargarId_Caja();
+    fechas();
     
-    // Cargar formas de pago y moneda al iniciar
+    // Configurar combo de sucursales según el rol del usuario
+    configurarComboSucursales();
+    
+    // Evento para recargar consecutivo cuando administrador cambie sucursal
+    $('#combo-sucursales').on('change', function() {
+        var sucursalSeleccionada = $(this).val();
+        if (sucursalSeleccionada) {
+            console.log('🔄 Recargando consecutivo para sucursal:', sucursalSeleccionada);
+            CargarCorrelativo();
+        } else {
+            // Limpiar el campo si no hay sucursal seleccionada
+            $("#text_nro_prestamo").val('');
+            console.log('⚠️ Sin sucursal seleccionada, consecutivo limpiado');
+        }
+    });
+    
+    // Cargar formas de pago al iniciar
     $.ajax({
         url: "ajax/prestamo_ajax.php",
         method: "POST",
@@ -571,10 +710,11 @@ $(document).ready(function() {
             }
         },
         error: function(xhr, status, error) {
-            // Error silencioso
+            console.error("Error al cargar formas de pago:", error);
         }
     });
 
+    // Cargar monedas al iniciar
     $.ajax({
         url: "ajax/prestamo_ajax.php",
         method: "POST",
@@ -583,67 +723,50 @@ $(document).ready(function() {
         },
         dataType: 'json',
         success: function(respuesta) {
-            console.log('Respuesta moneda:', respuesta); // Para debug
             var options = '<option value="">Seleccione moneda</option>';
             if (Array.isArray(respuesta)) {
                 respuesta.forEach(function(item) {
                     options += '<option value="' + item.moneda_id + '">' + item.moneda_descripcion + '</option>';
                 });
                 $("#select_moneda").html(options);
-            } else {
-                console.error('La respuesta no es un array:', respuesta);
             }
         },
         error: function(xhr, status, error) {
             console.error("Error al cargar monedas:", error);
-            console.error("Respuesta del servidor:", xhr.responseText);
         }
     });
+
+    // Cargar tipos de cálculo al iniciar
+    CargarTiposCalculo();
 
     var id_usuario = $("#text_Idprincipal").val();
     $("#id_usuario").val(id_usuario);
     $("#btnRegistrar").attr('hidden', true);
 
-    /*************************************
-     * ACTUALIZAR EN AUTOMATICO LAS TARJETAS 
-     *************************************/
-    //   var corre = setInterval(() => {
-    //       CargarCorrelativo();
-
-    //   }, 2000);
-
-
-
-    /***************************************************************************
-     * INICIAR DATATABLE BUSCAR CLIENTES
-     ******************************************************************************/
+    // ============================================================================
+    // INICIALIZAR DATATABLE BUSCAR CLIENTES
+    // ============================================================================
     var tbl_lista_cliente = $("#tbl_lista_cliente").DataTable({
-
-
         ajax: {
             url: "ajax/clientes_ajax.php",
             dataSrc: "",
             type: "POST",
             data: {
                 'accion': 7
-            }, //LISTAR PRODUCTOS
+            },
         },
         columnDefs: [{
             targets: 4,
             visible: false
-
         }, {
             targets: 3,
-            //sortable: false,
             createdCell: function(td, cellData, rowData, row, col) {
-
                 if (rowData[3] == 'con prestamo') {
                     $(td).html("<span class='badge badge-warning'>CON PRESTAMO</span>")
                 } else {
                     $(td).html("<span class='badge badge-success'>DISPONIBLE</span>")
                 }
             }
-
         }],
         "order": [
             [0, 'desc']
@@ -654,15 +777,13 @@ $(document).ready(function() {
         select: true
     });
 
+    // ============================================================================
+    // EVENTOS DE LA INTERFAZ
+    // ============================================================================
 
-    /*===================================================================*/
-    //VALIDAR SI LA CÉDULA ESTA REGISTRADA O DESACTIVADA
-    /*===================================================================*/
+    // Validar cédula cuando cambia el campo
     $("#text_dni").change(function() {
-
         var document = $("#text_dni").val();
-
-        // console.log(codBarra);
         $.ajax({
             async: false,
             url: "ajax/clientes_ajax.php",
@@ -670,22 +791,16 @@ $(document).ready(function() {
             data: {
                 'accion': 5,
                 'cliente_dni': document
-                //  'cantidad_a_comprar': cantidad
             },
-
             dataType: 'json',
             success: function(respuesta) {
-                //console.log(respuesta);
                 if (parseInt(respuesta['ex']) > 0) {
-                    // console.log('si hay');
                     CargarDatosCliente();
                     $("#text_dni").val("");
-
                 } else {
-                    // console.log('fdgdfgdfgfd');
                     Toast.fire({
                         icon: 'error',
-                        title: ' Documento ' + document + ' no esta  registrado'
+                        title: ' Documento ' + document + ' no esta registrado'
                     })
                     $("#text_nombre").val("");
                     $("#text_doc_dn").val("");
@@ -694,509 +809,64 @@ $(document).ready(function() {
                 }
             }
         });
+    });
 
-    })
-
-
-    /*===================================================================*/
-    //ABRIR EL MODAL BUSCAR CLIENTES
-    /*===================================================================*/
+    // Abrir modal buscar clientes
     $("#abrirmodal_buscar_cliente").on('click', function() {
         $("#modal_listar_cliente").modal({
             backdrop: 'static',
             keyboard: false
         });
         $("#modal_listar_cliente").modal('show');
+    });
 
-
-    })
-
-    /*===================================================================*/
-    // ABRIR EL MODAL DE REGISTRAR CLIENTES
-    /*===================================================================*/
+    // Abrir modal registrar cliente
     $("#abrirmodal_registrar_cliente").on('click', function() {
         AbrirModalRegistroCliente();
-        // Asegurarse de que los campos estén habilitados y el botón visible al abrir para registro
         $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
         $("#btnregistrar_cliente").show();
         $("#titulo_modal_cliente").html('Registro de Usuarios');
         $("#btnregistrar_cliente").html('Registrar');
-    })
+    });
 
-    /*===================================================================*/
-    //PASAR DATOS DEL DATATABLE A TEXBOX AL HACER DOBLECLICK
-    /*===================================================================*/
+    // Doble click en tabla de clientes
     $(document).on('dblclick', '#tbl_lista_cliente tr', function(event) {
-
         let disponible = $(this).find("td").eq(3).html();
-
-        //console.log(disponible);
 
         if (disponible == '<span class="badge badge-success">DISPONIBLE</span>') {
             let idCliente = $(this).find("td").eq(0).html();
             let nombres = $(this).find("td").eq(1).html();
             let dni = $(this).find("td").eq(2).html();
 
-
             $("#text_nombre").val(nombres);
             $("#text_doc_dn").val(dni);
             $("#cliente_id").val(idCliente);
             $("#modal_listar_cliente").modal('hide');
-
         } else {
             Toast.fire({
                 icon: 'warning',
                 title: 'Cliente Tiene un prestamo Pendiente, Revisar'
-
             });
-            //   $("#text_nombre").val('');
-            //   $("#text_doc_dn").val('');
-            //   $("#cliente_id").val('');
-            //   $("#modal_listar_cliente").modal('hide');
-
         }
-
-
-
-    })
-
-    /*===================================================================*/
-    // CALCULOS AUTOMATICOS EN LOS TEXBOX
-    /*===================================================================*/
-    $("#text_cuotas").change(function() {
-        recalcularPrestamo();
     });
 
-
-    /*===================================================================*/
-    //CALCULOS PARA LAS CAJAS DE TEXTO -  CREAR FILAS DEL DATATABLE
-    /*===================================================================*/
-    $("#btnCalcular").on('click', function() {
-        var interes = 0;
-        var cuota = $("#text_cuotas").val();
+    // CÁLCULO AUTOMÁTICO cuando cambien los valores
+    $('#text_monto, #text_interes, #text_cuotas, #select_tipo_calculo, #text_fecha, #select_f_pago').on('change keyup', function() {
         var monto = $("#text_monto").val();
         var interes = $("#text_interes").val();
-        var moneda = $("#select_moneda").val();
+        var cuotas = $("#text_cuotas").val();
         var fpago = $("#select_f_pago").val();
+        var tipo_calculo = $("#select_tipo_calculo").val();
         var fecha = $("#text_fecha").val();
-        var montocuota = $("#text_monto_por_cuota").val();
-        var cliente = $("#text_doc_dn").val();
-
-        // console.log(fpago);
-
-        //var vi = (interes*100)/monto;
-
-        //var interes_resultado = parseFloat( monto / cuota).toFixed(2);
-        // var interes_resultado = monto*((vi/cuota)/(1- Math.pow(1+(vi/cuota), (-cuota))));
-
-
-        // interes = monto * interes;
-
-
-
-        if (monto == 0) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar un monto a prestar'
-
-            });
-            $("#text_monto").focus();
-        } else if (interes == 0) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar el interes'
-
-            });
-            $("#text_interes").focus();
-        } else if (cuota == 0) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar una cuota'
-
-            });
-            $("#text_cuotas").focus();
-        } else if (fpago == 0) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar una forma de pago'
-
-            });
-            $("#select_f_pago").focus();
-        } else if (moneda == 0) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar una moneda'
-
-            });
-            $("#select_moneda").focus();
-        } /* else if (cliente == "") {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar un Cliente'
-
-            });
-            $("#text_doc_dn").focus();
-        } */ else if (fecha == 0) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar una fecha'
-
-            });
-            $("#text_fecha").focus();
-
-        }
-        //   else if (cuota >=12 ) {
-        //       Toast.fire({
-        //           icon: 'warning',
-        //           title: 'Maximo 12 cuotas'
-
-        //       });
-        //       $("#text_cuotas").focus();
-        //   } 
-        else {
-
+        
+        if (monto && interes && cuotas && fpago && tipo_calculo && fecha) {
             recalcularPrestamo();
             $("#btnRegistrar").attr('hidden', false);
             $("#btnLimpiarCampos").attr('hidden', false);
-            $("#btnCalcular").attr('hidden', true);
-
-
-            var i = 0;
-            var count = 1;
-            let element = {};
-            var cant1 = 0;
-
-            // Obtener los valores calculados de recalcularPrestamo()
-            var montoPresta = parseFloat($("#text_monto").val());
-            var interes = parseFloat($("#text_interes").val());
-            var cuota = parseInt($("#text_cuotas").val());
-            var tipoCalculo = $("#select_tipo_calculo").val();
-            var fixed_installment_C = parseFloat($("#text_monto_por_cuota").val()); // Cuota fija calculada
-            var annual_interest_rate = interes / 100;
-            var i_per_period;
-
-            // Obtener la configuración de periodicidad desde la base de datos
-            var periodosAnuales = {
-                "1": 365,  // DIARIO
-                "2": 52,   // SEMANAL  
-                "3": 24,   // QUINCENAL
-                "4": 12,   // MENSUAL
-               //  "5": 6,    // BIMESTRAL
-               //  "6": 2,    // SEMESTRAL
-               //  "7": 1     // ANUAL
-            };
-            
-            var periodos = periodosAnuales[fpago] || 12; // Default mensual
-            i_per_period = annual_interest_rate / periodos;
-
-            var saldo_capital_restante = montoPresta;
-            var amortizacion_fija = tipoCalculo === 'aleman' ? montoPresta / cuota : 0;
-
-            // Limpiar la tabla de detalle antes de agregar nuevas filas
-            $("#tbody_tabla_detalle_pro").empty();
-
-            let fechas = [];
-            let fechaActual = moment($("#text_fecha").val());
-
-            for (var i_cuota = 0; i_cuota < cuota; i_cuota++) {
-                let current_date;
-                if (fpago == 1) { // DIARIO
-                    current_date = moment(fechaActual).add(i_cuota, 'days').format('YYYY-MM-DD');
-                }
-                 else if (fpago == 2) { // SEMANAL
-                    current_date = moment(fechaActual).add(i_cuota, 'weeks').format('YYYY-MM-DD');
-                } 
-                else if (fpago == 3) { // QUINCENAL
-                    current_date = moment(fechaActual).add(i_cuota * 14, 'days').format('YYYY-MM-DD');
-                } 
-                else if (fpago == 4) { // MENSUAL
-                    current_date = moment(fechaActual).add(i_cuota, 'months').format('YYYY-MM-DD');
-                } 
-                /*else if (fpago == 5) { // BIMESTRAL
-                    current_date = moment(fechaActual).add(i_cuota * 2, 'months').format('YYYY-MM-DD');
-                } 
-                else if (fpago == 6) { // SEMESTRAL
-                    current_date = moment(fechaActual).add(i_cuota * 6, 'months').format('YYYY-MM-DD');
-                } 
-                else if (fpago == 7) { // ANUAL
-                    current_date = moment(fechaActual).add(i_cuota, 'years').format('YYYY-MM-DD');
-            }*/
-
-                var nro_cuota = i_cuota + 1;
-                var interes_cuota, capital_cuota, cuota_total;
-
-                if (tipoCalculo === 'frances') {
-                    interes_cuota = saldo_capital_restante * i_per_period;
-                    capital_cuota = fixed_installment_C - interes_cuota;
-                    cuota_total = fixed_installment_C;
-                } else { // Sistema Alemán
-                    capital_cuota = amortizacion_fija;
-                    interes_cuota = saldo_capital_restante * i_per_period;
-                    cuota_total = capital_cuota + interes_cuota;
-                }
-
-                saldo_capital_restante -= capital_cuota;
-
-                // Asegurarse de que el saldo no sea negativo en la última cuota
-                if (i_cuota === cuota - 1) {
-                    capital_cuota += saldo_capital_restante; // Ajustar el capital de la última cuota
-                    cuota_total = capital_cuota + interes_cuota;
-                    saldo_capital_restante = 0; // El saldo debe ser 0 al final
-                }
-
-                var fila = '<tr>' +
-                    '<td>' + nro_cuota + '</td>' +
-                    '<td>' + current_date + '</td>' +
-                    '<td>' + cuota_total.toFixed(2) + '</td>' +
-                    '<td>' + capital_cuota.toFixed(2) + '</td>' +
-                    '<td>' + interes_cuota.toFixed(2) + '</td>' +
-                    '<td>' + saldo_capital_restante.toFixed(2) + '</td>' +
-                    '</tr>';
-
-                $("#tbody_tabla_detalle_pro").append(fila);
-            }
-
-        }
-
-
-
-    })
-
-    //PARA ELIMINAR UN ITEM DEL DATATABLE
-    var tid = "";
-    $(document).on('click', '.remove2', function(event) {
-        //tid = $('#tbl_listadoCu tbody tr').attr('id');
-        tid = $(this).parents('tr').attr('id');
-
-
-        var opcion = confirm('fila seleccionada: ' + tid);
-        if (opcion == true) {
-            $('#' + tid).remove();
-        } else {
-
         }
     });
 
-
-
-    //LIMPIAR CAMPOS
-    $("#btnLimpiarCampos").on('click', function() {
-        LimpiarInputs();
-        //fechas();
-        $('#tbl_prestamo').DataTable().clear().destroy();
-
-        $("#btnLimpiarCampos").attr('hidden', true);
-        $("#btnCalcular").attr('hidden', false);
-        $("#btnRegistrar").attr('hidden', true);
-    })
-
-    /*===================================================================*/
-    //REGISTRAR CLIENTE
-    /*===================================================================*/
-    document.getElementById("btnregistrar_cliente").addEventListener("click", function() {
-
-        // Get the forms we want to add validation styles to
-        var forms = document.getElementsByClassName('needs-validation');
-        // Loop over them and prevent submission
-        var validation = Array.prototype.filter.call(forms, function(form) {
-
-            //si se ingresan todos los datos 
-            if (form.checkValidity() === true) {
-
-                Swal.fire({
-                    title: 'Esta seguro de ' + titulo_modal + ' el Cliente?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Si',
-                    cancelButtonText: 'Cancelar',
-                }).then((result) => {
-
-                    if (result.isConfirmed) {
-
-                        var datos = new FormData();
-
-                        datos.append("accion", accion);
-                        datos.append("cliente_id", $("#id_cliente").val()); //id
-                        datos.append("cliente_nombres", $("#text_nombres").val()); //modulo
-                        datos.append("cliente_dni", $("#text_documento").val());
-                        // Enviar teléfonos con código de país completo
-                        datos.append("cliente_cel", obtenerTelefonoCompleto("#text_cel"));
-                        datos.append("cliente_direccion", $("#text_direccion").val());
-                        datos.append("cliente_correo", $("#text_correo").val());
-
-                        // Nuevos campos de Información Laboral
-                        datos.append("cliente_empresa_laboral", $("#text_empresa_laboral").val());
-                        datos.append("cliente_cargo_laboral", $("#text_cargo_laboral").val());
-                        datos.append("cliente_tel_laboral", obtenerTelefonoCompleto("#text_tel_laboral"));
-                        datos.append("cliente_dir_laboral", $("#text_dir_laboral").val());
-
-                        // Nuevos campos de Referencia Personal
-                        datos.append("cliente_refe_per_nombre", $("#text_refe_per_e").val());
-                        datos.append("cliente_refe_per_cel", obtenerTelefonoCompleto("#text_nro_cel_per_e"));
-                        datos.append("cliente_refe_per_dir", $("#text_refe_per_dir").val());
-
-                        // Nuevos campos de Referencia Familiar
-                        datos.append("cliente_refe_fami_nombre", $("#text_refe_fami_e").val());
-                        datos.append("cliente_refe_fami_cel", obtenerTelefonoCompleto("#text_nro_cel_fami_e"));
-                        datos.append("cliente_refe_fami_dir", $("#text_refe_fami_dir").val());
-
-
-                        if (accion == 2) {
-                            var titulo_msj = "El Cliente  se registro correctamente"
-
-                        }
-
-                        if (accion == 3) {
-                            var titulo_msj = "El Cliente se actualizo correctamente"
-
-                        }
-                        $.ajax({
-                            url: "ajax/clientes_ajax.php",
-                            method: "POST",
-                            data: datos, //enviamos lo de la variable datos
-                            cache: false,
-                            contentType: false,
-                            processData: false,
-                            dataType: 'json',
-                            success: function(respuesta) {
-                                console.log(respuesta);
-
-                                if (respuesta == "ok") {
-
-                                    Toast.fire({
-                                        icon: 'success',
-                                        //title: 'El Cliente se registro de forma correcta'
-                                        title: titulo_msj
-                                    });
-
-                                    // tbl_clientes.ajax.reload(); //recargamos el datatable 
-
-                                    $("#modal_registro_cliente").modal('hide');
-
-                                    // Limpiar todos los campos del formulario
-                                    $("#id_cliente").val("");
-                                    $("#text_nombres").val("");
-                                    $("#text_documento").val("");
-                                    $("#text_cel").val("");
-                                    $("#text_direccion").val("");
-                                    $("#text_correo").val("");
-                                    $("#text_empresa_laboral").val("");
-                                    $("#text_cargo_laboral").val("");
-                                    $("#text_tel_laboral").val("");
-                                    $("#text_dir_laboral").val("");
-                                    $("#text_refe_per_e").val("");
-                                    $("#text_nro_cel_per_e").val("");
-                                    $("#text_refe_per_dir").val("");
-                                    $("#text_refe_fami_e").val("");
-                                    $("#text_nro_cel_fami_e").val("");
-                                    $("#text_refe_fami_dir").val("");
-
-                                    $(".needs-validation").removeClass("was-validated");
-
-                                } else {
-                                    Toast.fire({
-                                        icon: 'error',
-                                        title: 'El Cliente no se pudo registrar'
-                                    });
-                                }
-
-                            }
-                        });
-                    }
-                })
-
-
-            } else {
-                //console.log(" ") //No paso la validacion
-            }
-
-            form.classList.add('was-validated');
-
-
-        });
-    });
-
-
-
-    /*===================================================================*/
-    //DUPLICADO DE DOCUMENTOS
-    /*===================================================================*/
-    $("#text_documento").change(function() {
-
-        var document = $("#text_documento").val();
-
-        // console.log(codBarra);
-        $.ajax({
-            async: false,
-            url: "ajax/clientes_ajax.php",
-            method: "POST",
-            data: {
-                'accion': 5,
-                'cliente_dni': document
-                //  'cantidad_a_comprar': cantidad
-            },
-
-            dataType: 'json',
-            success: function(respuesta) {
-                //console.log(respuesta);
-                if (parseInt(respuesta['ex']) > 0) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: ' El Documento ' + document + '  ya se encuentra registrado'
-                    })
-
-                    $("#text_documento").val("");
-                    $("#text_documento").focus();
-
-                } else {
-                    //  console.log('dfgdfgdfg');
-                }
-            }
-        });
-
-    })
-
-    /*===================================================================*/
-    //EVENTO QUE LIMPIA EL INPUT  AL CERRAR LA VENTANA MODAL
-    /*===================================================================*/
-    $("#btncerrarmodal_cliente, #btncerrar_cliente").on('click', function() {
-        $("#id_cliente").val("");
-        $("#text_nombres").val("");
-        $("#text_documento").val("");
-        $("#text_cel").val("");
-        $("#text_direccion").val("");
-        $("#text_correo").val("");
-        $("#text_refe_per_e").val("");
-        $("#text_nro_cel_per_e").val("");
-        $("#text_empresa_laboral").val("");
-        $("#text_cargo_laboral").val("");
-        $("#text_tel_laboral").val("");
-        $("#text_dir_laboral").val("");
-        $("#text_refe_per_dir").val("");
-        $("#text_refe_fami_e").val("");
-        $("#text_nro_cel_fami_e").val("");
-        $("#text_refe_fami_dir").val("");
-        $(".needs-validation").removeClass("was-validated");
-        // Volver a habilitar los campos y mostrar el botón al cerrar, en caso de que se haya visto un cliente
-        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
-        $("#btnregistrar_cliente").show();
-    })
-    document.getElementById("btncerrar_cliente").addEventListener("click", function() {
-        $(".needs-validation").removeClass("was-validated");
-        // Volver a habilitar los campos y mostrar el botón al cerrar, en caso de que se haya visto un cliente
-        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
-        $("#btnregistrar_cliente").show();
-    })
-    document.getElementById("btncerrarmodal_cliente").addEventListener("click", function() {
-        $(".needs-validation").removeClass("was-validated");
-        // Volver a habilitar los campos y mostrar el botón al cerrar, en caso de que se haya visto un cliente
-        $("#modal_registro_cliente .form-control, #modal_registro_cliente .form-select").prop('disabled', false);
-        $("#btnregistrar_cliente").show();
-    })
-
-    //REGISTRAR PRESTAMO
+    // Registrar préstamo
     $("#btnRegistrar").on('click', function() {
         var clienteId = $("#cliente_id").val();
 
@@ -1205,179 +875,71 @@ $(document).ready(function() {
                 icon: 'error',
                 title: 'Debe seleccionar un cliente para poder registrar el préstamo.'
             });
-            return; // Detener la ejecución si no hay cliente seleccionado
+            return;
         }
 
-        RegistarPrestamo()
+        RegistarPrestamo();
         $("#btnLimpiarCampos").attr('hidden', true);
-        $("#btnCalcular").attr('hidden', false);
         $("#btnRegistrar").attr('hidden', true);
-    })
+    });
 
-    // Evento para cargar el cliente al presionar Enter en el campo Dni del cliente
+    // Limpiar campos
+    $("#btnLimpiarCampos").on('click', function() {
+        LimpiarInputs();
+        $("#btnLimpiarCampos").attr('hidden', true);
+        $("#btnRegistrar").attr('hidden', true);
+    });
+
+    // Enter en DNI abre modal de búsqueda
     $("#text_dni").on('keyup', function(event) {
         if (event.keyCode == 13 || event.which == 13) {
             $("#abrirmodal_buscar_cliente").click();
         }
-    })
-
-    /*===================================================================*/
-    // ACTIVAR BUSQUEDA AL CAMBIAR SELECTOR DE FORMA DE PAGO
-    /*===================================================================*/
-    $('#select_f_pago').on('change', function() {
-        $('#btnCalcular').click();
     });
 
-    /*===================================================================*/
-    // ACTIVAR BUSQUEDA AL CAMBIAR SELECTOR DE MONEDA
-    /*===================================================================*/
-    $('#select_moneda').on('change', function() {
-        $('#btnCalcular').click();
-    });
-
-    //Evento para calcular al presionar Enter en Monto Prestamo
+    // Enter en monto recalcula
     $("#text_monto").on('keyup', function(event) {
         if (event.keyCode == 13 || event.which == 13) {
             recalcularPrestamo();
         }
     });
 
-    /*===================================================================*/
-    //CARGA LOS TIPOS DE CALCULO AL INICIAR
-    /*===================================================================*/
-    function CargarTiposCalculo() {
-        $.ajax({
-            url: "ajax/prestamo_ajax.php",
-            method: "POST",
-            data: {
-                'accion': 'obtener_tipos_calculo'
-            },
-            dataType: 'json',
-                    success: function(respuesta) {
-            // Verificar si hay error en la respuesta
+}); // FIN DOCUMENT READY
+
+// ============================================================================
+// FUNCIONES DEL SISTEMA
+// ============================================================================
+
+function CargarTiposCalculo() {
+    $.ajax({
+        url: "ajax/prestamo_ajax.php",
+        method: "POST",
+        data: {
+            'accion': 'obtener_tipos_calculo'
+        },
+        dataType: 'json',
+        success: function(respuesta) {
             if (respuesta.error) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error del servidor',
-                        text: respuesta.error
-                    });
-                    $("#select_tipo_calculo")
-                        .html('<option value="">Error al cargar</option>')
-                        .prop('disabled', true);
-                    return;
-                }
-                
-                var options = '<option value="">Seleccione un tipo de cálculo</option>';
-                
-                if (Array.isArray(respuesta)) {
-                    respuesta.forEach(function(tipo) {
-                        options += '<option value="' + tipo.nombre + '" title="' + tipo.descripcion + '">' + 
-                                  tipo.descripcion + '</option>';
-                    });
-                    $("#select_tipo_calculo").html(options);
-                } else {
-                    console.error('Respuesta no es un array:', respuesta);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de formato',
-                        text: 'La respuesta del servidor no tiene el formato esperado.'
-                    });
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error al cargar tipos de cálculo:', error);
-                console.error('Respuesta del servidor:', xhr.responseText);
-                
-                // Mostrar mensaje de error al usuario
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudieron cargar los tipos de cálculo. Por favor, intente nuevamente.'
-                });
-                
-                // Deshabilitar el select
-                $("#select_tipo_calculo")
-                    .html('<option value="">Error al cargar</option>')
-                    .prop('disabled', true);
+                $("#select_tipo_calculo").html('<option value="">Error al cargar</option>').prop('disabled', true);
+                return;
             }
-        });
-    }
-
-    CargarTiposCalculo();
-
-    // Función para calcular la amortización
-    function calcularAmortizacion() {
-        let monto = $('#text_monto').val();
-        let tasa = $('#text_interes').val();
-        let plazo = $('#text_cuotas').val();
-        let sistema = $('#select_tipo_calculo').val();
-        let fecha = $('#text_fecha').val();
-        
-        if (!monto || !tasa || !plazo || !sistema || !fecha) {
-            return;
+            
+            var options = '<option value="">Seleccione un tipo de cálculo</option>';
+            
+            if (Array.isArray(respuesta)) {
+                respuesta.forEach(function(tipo) {
+                    options += '<option value="' + tipo.nombre + '" title="' + tipo.descripcion + '">' + 
+                              tipo.descripcion + '</option>';
+                });
+                $("#select_tipo_calculo").html(options);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al cargar tipos de cálculo:', error);
+            $("#select_tipo_calculo").html('<option value="">Error al cargar</option>').prop('disabled', true);
         }
-        
-        $.ajax({
-            url: 'ajax/prestamo_ajax.php',
-            type: 'POST',
-            data: {
-                accion: 'calcular_amortizacion',
-                monto: monto,
-                interes: tasa,
-                cuotas: plazo,
-                tipo_calculo: sistema,
-                fecha_inicio: fecha,
-                fpago: $('#select_f_pago').val() || '4' // Default mensual
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.error) {
-                    console.error(response.error);
-                    return;
-                }
-                
-                // Actualizar monto por cuota
-                $('#text_monto_por_cuota').val(response.cuota_inicial.toFixed(2));
-                
-                // Actualizar tabla de amortización
-                let tabla = '';
-                response.tabla_amortizacion.forEach(function(fila) {
-                    tabla += `
-                        <tr>
-                            <td>${fila.nro_cuota}</td>
-                            <td>${fila.fecha}</td>
-                            <td>${fila.monto.toFixed(2)}</td>
-                            <td>${fila.capital.toFixed(2)}</td>
-                            <td>${fila.interes.toFixed(2)}</td>
-                            <td>${fila.saldo.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-                
-                $('#tabla_amortizacion tbody').html(tabla);
-            },
-            error: function(xhr, status, error) {
-                console.error('Error al calcular amortización:', error);
-            }
-        });
-    }
-    
-    // Calcular cuando cambien los valores
-    $('#text_monto, #text_interes, #text_cuotas, #select_tipo_calculo, #text_fecha').on('change', function() {
-        calcularAmortizacion();
     });
-
-    // Las formas de pago y monedas se cargan desde el archivo original
-
-}) /// FIN DOCUMENT READY         
-
-
-
-///////////////////////////////////////////////////////////////////// FUNCIONES ////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
+}
 
 function recalcularPrestamo(pagina = 1) {
     var montoPresta = parseFloat($("#text_monto").val()) || 0;
@@ -1391,7 +953,6 @@ function recalcularPrestamo(pagina = 1) {
         return;
     }
 
-    // Llamar al servidor para calcular la amortización
     $.ajax({
         url: "ajax/prestamo_ajax.php",
         method: "POST",
@@ -1420,25 +981,37 @@ function recalcularPrestamo(pagina = 1) {
 
             // Limpiar y actualizar la tabla de detalle
             $("#tbody_tabla_detalle_pro").empty();
+            
+            var totalMonto = 0;
+            var totalCapital = 0;
+            var totalInteres = 0;
+            
             respuesta.tabla_amortizacion.forEach(function(fila) {
-                var tr = `<tr>
-                    <td>${fila.nro_cuota}</td>
-                    <td>${fila.fecha}</td>
-                    <td>${fila.monto.toFixed(2)}</td>
-                    <td>${fila.capital.toFixed(2)}</td>
-                    <td>${fila.interes.toFixed(2)}</td>
-                    <td>${fila.saldo.toFixed(2)}</td>
-                </tr>`;
+                totalMonto += parseFloat(fila.monto);
+                totalCapital += parseFloat(fila.capital);
+                totalInteres += parseFloat(fila.interes);
+                
+                var tr = '<tr>' +
+                    '<td class="text-center">' + fila.nro_cuota + '</td>' +
+                    '<td class="text-center">' + fila.fecha + '</td>' +
+                    '<td class="text-right">' + parseFloat(fila.monto).toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+                    '<td class="text-right">' + parseFloat(fila.capital).toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+                    '<td class="text-right">' + parseFloat(fila.interes).toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+                    '<td class="text-right">' + parseFloat(fila.saldo).toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+                    '</tr>';
                 $("#tbody_tabla_detalle_pro").append(tr);
             });
             
-            // Actualizar paginación si está disponible
-            if (respuesta.paginacion) {
-                actualizarPaginacion(respuesta.paginacion);
-                $(".paginacion-container").show();
-            } else {
-                $(".paginacion-container").hide();
-            }
+            // Agregar fila de TOTALES al final
+            var trTotales = '<tr class="bg-primary text-white font-weight-bold" style="background-color: #007bff !important;">' +
+                '<td class="text-center"><strong>TOTALES</strong></td>' +
+                '<td class="text-center"><strong>-</strong></td>' +
+                '<td class="text-right"><strong>' + totalMonto.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></td>' +
+                '<td class="text-right"><strong>' + totalCapital.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></td>' +
+                '<td class="text-right"><strong>' + totalInteres.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></td>' +
+                '<td class="text-right"><strong>-</strong></td>' +
+                '</tr>';
+            $("#tbody_tabla_detalle_pro").append(trTotales);
         },
         error: function(xhr, status, error) {
             console.error("Error al calcular amortización:", error);
@@ -1447,118 +1020,33 @@ function recalcularPrestamo(pagina = 1) {
     });
 }
 
-// Función para actualizar la paginación
-function actualizarPaginacion(paginacion) {
-    var paginacionContainer = $("#paginacion-tabla");
-    paginacionContainer.empty();
-    
-    // Actualizar información de registros mostrados
-    $("#desde").text((paginacion.pagina_actual - 1) * paginacion.por_pagina + 1);
-    $("#hasta").text(Math.min(paginacion.pagina_actual * paginacion.por_pagina, paginacion.total_registros));
-    $("#total").text(paginacion.total_registros);
-    
-    // Botón "Anterior"
-    var btnAnterior = $('<li class="page-item' + (paginacion.pagina_actual <= 1 ? ' disabled' : '') + '"><a class="page-link" href="#" data-pagina="' + (paginacion.pagina_actual - 1) + '">Anterior</a></li>');
-    paginacionContainer.append(btnAnterior);
-    
-    // Determinar qué números de página mostrar
-    var inicio = Math.max(1, paginacion.pagina_actual - 2);
-    var fin = Math.min(paginacion.total_paginas, paginacion.pagina_actual + 2);
-    
-    // Asegurarse de mostrar al menos 5 páginas si están disponibles
-    if (fin - inicio + 1 < 5 && paginacion.total_paginas >= 5) {
-        if (inicio === 1) {
-            fin = Math.min(5, paginacion.total_paginas);
-        } else if (fin === paginacion.total_paginas) {
-            inicio = Math.max(1, paginacion.total_paginas - 4);
-        }
-    }
-    
-    // Si no estamos en la primera página, mostrar "..."
-    if (inicio > 1) {
-        paginacionContainer.append('<li class="page-item"><a class="page-link" href="#" data-pagina="1">1</a></li>');
-        if (inicio > 2) {
-            paginacionContainer.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
-        }
-    }
-    
-    // Números de página
-    for (var i = inicio; i <= fin; i++) {
-        var btnPagina = $('<li class="page-item' + (i === paginacion.pagina_actual ? ' active' : '') + '"><a class="page-link" href="#" data-pagina="' + i + '">' + i + '</a></li>');
-        paginacionContainer.append(btnPagina);
-    }
-    
-    // Si no estamos en la última página, mostrar "..."
-    if (fin < paginacion.total_paginas) {
-        if (fin < paginacion.total_paginas - 1) {
-            paginacionContainer.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
-        }
-        paginacionContainer.append('<li class="page-item"><a class="page-link" href="#" data-pagina="' + paginacion.total_paginas + '">' + paginacion.total_paginas + '</a></li>');
-    }
-    
-    // Botón "Siguiente"
-    var btnSiguiente = $('<li class="page-item' + (paginacion.pagina_actual >= paginacion.total_paginas ? ' disabled' : '') + '"><a class="page-link" href="#" data-pagina="' + (paginacion.pagina_actual + 1) + '">Siguiente</a></li>');
-    paginacionContainer.append(btnSiguiente);
-    
-    // Agregar evento de clic a los botones de paginación
-    $(".page-link").on("click", function(e) {
-        e.preventDefault();
-        var pagina = $(this).data("pagina");
-        if (!isNaN(pagina) && pagina > 0) {
-            recalcularPrestamo(pagina);
-        }
-    });
-}
-
-
-/*===================================================================*/
-//FUNCION PARA CARGAR DATOS DEL CLIENTE EN TEXBOX
-/*===================================================================*/
 function CargarDatosCliente(dni = "") {
-
     if (dni != "") {
         var cliente_dni = dni;
-
     } else {
         var cliente_dni = $("#text_dni").val();
     }
 
     $.ajax({
-        ///async: false,
         url: "ajax/clientes_ajax.php",
         method: "POST",
-
         data: {
             'accion': 6,
             'cliente_dni': cliente_dni
-
         },
         dataType: 'json',
         success: function(respuesta2) {
-
-            //console.log(respuesta2);
-
             cliente_id = respuesta2["cliente_id"];
             cli_doc = respuesta2["cliente_dni"];
             cliente_nombres = respuesta2["cliente_nombres"];
-            //   console.log(cli_doc);
-            //  cliente_estado_prestamo = respuesta["cliente_estado_prestamo"];
-
-
 
             $("#cliente_id").val(cliente_id);
-            $("#text_nombre").val(cliente_nombres); //SETEAMOS EN LOS TEXTBOX
+            $("#text_nombre").val(cliente_nombres);
             $("#text_doc_dn").val(cli_doc);
-            //   $("#text_direccion").val(cliente_estado_prestamo);
-
         }
     });
 }
 
-
-/*===================================================================*/
-//REGISTRAR CABECERA DEL PRESTAMO
-/*===================================================================*/
 function RegistarPrestamo() {
     var count = 0;
     var nro_prestamo = $("#text_nro_prestamo").val();
@@ -1571,22 +1059,79 @@ function RegistarPrestamo() {
     var moneda_id = $("#select_moneda").val();
     var pres_f_emision = $("#text_fecha").val();
     var tipo_calculo = $("#select_tipo_calculo").val();
-
     var pres_monto_cuota = $("#text_monto_por_cuota").val();
     var pres_monto_interes = $("#text_interes_resultado").val();
     var pres_monto_total = $("#text_total_resultado").val();
     var caja_id = $("#id_caja").val();
 
-    //para validar que el detalle tenga un dato
+    // Validar que el detalle tenga datos
     $("#tbody_tabla_detalle_pro tr").each(function(i, e) {
         count = count + 1;
     });
 
-    if (count > 0) { //SI HAY DATOS AGREGADOS EN EL DETALLE
-        if (cliente_id > 0) {
-            var formData = new FormData();
+    // Validaciones mejoradas
+    if (!cliente_id || cliente_id <= 0) {
+        Toast.fire({ icon: 'warning', title: 'Debe seleccionar un cliente válido.' });
+        return;
+    }
+    if (!pres_monto || isNaN(pres_monto) || pres_monto <= 0) {
+        Toast.fire({ icon: 'warning', title: 'Ingrese un monto válido.' });
+        return;
+    }
+    if (!pres_interes || isNaN(pres_interes) || pres_interes < 0) {
+        Toast.fire({ icon: 'warning', title: 'Ingrese una tasa de interés válida.' });
+        return;
+    }
+    if (!pres_cuotas || isNaN(pres_cuotas) || pres_cuotas <= 0) {
+        Toast.fire({ icon: 'warning', title: 'Ingrese un número de cuotas válido.' });
+        return;
+    }
+    if (!fpago_id) {
+        Toast.fire({ icon: 'warning', title: 'Seleccione una forma de pago.' });
+        return;
+    }
+    if (!moneda_id) {
+        Toast.fire({ icon: 'warning', title: 'Seleccione una moneda.' });
+        return;
+    }
+    if (!tipo_calculo) {
+        Toast.fire({ icon: 'warning', title: 'Seleccione un tipo de amortización.' });
+        return;
+    }
+    if (count === 0) {
+        Toast.fire({ icon: 'warning', title: 'No hay datos en la tabla de amortización.' });
+        return;
+    }
+    if (typeof esAdmin === "function" && esAdmin()) {
+        var sucursal_seleccionada = $('#combo-sucursales').val();
+        if (!sucursal_seleccionada) {
+            Toast.fire({ icon: 'warning', title: 'Debe seleccionar una sucursal para el préstamo' });
+            return;
+        }
+    }
 
-            //PARA LA CABECERA
+    // Mostrar resumen de datos antes de guardar
+    var resumen = `<b>Monto:</b> ${parseFloat(pres_monto).toLocaleString('es-NI', {minimumFractionDigits:2})}<br>` +
+                  `<b>Interés:</b> ${parseFloat(pres_interes).toLocaleString('es-NI', {minimumFractionDigits:2})}%<br>` +
+                  `<b>Cuotas:</b> ${pres_cuotas}<br>` +
+                  `<b>Forma de pago:</b> ${$('#select_f_pago option:selected').text()}<br>` +
+                  `<b>Moneda:</b> ${$('#select_moneda option:selected').text()}<br>` +
+                  `<b>Tipo de cálculo:</b> ${$('#select_tipo_calculo option:selected').text()}<br>` +
+                  `<b>Total a pagar:</b> ${parseFloat(pres_monto_total).toLocaleString('es-NI', {minimumFractionDigits:2})}`;
+    
+    Swal.fire({
+        title: '¿Confirmar registro de préstamo?',
+        html: resumen,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'Cancelar',
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Deshabilitar botón para evitar doble envío
+            $("#btnRegistrar").attr('disabled', true);
+            var formData = new FormData();
             formData.append("accion", 1);
             formData.append('nro_prestamo', nro_prestamo);
             formData.append('cliente_id', cliente_id);
@@ -1602,7 +1147,13 @@ function RegistarPrestamo() {
             formData.append('id_usuario', id_usuario);
             formData.append('caja_id', caja_id);
             formData.append('tipo_calculo', tipo_calculo);
-
+            var sucursal_id = null;
+            if (typeof esAdmin === "function" && esAdmin()) {
+                sucursal_id = $('#combo-sucursales').val();
+            } else {
+                sucursal_id = window.userContext && window.userContext.sucursal_id ? window.userContext.sucursal_id : null;
+            }
+            formData.append('sucursal_id', sucursal_id);
             $.ajax({
                 url: "ajax/prestamo_ajax.php",
                 method: "POST",
@@ -1611,7 +1162,11 @@ function RegistarPrestamo() {
                 contentType: false,
                 processData: false,
                 success: function(respuesta) {
-                    
+                    if (typeof respuesta === 'string' && respuesta.toLowerCase().includes('error')) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: respuesta });
+                        $("#btnRegistrar").attr('disabled', false);
+                        return;
+                    }
                     Swal.fire({
                         position: 'center',
                         icon: 'success',
@@ -1619,36 +1174,23 @@ function RegistarPrestamo() {
                         showConfirmButton: false,
                         timer: 1500
                     });
-
                     RegistrarDetalle();
                     LimpiarInputs();
                     CargarCorrelativo();
                     fechas();
-
-                    // Limpiar la tabla de amortización
                     $("#tbody_tabla_detalle_pro").empty();
+                    $("#tbody_tabla_detalle_pro").html('<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-calculator"></i> Complete los datos y calcule para ver la tabla de amortización</td></tr>');
+                    $("#btnRegistrar").attr('disabled', false);
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo registrar el préstamo. Intente nuevamente.' });
+                    $("#btnRegistrar").attr('disabled', false);
                 }
             });
-        } else {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Debe ingresar un cliente'
-            });
-            $("#btnRegistrar").attr('hidden', false);
         }
-    } else {
-        Toast.fire({
-            icon: 'warning',
-            title: 'No hay datos en la tabla de amortización'
-        });
-    }
+    });
 }
 
-
-
-/*===================================================================*/
-//FUNCION PARA GUARDAR DETALLE DEL PRESTAMO
-/*===================================================================*/
 function RegistrarDetalle() {
     var count = 0;
     var nro_prestamo = $("#text_nro_prestamo").val();
@@ -1658,11 +1200,17 @@ function RegistrarDetalle() {
     var arreglo_monto = new Array();
 
     $("#tbody_tabla_detalle_pro tr").each(function(i, e) {
-        arreglo_cuota.push($(this).find('td').eq(0).text());
-        arreglo_monto.push($(this).find('td').eq(2).text());
-        arreglo_fecha.push($(this).find('td').eq(1).text());
-        count++;
-    })
+        // Filtrar la fila de TOTALES - solo procesar filas que tengan número de cuota válido
+        var nroCuota = $(this).find('td').eq(0).text();
+        if (nroCuota !== "TOTALES" && !isNaN(parseInt(nroCuota))) {
+            arreglo_cuota.push(nroCuota);
+            // Remover formato de números (comas) y obtener solo el valor numérico
+            var montoText = $(this).find('td').eq(2).text().replace(/,/g, '');
+            arreglo_monto.push(montoText);
+            arreglo_fecha.push($(this).find('td').eq(1).text());
+            count++;
+        }
+    });
 
     if (count === 0) {
         Toast.fire({
@@ -1675,11 +1223,6 @@ function RegistrarDetalle() {
     var pdetalle_nro_cuota = arreglo_cuota.toString();
     var pdetalle_monto_cuota = arreglo_monto.toString();
     var pdetalle_fecha = arreglo_fecha.toString();
-
-    console.log("Guardando detalle del préstamo:");
-    console.log("Cuotas:", pdetalle_nro_cuota);
-    console.log("Montos:", pdetalle_monto_cuota);
-    console.log("Fechas:", pdetalle_fecha);
 
     $.ajax({
         url: "ajax/prestamo_ajax.php",
@@ -1714,7 +1257,6 @@ function RegistrarDetalle() {
     });
 }
 
-
 function fechas() {
     var f = new Date();
     var anio = f.getFullYear();
@@ -1730,21 +1272,16 @@ function fechas() {
     document.getElementById('text_fecha').value = anio + "-" + mes + "-" + d;
 }
 
-
-
 function AbrirModalRegistroCliente() {
-    //para que no se nos salga del modal haciendo click a los costados
     $("#modal_registro_cliente").modal({
         backdrop: 'static',
         keyboard: false
     });
-    $("#modal_registro_cliente").modal('show'); //abrimos el modal
+    $("#modal_registro_cliente").modal('show');
     $("#titulo_modal_cliente").html('Registrar Cliente');
     $("#btnregistrar_cliente").html('Registrar');
-    accion = 2; // guardar
+    accion = 2;
     titulo_modal = "Registrar";
-
-
 }
 
 function obtenerTelefonoCompleto(campoId) {
@@ -1752,34 +1289,99 @@ function obtenerTelefonoCompleto(campoId) {
     return numero ? '+505' + numero : '';
 }
 
-/*===================================================================*/
-//FUNCION PARA CARGAR CORRELATIVO
-/*===================================================================*/
 function CargarCorrelativo() {
-
+    // DEBUG: Mostrar información del contexto del usuario
+    console.log('🔍 UserContext completo:', window.userContext);
+    console.log('🔍 Es administrador:', esAdmin());
+    console.log('🔍 Sucursal del usuario:', window.userContext?.sucursal_id);
+    console.log('🔍 Valor del combo sucursales:', $('#combo-sucursales').val());
+    
+    // Determinar qué sucursal usar
+    var sucursal_id = null;
+    
+    // Si es administrador y hay sucursal seleccionada
+    if (esAdmin()) {
+        sucursal_id = $('#combo-sucursales').val();
+        console.log('👨‍💼 Modo administrador - Sucursal seleccionada:', sucursal_id);
+        if (!sucursal_id) {
+            // Si es admin pero no ha seleccionado sucursal, no generar consecutivo aún
+            $("#text_nro_prestamo").val('');
+            console.log('⚠️ Administrador debe seleccionar sucursal primero');
+            return;
+        }
+    }
+    // Si es usuario común, usar su sucursal asignada
+    else if (window.userContext && window.userContext.sucursal_id) {
+        sucursal_id = window.userContext.sucursal_id;
+        console.log('👤 Modo usuario común - Sucursal asignada:', sucursal_id);
+    }
+    else {
+        console.log('❌ No se puede determinar el tipo de usuario o no tiene sucursal asignada');
+    }
+    
+    // Preparar datos para enviar
+    var requestData = {
+        'accion': 'obtener_numero_prestamo'
+    };
+    
+    // Agregar sucursal_id si está definida
+    if (sucursal_id) {
+        requestData.sucursal_id = sucursal_id;
+    }
+    
+    // DEBUG: Mostrar datos que se van a enviar
+    console.log('📤 Enviando datos al servidor:', requestData);
+    
+    // Usar el nuevo sistema de consecutivos por sucursal
     $.ajax({
         async: false,
-        url: "ajax/configuracion_ajax.php",
+        url: "ajax/consecutivos_ajax.php",
         method: "POST",
-        data: {
-            'accion': 3
-        },
+        data: requestData,
         dataType: 'json',
         success: function(respuesta) {
-
-            nro_prestamo = respuesta["nro_prestamo"];
-
-
-            $("#text_nro_prestamo").val(nro_prestamo);
+            if (respuesta.estado === 'exito') {
+                nro_prestamo = respuesta["numero_prestamo"];
+                $("#text_nro_prestamo").val(nro_prestamo);
+                console.log('✅ Consecutivo por sucursal:', nro_prestamo, 'Sucursal ID:', respuesta.sucursal_id);
+            } else {
+                console.log('❌ Error en consecutivos, usando sistema antiguo:', respuesta.mensaje);
+                console.log('🔍 Debug info:', respuesta.debug);
+                // Fallback al sistema antiguo si hay error
+                $.ajax({
+                    async: false,
+                    url: "ajax/configuracion_ajax.php",
+                    method: "POST",
+                    data: { 'accion': 3 },
+                    dataType: 'json',
+                    success: function(respuesta) {
+                        nro_prestamo = respuesta["nro_prestamo"];
+                        $("#text_nro_prestamo").val(nro_prestamo);
+                        console.log('⚠️ Usando sistema antiguo:', nro_prestamo);
+                    }
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log('❌ Error AJAX, usando sistema antiguo:', error);
+            // Fallback al sistema antiguo si hay error
+            $.ajax({
+                async: false,
+                url: "ajax/configuracion_ajax.php",
+                method: "POST",
+                data: { 'accion': 3 },
+                dataType: 'json',
+                success: function(respuesta) {
+                    nro_prestamo = respuesta["nro_prestamo"];
+                    $("#text_nro_prestamo").val(nro_prestamo);
+                    console.log('⚠️ Usando sistema antiguo (fallback):', nro_prestamo);
+                }
+            });
         }
     });
 }
 
-/*===================================================================*/
-//FUNCION PARA CARGAR TRAER EL ID CAJA
-/*===================================================================*/
 function CargarId_Caja() {
-
     $.ajax({
         async: false,
         url: "ajax/caja_ajax.php",
@@ -1789,21 +1391,13 @@ function CargarId_Caja() {
         },
         dataType: 'json',
         success: function(respuesta) {
-
             caja_id = respuesta["caja_id"];
-
-
             $("#id_caja").val(caja_id);
         }
     });
 }
 
-
-/*===================================================================*/
-//SI ESTA APERTURADA O NO UNA CAJA
-/*===================================================================*/
 function CargarEstadoCaja() {
-
     $.ajax({
         async: false,
         url: "ajax/caja_ajax.php",
@@ -1813,11 +1407,7 @@ function CargarEstadoCaja() {
         },
         dataType: 'json',
         success: function(respuesta) {
-            //console.log(respuesta);
-
             caja_estado = respuesta["caja_estado"];
-            //console.log(caja_estado);
-            // $("#text_correo").val(email);
 
             if (caja_estado == 'VIGENTE') {
 
@@ -1828,76 +1418,21 @@ function CargarEstadoCaja() {
                     title: 'Mensaje de Error',
                     text: 'Debe aperturar una caja, se redireccionara a la ventana',
                     showConfirmButton: false,
-                    //timer: 1500
-                })
+                });
 
-                $("#btnCalcular").attr('hidden', true);
                 $("#text_monto").attr('disabled', true);
                 $("#text_interes").attr('disabled', true);
                 $("#text_cuotas").attr('disabled', true);
                 $("#select_f_pago").attr('disabled', true);
                 $("#select_moneda").attr('disabled', true);
                 $("#text_fecha").attr('disabled', true);
-                //$("#CargarContenido").load('vistas/caja.php','content-wrapper');
                 CargarContenido('vistas/caja.php', 'content-wrapper');
             }
         }
     });
 }
 
-/*===================================================================*/
-//FUNCION PARA VALIDAR EL MONTO A PRESTAR CON LO QUE TENEMOS EN CAJA
-/*===================================================================*/
-function CargarMontoaPrestar() {
-    $.ajax({
-        async: false,
-        url: "ajax/prestamo_ajax.php",
-        method: "POST",
-        data: {
-            'accion': 3
-        },
-        dataType: 'json',
-        success: function(respuesta) {
-
-            pres_monto = respuesta["pres_monto"];
-            monto_inicial_caja = respuesta["monto_inicial_caja"];
-            ingreso = respuesta["ingreso"];
-            egreso = respuesta["egreso"];
-            interes = respuesta["interes"];
-
-            var montonuevoprestamo = $("#text_monto").val();
-            ope = (parseFloat(monto_inicial_caja) + parseFloat(ingreso) + parseFloat(interes) - parseFloat(
-                egreso));
-            montodelprestamo = (parseFloat(ope - pres_monto).toFixed(2));
-
-            //ejm = (parseFloat(montonuevoprestamo - montodelprestamo).toFixed(2));
-
-            //console.log(ope);
-            //console.log(montodelprestamo);
-            //console.log(ejm);
-
-            if (parseFloat(montonuevoprestamo) <= montodelprestamo) {
-                console.log();
-            } else {
-                Toast.fire({
-                    icon: 'error',
-                    title: ' El monto:  ' + montonuevoprestamo +
-                        ' supera lo que hay en caja, Saldo:  ' + montodelprestamo
-                })
-                // $("#text_monto").val("");
-                LimpiarInputs();
-            }
-
-
-        }
-    });
-}
-
-
-
-
 function LimpiarInputs() {
-    // $("#text_nro_prestamo").val("");
     $("#cliente_id").val("");
     $("#text_nombre").val("");
     $("#text_doc_dn").val("");
@@ -1907,16 +1442,16 @@ function LimpiarInputs() {
     $("#select_f_pago").val("");
     $("#select_moneda").val("");
     $("#text_fecha").val("");
-
     $("#text_monto_por_cuota").val("");
     $("#text_interes_resultado").val("");
     $("#text_total_resultado").val("");
-
+    
+    // Limpiar completamente la tabla de amortización y restaurar mensaje inicial
+    $("#tbody_tabla_detalle_pro").empty();
+    $("#tbody_tabla_detalle_pro").html('<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-calculator"></i> Complete los datos y calcule para ver la tabla de amortización</td></tr>');
+    
     $("#text_dni").focus();
-
 }
-
-
 
 var idioma_espanol = {
     select: {
@@ -1944,12 +1479,6 @@ var idioma_espanol = {
         "sSortAscending": ": ordenar de manera Ascendente",
         "SSortDescending": ": ordenar de manera Descendente ",
     }
-}
+};
 
-// Activar recálculo al cambiar tipo de cálculo
-$('#select_tipo_calculo').on('change', function() {
-    $('#btnCalcular').click();
-});
-
-// El símbolo de moneda se maneja desde la base de datos
   </script>

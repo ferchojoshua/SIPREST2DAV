@@ -324,11 +324,11 @@ class ConsecutivosModelo
     }
 
     /**
-     * Generar número de préstamo para la sucursal del usuario
+     * Generar número de préstamo para la sucursal especificada o del usuario
      */
-    static public function mdlGenerarNumeroPrestamo()
+    static public function mdlGenerarNumeroPrestamo($sucursal_id = null)
     {
-        return self::mdlGenerarNumeroDocumento('prestamo');
+        return self::mdlGenerarNumeroDocumento('prestamo', $sucursal_id);
     }
 
     /**

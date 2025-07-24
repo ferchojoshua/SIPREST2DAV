@@ -637,11 +637,13 @@ class RutasAjax
     public function ajaxListarRutasPorSucursal()
     {
         try {
-            if (!isset($_POST['id_sucursal']) || !is_numeric($_POST['id_sucursal'])) {
+            // Aceptar tanto 'id_sucursal' como 'sucursal_id' para compatibilidad
+            $id_sucursal = $_POST['id_sucursal'] ?? $_POST['sucursal_id'] ?? null;
+            
+            if (!$id_sucursal || !is_numeric($id_sucursal)) {
                 throw new Exception("ID de sucursal inválido o no proporcionado.");
             }
             
-            $id_sucursal = $_POST['id_sucursal'];
             $rutas = RutasControlador::ctrListarRutasPorSucursal($id_sucursal);
             
             echo json_encode($rutas);
@@ -724,6 +726,9 @@ try {
             $ajax->ajaxListarRutas();
             break;
         case 'listar_rutas_por_sucursal': // <-- Nuevo caso
+            $ajax->ajaxListarRutasPorSucursal();
+            break;
+        case 'obtener_rutas_sucursal': // Para reportes de mora
             $ajax->ajaxListarRutasPorSucursal();
             break;
         case 'obtener':

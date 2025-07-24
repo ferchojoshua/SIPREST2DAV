@@ -37,8 +37,9 @@
                                           <th>Nombres</th>
                                           <th>Apellidos</th>
                                           <th>Usuario</th>
-                                          <th>clave</th>
-                                          <th>id Rol</th>
+                                          <th>Cédula</th>
+                                          <th>Celular</th>
+                                          <th>Cargo</th>
                                           <th>Rol</th>
                                           <th>Sucursal</th>
                                           <th>Estado</th>
@@ -147,6 +148,147 @@
                                     <!-- Las sucursales se cargarán aquí dinámicamente -->
                                 </select>
                                 <div class="invalid-feedback">Seleccione una sucursal</div>
+                            </div>
+                        </div>
+
+                        <!-- Nuevos campos adicionales -->
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_cedula" class="">
+                                    <span class="small">Cédula</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_cedula" name="text_cedula" placeholder="Cédula">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_celular" class="">
+                                    <span class="small">Celular</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_celular" name="text_celular" placeholder="Celular">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_ciudad" class="">
+                                    <span class="small">Ciudad</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_ciudad" name="text_ciudad" placeholder="Ciudad">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_profesion" class="">
+                                    <span class="small">Profesión</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_profesion" name="text_profesion" placeholder="Profesión">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_cargo" class="">
+                                    <span class="small">Cargo</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_cargo" name="text_cargo" placeholder="Cargo">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_fecha_ingreso" class="">
+                                    <span class="small">Fecha de Ingreso</span>
+                                </label>
+                                <input type="date" class="form-control form-control-sm" id="text_fecha_ingreso" name="text_fecha_ingreso">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_numero_seguro" class="">
+                                    <span class="small">Número de Seguro</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_numero_seguro" name="text_numero_seguro" placeholder="Número de Seguro">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_forma_pago" class="">
+                                    <span class="small">Forma de Pago</span>
+                                </label>
+                                <select class="form-select form-select-sm" id="text_forma_pago" name="text_forma_pago">
+                                    <option value="">Seleccione forma de pago</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Depósito">Depósito</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="form-group mb-2">
+                                <label for="text_direccion" class="">
+                                    <span class="small">Dirección</span>
+                                </label>
+                                <textarea class="form-control form-control-sm" id="text_direccion" name="text_direccion" rows="2" placeholder="Dirección completa"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Campos de WhatsApp -->
+                        <div class="col-lg-6">
+                            <div class="form-group mb-2">
+                                <label for="text_telefono_whatsapp" class="">
+                                    <span class="small">Teléfono WhatsApp</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" id="text_telefono_whatsapp" name="text_telefono_whatsapp" placeholder="Teléfono WhatsApp">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group mb-2">
+                                <label for="check_whatsapp_activo" class="">
+                                    <span class="small">WhatsApp Activo</span>
+                                </label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="check_whatsapp_activo" name="check_whatsapp_activo">
+                                    <label class="form-check-label" for="check_whatsapp_activo">
+                                        Activo
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group mb-2">
+                                <label for="check_whatsapp_admin" class="">
+                                    <span class="small">WhatsApp Admin</span>
+                                </label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="check_whatsapp_admin" name="check_whatsapp_admin">
+                                    <label class="form-check-label" for="check_whatsapp_admin">
+                                        Admin
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo de Estado del Usuario -->
+                        <div class="col-lg-12" id="div_estado_usuario" style="display: none;">
+                            <div class="form-group mb-2">
+                                <label for="select_estado_usuario" class="">
+                                    <span class="small">Estado del Usuario</span><span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select form-select-sm" id="select_estado_usuario" name="select_estado_usuario" required>
+                                    <option value="">Seleccione estado</option>
+                                    <option value="1">Activo</option>
+                                    <option value="0">Inactivo</option>
+                                </select>
+                                <div class="invalid-feedback">Seleccione el estado del usuario</div>
                             </div>
                         </div>
 
@@ -306,7 +448,86 @@
         $("#btnregistrar_usuario").on('click', function() {
             var forms = document.querySelectorAll('.needs-validation')
             
-            // Validar el formulario
+            // Validar campos obligatorios manualmente
+            var esValido = true;
+            var mensajeError = "";
+            
+            // Validar nombres
+            if ($("#text_nombres").val().trim() === "") {
+                esValido = false;
+                mensajeError = "El campo Nombres es obligatorio";
+                $("#text_nombres").addClass('is-invalid').focus();
+            } else {
+                $("#text_nombres").removeClass('is-invalid');
+            }
+            
+            // Validar apellidos
+            if ($("#text_apellidos").val().trim() === "") {
+                esValido = false;
+                if (mensajeError === "") mensajeError = "El campo Apellidos es obligatorio";
+                $("#text_apellidos").addClass('is-invalid');
+                if ($("#text_nombres").val().trim() !== "") $("#text_apellidos").focus();
+            } else {
+                $("#text_apellidos").removeClass('is-invalid');
+            }
+            
+            // Validar usuario
+            if ($("#text_usuario").val().trim() === "") {
+                esValido = false;
+                if (mensajeError === "") mensajeError = "El campo Usuario es obligatorio";
+                $("#text_usuario").addClass('is-invalid');
+                if ($("#text_nombres").val().trim() !== "" && $("#text_apellidos").val().trim() !== "") $("#text_usuario").focus();
+            } else {
+                $("#text_usuario").removeClass('is-invalid');
+            }
+            
+            // Validar clave solo en modo registro
+            if (accion == 1 && $("#text_clave").val().trim() === "") {
+                esValido = false;
+                if (mensajeError === "") mensajeError = "El campo Clave es obligatorio";
+                $("#text_clave").addClass('is-invalid');
+                if ($("#text_nombres").val().trim() !== "" && $("#text_apellidos").val().trim() !== "" && $("#text_usuario").val().trim() !== "") $("#text_clave").focus();
+            } else {
+                $("#text_clave").removeClass('is-invalid');
+            }
+            
+            // Validar perfil
+            if ($("#select_perfil").val() === "" || $("#select_perfil").val() === null) {
+                esValido = false;
+                if (mensajeError === "") mensajeError = "Debe seleccionar un perfil";
+                $("#select_perfil").addClass('is-invalid');
+            } else {
+                $("#select_perfil").removeClass('is-invalid');
+            }
+            
+            // Validar sucursal
+            if ($("#select_sucursal").val() === "" || $("#select_sucursal").val() === null) {
+                esValido = false;
+                if (mensajeError === "") mensajeError = "Debe seleccionar una sucursal";
+                $("#select_sucursal").addClass('is-invalid');
+            } else {
+                $("#select_sucursal").removeClass('is-invalid');
+            }
+            
+            // Validar estado en modo edición
+            if (accion == 2 && ($("#select_estado_usuario").val() === "" || $("#select_estado_usuario").val() === null)) {
+                esValido = false;
+                if (mensajeError === "") mensajeError = "Debe seleccionar el estado del usuario";
+                $("#select_estado_usuario").addClass('is-invalid');
+            } else {
+                $("#select_estado_usuario").removeClass('is-invalid');
+            }
+            
+            // Si hay errores, mostrar mensaje y no continuar
+            if (!esValido) {
+                Toast.fire({
+                    icon: 'error',
+                    title: mensajeError
+                });
+                return;
+            }
+            
+            // Validar el formulario HTML5
             var form = forms[0];
             if (!form.checkValidity()) {
                 event.preventDefault();
@@ -338,6 +559,23 @@
                     }
                     datos.append("id_perfil_usuario", $("#select_perfil").val());
                     datos.append("sucursal_id", $("#select_sucursal").val());
+                    datos.append("telefono_whatsapp", $("#text_telefono_whatsapp").val());
+                    datos.append("whatsapp_activo", $("#check_whatsapp_activo").is(':checked') ? 1 : 0);
+                    datos.append("whatsapp_admin", $("#check_whatsapp_admin").is(':checked') ? 1 : 0);
+                    datos.append("cedula", $("#text_cedula").val());
+                    datos.append("ciudad", $("#text_ciudad").val());
+                    datos.append("direccion", $("#text_direccion").val());
+                    datos.append("profesion", $("#text_profesion").val());
+                    datos.append("cargo", $("#text_cargo").val());
+                    datos.append("celular", $("#text_celular").val());
+                    datos.append("fecha_ingreso", $("#text_fecha_ingreso").val());
+                    datos.append("numero_seguro", $("#text_numero_seguro").val());
+                    datos.append("forma_pago", $("#text_forma_pago").val());
+                    
+                    // Solo enviar estado si estamos en modo edición
+                    if(accion == 2) {
+                        datos.append("estado", $("#select_estado_usuario").val());
+                    }
 
                     $.ajax({
                         url: "ajax/usuario_ajax.php",
@@ -357,6 +595,18 @@
                                 $("#text_clave").val("");
                                 $("#select_perfil").val("");
                                 $("#select_sucursal").val("");
+                                $("#text_cedula").val("");
+                                $("#text_celular").val("");
+                                $("#text_ciudad").val("");
+                                $("#text_profesion").val("");
+                                $("#text_cargo").val("");
+                                $("#text_fecha_ingreso").val("");
+                                $("#text_numero_seguro").val("");
+                                $("#text_forma_pago").val("");
+                                $("#text_direccion").val("");
+                                $("#text_telefono_whatsapp").val("");
+                                $("#check_whatsapp_activo").prop('checked', false);
+                                $("#check_whatsapp_admin").prop('checked', false);
                                 
                                 // Restablecer validación
                                 form.classList.remove('was-validated');
@@ -428,14 +678,14 @@
             text: 'Exportar a Excel',
             className: 'btn-success',
             exportOptions: {
-                columns: [1, 2, 3, 6, 7, 8]
+                columns: [1, 2, 3, 4, 5, 6, 7, 8]
             },
         }, {
             extend: 'print',
             text: 'Imprimir',
             title: nombreEmpresa,
             exportOptions: {
-                columns: [1, 2, 3, 6, 7, 8]
+                columns: [1, 2, 3, 4, 5, 6, 7, 8]
             },
             customize: function(win) {
                 $(win.document.body).css('font-size', '10pt')
@@ -478,17 +728,18 @@
             { data: 'nombre_usuario' },
             { data: 'apellido_usuario' },
             { data: 'usuario' },
-            { data: 'clave' },
-            { data: 'id_perfil_usuario' },
+            { data: 'cedula' },
+            { data: 'celular' },
+            { data: 'cargo' },
             { data: 'descripcion' },
             { data: 'sucursal_nombre' },
             { 
                 data: 'estado_texto',
                 render: function(data, type, row) {
                     if (type === 'display') {
-                        return row.estado == '1' ? 
-                             '<span class="badge bg-danger">Inactivo</span>': 
-                            '<span class="badge bg-success">Activo</span>' ;
+                        return row.estado == 'Activo' ? 
+                             '<span class="badge bg-success">Activo</span>': 
+                            '<span class="badge bg-danger">Inactivo</span>' ;
                     }
                     return data;
                 }
@@ -496,9 +747,9 @@
             { data: 'opciones' }
         ],
         columnDefs: [{
-                targets: 9,
+                targets: 10,
                 createdCell: function(td, cellData, rowData, row, col) {
-                    if (rowData.estado == '1') {
+                    if (rowData.estado == 'Activo') {
                         $(td).html(
                             "<center>" +
                             "<span class='text-success px-1' style='cursor:pointer;' data-bs-toggle='tooltip' data-bs-placement='top' title='Cambiar Clave'> " +
@@ -527,12 +778,12 @@
                 }
             },
             {
-                targets: [0, 4, 5], //OCULTA SOLO ID, CLAVE Y ID_PERFIL
+                targets: [0], //OCULTA SOLO ID
                 visible: false
             }
         ],
         "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.20/i18n/Spanish.json"
+            "url": "vistas/assets/plugins/datatables/i18n/Spanish.json"
         }
     });
 
@@ -652,6 +903,7 @@
         var data = tbl_usuarios.row($(this).parents('tr')).data();
         accion = 2; // Modo edición
         $("#iptclave").hide();
+        $("#div_estado_usuario").show(); // Mostrar campo de estado en edición
         $("#titulo_modal_usuario").html("Editar Usuario");
         $("#btnregistrar_usuario").html("Modificar"); // Cambiar texto del botón
         
@@ -666,6 +918,21 @@
         $("#text_nombres").val(data.nombre_usuario);
         $("#text_apellidos").val(data.apellido_usuario);
         $("#text_usuario").val(data.usuario);
+        $("#text_cedula").val(data.cedula || '');
+        $("#text_celular").val(data.celular || '');
+        $("#text_ciudad").val(data.ciudad || '');
+        $("#text_profesion").val(data.profesion || '');
+        $("#text_cargo").val(data.cargo || '');
+        $("#text_fecha_ingreso").val(data.fecha_ingreso || '');
+        $("#text_numero_seguro").val(data.numero_seguro || '');
+        $("#text_forma_pago").val(data.forma_pago || '');
+        $("#text_direccion").val(data.direccion || '');
+        $("#text_telefono_whatsapp").val(data.telefono_whatsapp || '');
+        $("#check_whatsapp_activo").prop('checked', data.whatsapp_activo == 1);
+        $("#check_whatsapp_admin").prop('checked', data.whatsapp_admin == 1);
+        
+        // Establecer estado del usuario (1 = Activo, 0 = Inactivo)
+        $("#select_estado_usuario").val(data.estado_texto === 'Activo' ? '1' : '0');
         
         // Cargar perfiles y seleccionar el del usuario
         cargarPerfiles(function() {
@@ -692,6 +959,18 @@
         $("#text_clave").val("");
         $("#select_perfil").val("");
         $("#select_sucursal").val("");
+        $("#text_cedula").val("");
+        $("#text_celular").val("");
+        $("#text_ciudad").val("");
+        $("#text_profesion").val("");
+        $("#text_cargo").val("");
+        $("#text_fecha_ingreso").val("");
+        $("#text_numero_seguro").val("");
+        $("#text_forma_pago").val("");
+        $("#text_direccion").val("");
+        $("#text_telefono_whatsapp").val("");
+        $("#check_whatsapp_activo").prop('checked', false);
+        $("#check_whatsapp_admin").prop('checked', false);
         
         // Restablecer validación
         var forms = document.querySelectorAll('.needs-validation');
@@ -703,6 +982,8 @@
         $("#btnregistrar_usuario").html("Registrar");
         $("#titulo_modal_usuario").html("Registro de Usuario");
         $("#iptclave").show();
+        $("#div_estado_usuario").hide(); // Ocultar campo de estado en nuevo registro
+        $("#select_estado_usuario").val(""); // Limpiar estado
         accion = 1; // Modo registro
     });
     $("#btncerrarmodal_clave, #btncerrar_clave").on('click', function() {
@@ -792,5 +1073,101 @@
         $("#modal_cambiar_clave").modal('show');
         $("#id_usuario_clave").val(data[0]);
 
-    })
+    });
+
+    /*===================================================================*/
+    // ACTIVAR USUARIO
+    /*===================================================================*/
+    $('#tbl_usuarios').on('click', '.btn_activar_usuario', function() {
+        var data = tbl_usuarios.row($(this).parents('tr')).data();
+        
+        Swal.fire({
+            title: '¿Está seguro de activar el usuario?',
+            text: 'Usuario: ' + data.nombre_usuario + ' ' + data.apellido_usuario,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, activar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var datos = new FormData();
+                datos.append("accion", 4); // Acción para activar
+                datos.append("id_usuario", data.id_usuario);
+                
+                $.ajax({
+                    url: "ajax/usuario_ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(respuesta) {
+                        if (respuesta == "ok") {
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Usuario activado correctamente'
+                            });
+                            tbl_usuarios.ajax.reload();
+                        } else {
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'Error al activar el usuario'
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    /*===================================================================*/
+    // DESACTIVAR USUARIO
+    /*===================================================================*/
+    $('#tbl_usuarios').on('click', '.btn_desactivar_usuario', function() {
+        var data = tbl_usuarios.row($(this).parents('tr')).data();
+        
+        Swal.fire({
+            title: '¿Está seguro de desactivar el usuario?',
+            text: 'Usuario: ' + data.nombre_usuario + ' ' + data.apellido_usuario,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, desactivar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var datos = new FormData();
+                datos.append("accion", 5); // Acción para desactivar
+                datos.append("id_usuario", data.id_usuario);
+                
+                $.ajax({
+                    url: "ajax/usuario_ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(respuesta) {
+                        if (respuesta == "ok") {
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Usuario desactivado correctamente'
+                            });
+                            tbl_usuarios.ajax.reload();
+                        } else {
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'Error al desactivar el usuario'
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    });
 </script>

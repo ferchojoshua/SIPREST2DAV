@@ -28,15 +28,31 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-alt text-info"></i> Fecha Inicio:</label>
+                                    <input type="date" class="form-control" id="fecha_inicio_saldos" value="<?php echo date('Y-m-01'); ?>">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-check text-info"></i> Fecha Fin:</label>
+                                    <input type="date" class="form-control" id="fecha_fin_saldos" value="<?php echo date('Y-m-d'); ?>">
+                                </div>
+                            </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Rango de Fechas:</label>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                                        </div>
-                                        <input type="text" class="form-control float-right" id="rango_fechas_saldos">
-                                    </div>
+                                    <label><i class="fas fa-calendar-week text-info"></i> Rango Rápido:</label>
+                                    <select class="form-control" id="rango_rapido_saldos">
+                                        <option value="">Seleccionar período...</option>
+                                        <option value="hoy">📅 Hoy</option>
+                                        <option value="ayer">📅 Ayer</option>
+                                        <option value="semana">📊 Esta semana</option>
+                                        <option value="mes" selected>📊 Este mes</option>
+                                        <option value="mes_anterior">📊 Mes anterior</option>
+                                        <option value="trimestre">📊 Este trimestre</option>
+                                        <option value="ano">📊 Este año</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -85,18 +101,53 @@
 
 <script>
 $(document).ready(function() {
-    // Inicializar el Daterangepicker
-    $('#rango_fechas_saldos').daterangepicker({
-        locale: {
-            format: 'DD/MM/YYYY',
-            "applyLabel": "Aplicar",
-            "cancelLabel": "Cancelar",
-            "fromLabel": "Desde",
-            "toLabel": "Hasta",
-            "customRangeLabel": "Rango Personalizado",
-            "daysOfWeek": ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"],
-            "monthNames": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-            "firstDay": 1
+    // Manejar rango rápido
+    $('#rango_rapido_saldos').on('change', function() {
+        var rango = $(this).val();
+        var fechaInicio, fechaFin;
+        var hoy = new Date();
+        
+        switch(rango) {
+            case 'hoy':
+                fechaInicio = fechaFin = hoy.toISOString().split('T')[0];
+                break;
+            case 'ayer':
+                var ayer = new Date(hoy);
+                ayer.setDate(hoy.getDate() - 1);
+                fechaInicio = fechaFin = ayer.toISOString().split('T')[0];
+                break;
+            case 'semana':
+                var inicioSemana = new Date(hoy);
+                inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+                fechaInicio = inicioSemana.toISOString().split('T')[0];
+                fechaFin = hoy.toISOString().split('T')[0];
+                break;
+            case 'mes':
+                fechaInicio = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-01';
+                fechaFin = hoy.toISOString().split('T')[0];
+                break;
+            case 'mes_anterior':
+                var mesAnterior = new Date(hoy);
+                mesAnterior.setMonth(hoy.getMonth() - 1);
+                fechaInicio = mesAnterior.getFullYear() + '-' + String(mesAnterior.getMonth() + 1).padStart(2, '0') + '-01';
+                var ultimoDiaMesAnterior = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+                fechaFin = ultimoDiaMesAnterior.toISOString().split('T')[0];
+                break;
+            case 'trimestre':
+                var mesActual = hoy.getMonth();
+                var inicioTrimestre = Math.floor(mesActual / 3) * 3;
+                fechaInicio = hoy.getFullYear() + '-' + String(inicioTrimestre + 1).padStart(2, '0') + '-01';
+                fechaFin = hoy.toISOString().split('T')[0];
+                break;
+            case 'ano':
+                fechaInicio = hoy.getFullYear() + '-01-01';
+                fechaFin = hoy.toISOString().split('T')[0];
+                break;
+        }
+        
+        if (fechaInicio && fechaFin) {
+            $('#fecha_inicio_saldos').val(fechaInicio);
+            $('#fecha_fin_saldos').val(fechaFin);
         }
     });
 
@@ -118,22 +169,42 @@ $(document).ready(function() {
             }
         }, 'pageLength'],
         "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.20/i18n/Spanish.json"
+            "url": "vistas/assets/plugins/datatables/i18n/Spanish.json"
         }
     });
 
     // Evento del botón buscar
     $("#btn_buscar_saldos").on('click', function() {
-        var rango_fechas = $("#rango_fechas_saldos").val().split(' - ');
-        var fecha_inicio = moment(rango_fechas[0], 'DD/MM/YYYY').format('YYYY-MM-DD');
-        var fecha_fin = moment(rango_fechas[1], 'DD/MM/YYYY').format('YYYY-MM-DD');
+        var fecha_inicio = $("#fecha_inicio_saldos").val();
+        var fecha_fin = $("#fecha_fin_saldos").val();
+        
+        if (!fecha_inicio || !fecha_fin) {
+            Swal.fire('Error', 'Por favor seleccione ambas fechas.', 'warning');
+            return;
+        }
+        
+        if (fecha_inicio > fecha_fin) {
+            Swal.fire('Error', 'La fecha de inicio no puede ser mayor a la fecha fin.', 'warning');
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Consultando...',
+            text: 'Obteniendo saldos arrastrados.',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         // Aquí iría la llamada AJAX para obtener los datos
         // Por ahora, mostraremos datos de ejemplo
         
-        // Simulación de llamada AJAX
+        // Llamada AJAX
         $.ajax({
-            url: 'ajax/reportes_ajax.php', // Este archivo aún no existe
+            url: 'ajax/reportes_ajax.php',
             type: 'POST',
             data: {
                 accion: 'reporte_saldos_arrastrados',
@@ -142,16 +213,19 @@ $(document).ready(function() {
             },
             dataType: 'json',
             success: function(data) {
+                Swal.close();
                 tblReporteSaldos.clear().draw();
                 if (data && data.length > 0) {
                     tblReporteSaldos.rows.add(data).draw();
+                    Swal.fire('Éxito', `Se encontraron ${data.length} registros de saldos arrastrados.`, 'success');
                 } else {
-                    // Manejar caso sin datos
+                    Swal.fire('Sin resultados', 'No se encontraron saldos arrastrados en el período seleccionado.', 'info');
                 }
             },
             error: function(xhr, status, error) {
-                // Manejar error
+                Swal.close();
                 console.error("Error en AJAX:", status, error);
+                Swal.fire('Error', 'Error al consultar los datos. Intente nuevamente.', 'error');
             }
         });
     });

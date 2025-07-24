@@ -78,9 +78,36 @@ class CajaModelo
     /*===================================================================*/
     static public function mdlObtenerDataEstadoCaja()
     {
-        $smt = Conexion::conectar()->prepare('call SP_OBTENER_ESTADO_CAJA()');
-        $smt->execute();
-        return $smt->fetch(PDO::FETCH_OBJ);
+        session_start();
+        if (!isset($_SESSION['id_usuario'])) {
+            return (object)[
+                'caja_estado' => 'CERRADA',
+                'caja_monto_inicial' => 0
+            ];
+        }
+        $usuario_id = $_SESSION['id_usuario'];
+
+        $stmt = Conexion::conectar()->prepare("
+            SELECT c.* 
+            FROM caja c
+            INNER JOIN usuarios u ON c.id_usuario = u.id_usuario
+            WHERE c.caja_estado = 'VIGENTE' AND u.id_usuario = :usuario_id
+            ORDER BY c.caja_fecha_apertura DESC 
+            LIMIT 1
+        ");
+        $stmt->bindParam(":usuario_id", $usuario_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $resultado = $stmt->fetch(PDO::FETCH_OBJ);
+
+        if ($resultado) {
+            return $resultado;
+        } else {
+            return (object)[
+                'caja_estado' => 'CERRADA',
+                'caja_monto_inicial' => 0.00,
+                'caja_descripcion' => 'No hay caja abierta'
+            ];
+        }
     }
 
 
@@ -129,15 +156,96 @@ class CajaModelo
     static public function mdlVerificarPermisosCaja($id_usuario, $accion, $monto = 0)
     {
         try {
-            $stmt = Conexion::conectar()->prepare('CALL SP_VERIFICAR_PERMISOS_CAJA(:id_usuario, :accion, :monto)');
+            // Primero verificar si el usuario existe y obtener su perfil
+            $stmt = Conexion::conectar()->prepare('
+                SELECT 
+                    u.id_usuario,
+                    p.descripcion as perfil,
+                    p.id_perfil,
+                    u.sucursal_id
+                FROM usuarios u 
+                INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
+                WHERE u.id_usuario = :id_usuario
+                AND u.estado = 1
+            ');
             $stmt->bindParam(":id_usuario", $id_usuario, PDO::PARAM_INT);
-            $stmt->bindParam(":accion", $accion, PDO::PARAM_STR);
-            $stmt->bindParam(":monto", $monto, PDO::PARAM_STR);
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_OBJ);
+            $usuario = $stmt->fetch(PDO::FETCH_OBJ);
+            
+            if (!$usuario) {
+                error_log("Usuario no encontrado o inactivo: " . $id_usuario);
+                return (object)[
+                    'puede_ejecutar' => false,
+                    'es_administrador' => false,
+                    'limite_monto' => 0,
+                    'mensaje' => 'Usuario no encontrado o inactivo'
+                ];
+            }
+            
+            // Si es administrador (id_perfil = 1), tiene acceso total
+            if ($usuario->id_perfil == 1) {
+                return (object)[
+                    'puede_ejecutar' => true,
+                    'es_administrador' => true,
+                    'limite_monto' => 999999999.99,
+                    'mensaje' => 'Acceso total al sistema - Administrador',
+                    'perfil' => $usuario->perfil,
+                    'sucursal_id' => $usuario->sucursal_id
+                ];
+            }
+            
+            // Para otros perfiles, verificar permisos específicos
+            $stmt = Conexion::conectar()->prepare('
+                SELECT 
+                    CASE 
+                        WHEN :accion = "ABRIR_CAJA" AND p.puede_abrir_caja = 1 THEN 1
+                        WHEN :accion = "CERRAR_CAJA" AND p.puede_cerrar_caja = 1 THEN 1
+                        WHEN :accion = "SUPERVISAR" AND p.puede_supervisar = 1 THEN 1
+                        ELSE 0
+                    END as puede_ejecutar,
+                    p.limite_monto_caja
+                FROM perfiles p
+                WHERE p.id_perfil = :id_perfil
+            ');
+            
+            $stmt->bindParam(":id_perfil", $usuario->id_perfil, PDO::PARAM_INT);
+            $stmt->bindParam(":accion", $accion, PDO::PARAM_STR);
+            $stmt->execute();
+            $permisos = $stmt->fetch(PDO::FETCH_OBJ);
+            
+            if (!$permisos) {
+                return (object)[
+                    'puede_ejecutar' => false,
+                    'es_administrador' => false,
+                    'limite_monto' => 0,
+                    'mensaje' => 'No tiene permisos asignados',
+                    'perfil' => $usuario->perfil,
+                    'sucursal_id' => $usuario->sucursal_id
+                ];
+            }
+            
+            $puede_ejecutar = $permisos->puede_ejecutar == 1;
+            $dentro_limite = $monto <= $permisos->limite_monto_caja;
+            
+            return (object)[
+                'puede_ejecutar' => $puede_ejecutar && $dentro_limite,
+                'es_administrador' => false,
+                'limite_monto' => $permisos->limite_monto_caja,
+                'mensaje' => $puede_ejecutar ? 
+                    ($dentro_limite ? 'Acceso permitido' : 'Monto excede límite') : 
+                    'No tiene permiso para esta acción',
+                'perfil' => $usuario->perfil,
+                'sucursal_id' => $usuario->sucursal_id
+            ];
+            
         } catch (Exception $e) {
             error_log("Error verificando permisos de caja: " . $e->getMessage());
-            return (object)['puede_ejecutar' => 0, 'es_administrador' => 0, 'limite_monto' => 0];
+            return (object)[
+                'puede_ejecutar' => false,
+                'es_administrador' => false,
+                'limite_monto' => 0,
+                'mensaje' => 'Error interno del sistema: ' . $e->getMessage()
+            ];
         }
     }
 
@@ -482,11 +590,25 @@ class CajaModelo
     /*===================================================================*/
     static public function mdlListarCajasPorSucursal($sucursal_id, $es_admin = false)
     {
-        $stmt = Conexion::conectar()->prepare('CALL SP_LISTAR_CAJAS_POR_SUCURSAL(:sucursal_id, :es_admin)');
-        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
-        $stmt->bindParam(":es_admin", $es_admin, PDO::PARAM_BOOL);
+        if ($es_admin) {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT c.*, u.nombre_usuario as usuario_apertura_nombre
+                FROM caja c
+                LEFT JOIN usuarios u ON c.usuario_apertura = u.id_usuario
+                ORDER BY c.caja_f_apertura DESC, c.caja_hora_apertura DESC
+            ");
+        } else {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT c.*, u.nombre_usuario as usuario_apertura_nombre
+                FROM caja c
+                LEFT JOIN usuarios u ON c.usuario_apertura = u.id_usuario
+                WHERE c.sucursal_id = :sucursal_id
+                ORDER BY c.caja_f_apertura DESC, c.caja_hora_apertura DESC
+            ");
+            $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        }
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_NUM);
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
     /*===================================================================*/
@@ -510,7 +632,7 @@ class CajaModelo
     /*===================================================================*/
     static public function mdlVerificarAccesoCajaSucursal($usuario_id, $sucursal_id)
     {
-        // Verificar si es administrador
+        // Verificar si tiene permisos administrativos
         $stmt = Conexion::conectar()->prepare('SELECT p.descripcion 
                                              FROM usuarios u 
                                              INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
@@ -519,8 +641,11 @@ class CajaModelo
         $stmt->execute();
         $perfil = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($perfil && $perfil['descripcion'] === 'Administrador') {
-            return ['puede_acceder' => true, 'es_admin' => true, 'razon' => 'Acceso de administrador'];
+        // Lista de perfiles con acceso administrativo
+        $perfiles_admin = ['administrador', 'developer senior', 'supervisor'];
+        
+        if ($perfil && in_array(strtolower($perfil['descripcion']), $perfiles_admin)) {
+            return ['puede_acceder' => true, 'es_admin' => true, 'razon' => 'Acceso administrativo'];
         }
         
         // Verificar si pertenece a la sucursal
@@ -545,6 +670,7 @@ class CajaModelo
     /*===================================================================*/
     static public function mdlGenerarCierreDia($sucursal_id, $fecha_cierre, $usuario_cierre, $observaciones = '')
     {
+        // Se vuelve a utilizar el SP ahora que está corregido.
         $stmt = Conexion::conectar()->prepare('CALL SP_GENERAR_CIERRE_DIA(:sucursal_id, :fecha_cierre, :usuario_cierre, :observaciones)');
         $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
         $stmt->bindParam(":fecha_cierre", $fecha_cierre, PDO::PARAM_STR);
@@ -599,26 +725,30 @@ class CajaModelo
                          AND pd.pdetalle_estado_cuota = "pagada"
                          AND (pc.sucursal_asignada_id = :sucursal_id OR (pc.sucursal_asignada_id IS NULL AND :sucursal_id IS NULL))), 0) as monto_pagos,
                 
-                -- Movimientos del día
+                -- Movimientos del día (corregido con JOIN a caja)
                 COALESCE((SELECT COUNT(*) FROM movimientos m 
+                         INNER JOIN caja c ON m.movi_caja = c.caja_id
                          WHERE DATE(m.movi_fecha) = :fecha 
                          AND m.movi_tipo = "INGRESO"
-                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as ingresos_count,
+                         AND (c.sucursal_id = :sucursal_id OR (c.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as ingresos_count,
                          
                 COALESCE((SELECT SUM(m.movi_monto) FROM movimientos m 
+                         INNER JOIN caja c ON m.movi_caja = c.caja_id
                          WHERE DATE(m.movi_fecha) = :fecha 
                          AND m.movi_tipo = "INGRESO"
-                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as ingresos_monto,
+                         AND (c.sucursal_id = :sucursal_id OR (c.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as ingresos_monto,
                          
                 COALESCE((SELECT COUNT(*) FROM movimientos m 
+                         INNER JOIN caja c ON m.movi_caja = c.caja_id
                          WHERE DATE(m.movi_fecha) = :fecha 
                          AND m.movi_tipo = "EGRESO"
-                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as egresos_count,
+                         AND (c.sucursal_id = :sucursal_id OR (c.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as egresos_count,
                          
                 COALESCE((SELECT SUM(m.movi_monto) FROM movimientos m 
+                         INNER JOIN caja c ON m.movi_caja = c.caja_id
                          WHERE DATE(m.movi_fecha) = :fecha 
                          AND m.movi_tipo = "EGRESO"
-                         AND (m.sucursal_id = :sucursal_id OR (m.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as egresos_monto,
+                         AND (c.sucursal_id = :sucursal_id OR (c.sucursal_id IS NULL AND :sucursal_id IS NULL))), 0) as egresos_monto,
                 
                 -- Caja activa
                 (SELECT caja_monto_inicial FROM caja 
@@ -645,4 +775,33 @@ class CajaModelo
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['existe'] > 0;
     }
+
+    /*===================================================================*/
+    // OBTENER DATOS DE USUARIO PARA CONTEXTO
+    /*===================================================================*/
+    static public function mdlObtenerDatosUsuario($id_usuario)
+    {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT 
+                u.id_usuario,
+                u.nombre_usuario,
+                p.descripcion as perfil,
+                s.nombre as sucursal_nombre
+            FROM usuarios u 
+            INNER JOIN perfiles p ON u.id_perfil_usuario = p.id_perfil 
+            LEFT JOIN sucursales s ON u.sucursal_id = s.id
+            WHERE u.id_usuario = :id_usuario
+        ");
+        $stmt->bindParam(":id_usuario", $id_usuario, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    static public function mdlObtenerCajaPrincipalAbiertaPorSucursal($sucursal_id) {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM caja WHERE caja_estado = 'VIGENTE' AND tipo_caja = 'principal' AND sucursal_id = :sucursal_id LIMIT 1");
+        $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_OBJ);
+    }
+
 }

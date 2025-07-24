@@ -1,7 +1,9 @@
-Options All -Indexes
-Options -MultiViews
-
 RewriteEngine On
 
+# Permitir acceso DIRECTO a todos los archivos estáticos sin procesamiento
+RewriteRule \.(js|css|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg|map)$ - [L]
+
+# Solo procesar rutas que NO sean archivos físicos
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ index.php [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.php [L]

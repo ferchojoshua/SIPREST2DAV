@@ -9,53 +9,94 @@ class PerfilModuloModelo{
     //REGISTRAR PERFIL MODULO
     /*===================================================================*/
     static public function mdlRegistrarPerfilModulo($array_idModulos, $idPerfil, $id_modulo_inicio){
+        try {
+            $total_registros = 0;
 
-        $total_registros = 0;
+            // Primero verificar si es un perfil administrativo
+            $stmt = Conexion::conectar()->prepare("
+                SELECT descripcion 
+                FROM perfiles 
+                WHERE id_perfil = :id_perfil
+            ");
+            $stmt->bindParam(":id_perfil", $idPerfil, PDO::PARAM_INT);
+            $stmt->execute();
+            $perfil = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if($idPerfil == 1){
-            $stmt = Conexion::conectar()->prepare("delete from perfil_modulo where id_perfil = :id_perfil and id_modulo != 13");
-        }else{
-            $stmt = Conexion::conectar()->prepare("delete from perfil_modulo where id_perfil = :id_perfil");
-        }
+            // Si es un perfil administrativo, dar acceso a todos los módulos
+            if ($perfil && in_array(strtolower($perfil['descripcion']), ['administrador', 'developer senior', 'super administrador'])) {
+                // Primero eliminar los módulos existentes
+                $stmt = Conexion::conectar()->prepare("DELETE FROM perfil_modulo WHERE id_perfil = :id_perfil");
+                $stmt->bindParam(":id_perfil", $idPerfil, PDO::PARAM_INT);
+                $stmt->execute();
 
-        $stmt -> bindParam(":id_perfil",$idPerfil,PDO::PARAM_INT);
-        $stmt -> execute();
+                // Obtener todos los módulos del sistema
+                $stmt = Conexion::conectar()->prepare("SELECT id FROM modulos");
+                $stmt->execute();
+                $modulos = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        foreach ($array_idModulos as $value) { 
+                // Asignar todos los módulos al perfil
+                foreach ($modulos as $id_modulo) {
+                    $vista_inicio = ($id_modulo == $id_modulo_inicio) ? 1 : 0;
+                    
+                    $stmt = Conexion::conectar()->prepare("
+                        INSERT INTO perfil_modulo(
+                            id_perfil,
+                            id_modulo,
+                            vista_inicio,
+                            estado
+                        ) VALUES (
+                            :id_perfil,
+                            :id_modulo,
+                            :vista_inicio,
+                            1
+                        )
+                    ");
 
-            if($idPerfil == 1 && $value == 13){
-                $total_registros = $total_registros + 0;
-            }else{
+                    $stmt->bindParam(":id_perfil", $idPerfil, PDO::PARAM_INT);
+                    $stmt->bindParam(":id_modulo", $id_modulo, PDO::PARAM_INT);
+                    $stmt->bindParam(":vista_inicio", $vista_inicio, PDO::PARAM_INT);
 
-                if($value == $id_modulo_inicio){
-                    $vista_inicio = 1;
-                }else{
-                    $vista_inicio = 0;
+                    if ($stmt->execute()) {
+                        $total_registros++;
+                    }
                 }
+            } else {
+                // Para perfiles no administrativos, usar la lógica original
+                $stmt = Conexion::conectar()->prepare("DELETE FROM perfil_modulo WHERE id_perfil = :id_perfil");
+                $stmt->bindParam(":id_perfil", $idPerfil, PDO::PARAM_INT);
+                $stmt->execute();
 
-                $stmt = Conexion::conectar()->prepare("INSERT INTO perfil_modulo(id_perfil,
-                                                                                id_modulo,
-                                                                                vista_inicio,
-                                                                                estado)
-                                                                    values(:id_perfil,
-                                                                            :id_modulo,
-                                                                            :vista_inicio,
-                                                                            1)");
+                foreach ($array_idModulos as $value) {
+                    $vista_inicio = ($value == $id_modulo_inicio) ? 1 : 0;
 
-                $stmt -> bindParam(":id_perfil",$idPerfil,PDO::PARAM_INT);
-                $stmt -> bindParam(":id_modulo",$value,PDO::PARAM_INT);
-                $stmt -> bindParam(":vista_inicio",$vista_inicio,PDO::PARAM_INT);
+                    $stmt = Conexion::conectar()->prepare("
+                        INSERT INTO perfil_modulo(
+                            id_perfil,
+                            id_modulo,
+                            vista_inicio,
+                            estado
+                        ) VALUES (
+                            :id_perfil,
+                            :id_modulo,
+                            :vista_inicio,
+                            1
+                        )
+                    ");
 
-                if($stmt->execute()){
-                    $total_registros = $total_registros + 1;
-                }else{
-                    $total_registros = 0;
+                    $stmt->bindParam(":id_perfil", $idPerfil, PDO::PARAM_INT);
+                    $stmt->bindParam(":id_modulo", $value, PDO::PARAM_INT);
+                    $stmt->bindParam(":vista_inicio", $vista_inicio, PDO::PARAM_INT);
+
+                    if ($stmt->execute()) {
+                        $total_registros++;
+                    }
                 }
-
             }
 
+            return $total_registros;
+        } catch (Exception $e) {
+            error_log("Error en mdlRegistrarPerfilModulo: " . $e->getMessage());
+            return 0;
         }
-
-        return $total_registros;
     }
 }

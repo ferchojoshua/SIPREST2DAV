@@ -9,7 +9,7 @@ class PrestamoModelo
     /*===================================================================*/
     //REGISTRAR PRESTAMO
     /*===================================================================*/
-    static public function mdlRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo)
+    static public function mdlRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo, $sucursal_id = null)
     {
         //print_r($nro_boleta);
         $fecha = date('Y-m-d H:i:s');
@@ -36,10 +36,22 @@ class PrestamoModelo
 
             if ($stmt->execute()) {
 
-                $stmt = null; //colocamos en null porque se va a usar de nuevo para actualizar correlativo
+                $stmt = null; //colocamos en null porque se va a usar de nuevo para actualizar consecutivo
 
-                //ACTUALIZAMOS EL CORRELATIVO
-                $stmt = Conexion::conectar()->prepare("UPDATE empresa SET confi_correlativo = LPAD(confi_correlativo + 1,8,'0')");
+                //INCREMENTAR CONSECUTIVO POR SUCURSAL (NUEVO SISTEMA)
+                // Determinar sucursal si no se especifica
+                if ($sucursal_id === null) {
+                    // Obtener sucursal desde la caja
+                    $stmt_sucursal = Conexion::conectar()->prepare("SELECT sucursal_id FROM caja WHERE caja_id = :caja_id");
+                    $stmt_sucursal->bindParam(":caja_id", $caja_id, PDO::PARAM_INT);
+                    $stmt_sucursal->execute();
+                    $result_sucursal = $stmt_sucursal->fetch(PDO::FETCH_OBJ);
+                    $sucursal_id = $result_sucursal ? $result_sucursal->sucursal_id : 1; // Fallback a sucursal 1
+                }
+                
+                // Incrementar consecutivo de préstamos por sucursal
+                $stmt = Conexion::conectar()->prepare('CALL SP_INCREMENTAR_CONSECUTIVO_PRESTAMO_SUCURSAL(:sucursal_id)');
+                $stmt->bindParam(":sucursal_id", $sucursal_id, PDO::PARAM_INT);
 
                 if ($stmt->execute()) {
                     //$stmt = Conexion::conectar()->prepare("UPDATE clientes SET cliente_estado_prestamo =  'con prestamo' where cliente_id = :cliente_id");

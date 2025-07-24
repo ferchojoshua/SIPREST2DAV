@@ -74,9 +74,9 @@ class UsuarioControlador{
     /*===================================================================*/
      //REGISTRAR USUARIOS
      /*===================================================================*/
-     static public function ctrRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id)
+     static public function ctrRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id, $telefono_whatsapp, $whatsapp_activo, $whatsapp_admin, $cedula, $ciudad, $direccion, $profesion, $cargo, $celular, $fecha_ingreso, $numero_seguro, $forma_pago)
      {
-         $registroUsuario = UsuarioModelo::mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id);
+         $registroUsuario = UsuarioModelo::mdlRegistrarUsuario($nombre_usuario, $apellido_usuario, $usuario, $clave, $id_perfil_usuario, $sucursal_id, $telefono_whatsapp, $whatsapp_activo, $whatsapp_admin, $cedula, $ciudad, $direccion, $profesion, $cargo, $celular, $fecha_ingreso, $numero_seguro, $forma_pago);
          return $registroUsuario;
      }
 
@@ -97,6 +97,24 @@ class UsuarioControlador{
         return $respuesta;
     }
 
+
+    /*===================================================================*/
+     //ACTIVAR USUARIOS
+     /*===================================================================*/
+     static public function ctrActivarUsuario($table, $id, $nameId)
+     {
+         $respuesta = UsuarioModelo::mdlActivarUsuario($table, $id, $nameId);
+         return $respuesta;
+     }
+
+    /*===================================================================*/
+     //DAR DE BAJA USUARIOS
+     /*===================================================================*/
+     static public function ctrBajaUsuario($table, $id, $nameId)
+     {
+         $respuesta = UsuarioModelo::mdlBajaUsuario($table, $id, $nameId);
+         return $respuesta;
+     }
 
     /*===================================================================*/
      //ELIMINAR USUARIOS

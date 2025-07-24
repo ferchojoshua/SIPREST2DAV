@@ -23,6 +23,18 @@ class AjaxUsuario
     public $clave;
     public $id_perfil_usuario;
     public $sucursal_id;
+    public $telefono_whatsapp;
+    public $whatsapp_activo;
+    public $whatsapp_admin;
+    public $cedula;
+    public $ciudad;
+    public $direccion;
+    public $profesion;
+    public $cargo;
+    public $celular;
+    public $fecha_ingreso;
+    public $numero_seguro;
+    public $forma_pago;
 
     /*===================================================================*/
     //LISTAR EN DATATABLE LOS USUARIOS
@@ -66,7 +78,19 @@ class AjaxUsuario
             $this->usuario,
             $this->clave,
             $this->id_perfil_usuario,
-            $this->sucursal_id
+            $this->sucursal_id,
+            $this->telefono_whatsapp,
+            $this->whatsapp_activo,
+            $this->whatsapp_admin,
+            $this->cedula,
+            $this->ciudad,
+            $this->direccion,
+            $this->profesion,
+            $this->cargo,
+            $this->celular,
+            $this->fecha_ingreso,
+            $this->numero_seguro,
+            $this->forma_pago
         );
         echo json_encode($usuario);
     }
@@ -87,6 +111,30 @@ class AjaxUsuario
     }
 
      /*===================================================================*/
+    //ACTIVAR USUARIO
+    /*===================================================================*/
+    public function ajaxActivarUsuario(){
+        $table = "usuarios"; //TABLA
+        $id = $_POST["id_usuario"]; //LO QUE VIENE DE PRODUCTOS.PHP
+        $nameId = "id_usuario"; //CAMPO DE LA BASE
+        $respuesta = UsuarioControlador::ctrActivarUsuario($table, $id, $nameId);
+
+        echo json_encode($respuesta);
+    }
+
+    /*===================================================================*/
+    //DAR DE BAJA USUARIO
+    /*===================================================================*/
+    public function ajaxBajaUsuario(){
+        $table = "usuarios"; //TABLA
+        $id = $_POST["id_usuario"]; //LO QUE VIENE DE PRODUCTOS.PHP
+        $nameId = "id_usuario"; //CAMPO DE LA BASE
+        $respuesta = UsuarioControlador::ctrBajaUsuario($table, $id, $nameId);
+
+        echo json_encode($respuesta);
+    }
+
+    /*===================================================================*/
     //ELIMINAR USUARIO
     /*===================================================================*/
     public function ajaxEliminarUsuario(){
@@ -124,20 +172,34 @@ if(isset($_POST["loginUsuario"])){
     $usuario = trim($_POST["loginUsuario"]);
     $password = trim($_POST["loginPassword"]);
 
-    // LOGGING - Comentado temporalmente
-    // $logFile = fopen("login_debug.log", 'w'); // 'w' para sobreescribir el log en cada intento
-    // fwrite($logFile, "AJAX: Usuario recibido: '" . $usuario . "' (longitud: " . strlen($usuario) . ")\n");
-    // fwrite($logFile, "AJAX: Contraseña recibida: '" . $password . "' (longitud: " . strlen($password) . ")\n\n");
-    // fclose($logFile);
-
-    $respuesta = UsuarioControlador::login($usuario,$password);
+    $respuesta = UsuarioControlador::login($usuario, $password);
     
     if($respuesta && !empty($respuesta) && is_object($respuesta)){
-        $resultado["status"] = "success";
+        // Guardar datos completos en la sesión
+        $_SESSION["id_usuario"] = $respuesta->id_usuario;
+        $_SESSION["nombre_usuario"] = $respuesta->nombre_usuario;
+        $_SESSION["perfil"] = $respuesta->perfil;
         $_SESSION["usuario"] = $respuesta;
-
-    }else{
-        $resultado["status"] = "error";
+        $_SESSION["sucursal_id"] = $respuesta->sucursal_id;
+        $_SESSION["ultima_actividad"] = time();
+        
+        $resultado = [
+            "status" => "success",
+            "message" => "Login exitoso",
+            "debug_info" => [
+                "session_id" => session_id(),
+                "user_data" => [
+                    "id" => $_SESSION["id_usuario"],
+                    "nombre" => $_SESSION["nombre_usuario"],
+                    "perfil" => $_SESSION["perfil"]
+                ]
+            ]
+        ];
+    } else {
+        $resultado = [
+            "status" => "error",
+            "message" => "Usuario o contraseña incorrectos"
+        ];
     }
 
     echo json_encode($resultado);
@@ -156,6 +218,18 @@ if(isset($_POST["loginUsuario"])){
     //$registroUsuario->clave= password_hash($_POST['clave'],PASSWORD_DEFAULT,['cost'=>12]);$password = crypt($_POST["loginPassword"],'$2a$07$azybxcags23425sdg23sdfhsd$');
     $registroUsuario->id_perfil_usuario = $_POST["id_perfil_usuario"];
     $registroUsuario->sucursal_id = $_POST["sucursal_id"];
+    $registroUsuario->telefono_whatsapp = $_POST["telefono_whatsapp"] ?? '';
+    $registroUsuario->whatsapp_activo = $_POST["whatsapp_activo"] ?? 0;
+    $registroUsuario->whatsapp_admin = $_POST["whatsapp_admin"] ?? 0;
+    $registroUsuario->cedula = $_POST["cedula"] ?? '';
+    $registroUsuario->ciudad = $_POST["ciudad"] ?? '';
+    $registroUsuario->direccion = $_POST["direccion"] ?? '';
+    $registroUsuario->profesion = $_POST["profesion"] ?? '';
+    $registroUsuario->cargo = $_POST["cargo"] ?? '';
+    $registroUsuario->celular = $_POST["celular"] ?? '';
+    $registroUsuario->fecha_ingreso = $_POST["fecha_ingreso"] ?? '';
+    $registroUsuario->numero_seguro = $_POST["numero_seguro"] ?? '';
+    $registroUsuario->forma_pago = $_POST["forma_pago"] ?? '';
 
     $registroUsuario->ajaxRegistrarUsuario();
 
@@ -172,19 +246,39 @@ if(isset($_POST["loginUsuario"])){
         "apellido_usuario" => $_POST["apellido_usuario"],
         "usuario" => $_POST["usuario"],
         "id_perfil_usuario" => $_POST["id_perfil_usuario"],
-        "sucursal_id" => $_POST["sucursal_id"]
-
+        "sucursal_id" => $_POST["sucursal_id"],
+        "telefono_whatsapp" => $_POST["telefono_whatsapp"] ?? '',
+        "whatsapp_activo" => $_POST["whatsapp_activo"] ?? 0,
+        "whatsapp_admin" => $_POST["whatsapp_admin"] ?? 0,
+        "cedula" => $_POST["cedula"] ?? '',
+        "ciudad" => $_POST["ciudad"] ?? '',
+        "direccion" => $_POST["direccion"] ?? '',
+        "profesion" => $_POST["profesion"] ?? '',
+        "cargo" => $_POST["cargo"] ?? '',
+        "celular" => $_POST["celular"] ?? '',
+        "fecha_ingreso" => $_POST["fecha_ingreso"] ?? '',
+        "numero_seguro" => $_POST["numero_seguro"] ?? '',
+        "forma_pago" => $_POST["forma_pago"] ?? ''
     );
+    
+    // Agregar estado si se envió
+    if (isset($_POST["estado"])) {
+        $data["estado"] = $_POST["estado"];
+    }
+    
     $actualizarUsuario->ajaxActualizarUsuario($data);
 
-}else if (isset($_POST['accion']) && $_POST['accion'] == 4) {//ELIMINAR UN USUARIO
+}else if (isset($_POST['accion']) && $_POST['accion'] == 4) {//ACTIVAR USUARIO
 
-    
-    $eliminarUsuario = new AjaxUsuario();
-    $eliminarUsuario -> ajaxEliminarUsuario();
+    $activarUsuario = new AjaxUsuario();
+    $activarUsuario->ajaxActivarUsuario();
 
+}else if (isset($_POST['accion']) && $_POST['accion'] == 5) { //DAR DE BAJA USUARIO
 
-}else if (isset($_POST['accion']) && $_POST['accion'] == 5) { //ACTUALIZAR CLAVE
+    $bajaUsuario = new AjaxUsuario();
+    $bajaUsuario->ajaxBajaUsuario();
+
+}else if (isset($_POST['accion']) && $_POST['accion'] == 6) { //ACTUALIZAR CLAVE
 
     $actualizarClave = new AjaxUsuario();
     $data = array(

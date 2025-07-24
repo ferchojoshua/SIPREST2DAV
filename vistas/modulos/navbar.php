@@ -43,7 +43,7 @@
                     <i class="fas fa-user mr-2"></i> Perfil
                 </a>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item" onclick="CerrarSesion()">
+                <a href="vistas/salir.php" class="dropdown-item">
                     <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
                 </a>
             </div>
@@ -57,12 +57,3 @@
         </li>
     </ul>
 </nav>
-
-<script>
-// Función para cerrar sesión
-function CerrarSesion() {
-    if (confirm('¿Está seguro que desea cerrar sesión?')) {
-        window.location.href = 'index.php?ruta=salir';
-        }
-    }
-</script>

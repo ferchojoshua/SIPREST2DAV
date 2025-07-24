@@ -19,25 +19,19 @@
     
     // Marcar como cargado
     window.CombosMejoradosLoaded = true;
-    console.log('[Combos] Iniciando carga de CombosMejorados');
-
+   
     $(document).ready(function() {
-        console.log('[Combos] Sistema de combos cargando...');
         
         // Verificar dependencias
         if (typeof $ === 'undefined') {
-            console.error('[Combos] jQuery no está disponible');
             return;
         }
         
         if (typeof $.fn.select2 === 'undefined') {
-            console.warn('[Combos] Select2 no está disponible. Algunas funciones pueden no funcionar correctamente.');
-        }
+          }
         
         if (typeof $.fn.DataTable === 'undefined') {
-            console.warn('[Combos] DataTables no está disponible. Algunas funciones pueden no funcionar correctamente.');
-        }
-        console.log('[Combos] Combos Mejorados cargado correctamente');
+           }
     });
 
     class CombosMejorados {
@@ -531,7 +525,6 @@
     // Instancia global - Evitar redeclaración
     if (typeof window.CombosMejorados === 'undefined') {
         window.CombosMejorados = new CombosMejorados();
-        console.log('[Combos] CombosMejorados instanciado globalmente');
     }
     
     // Funciones de conveniencia para compatibilidad

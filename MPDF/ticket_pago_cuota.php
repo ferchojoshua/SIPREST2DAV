@@ -278,8 +278,7 @@ if ($row1 = $resultado->fetch_assoc()) {
                 <img src="' . $logo_empresa . '" class="recibo-logo" alt="Logo">
                 <div class="recibo-empresa">' . htmlspecialchars($row1['confi_razon']) . '</div>
                 <div class="recibo-ruc">RUC: ' . htmlspecialchars($row1['confi_ruc']) . '</div>
-                <div class="recibo-direccion">' . htmlspecialchars($row1['confi_direccion']) . '</div>
-                <div class="recibo-contacto">Tel: ' . htmlspecialchars($row1['config_celular']) . ' | Email: ' . htmlspecialchars($row1['config_correo']) . '</div>
+                <div class="recibo-contacto">Tel: ' . htmlspecialchars($row1['config_celular']) . '</div>
             </div>
             
             <div class="recibo-titulo">RECIBO DE PAGO</div>
@@ -293,8 +292,6 @@ if ($row1 = $resultado->fetch_assoc()) {
             <div class="recibo-seccion">
                 <div class="recibo-info"><span class="recibo-info-label">Cliente:</span><span class="recibo-info-value">' . htmlspecialchars($row1['cliente_nombres']) . '</span></div>
                 <div class="recibo-info"><span class="recibo-info-label">Cédula:</span><span class="recibo-info-value">' . htmlspecialchars($row1['cliente_dni']) . '</span></div>
-                <div class="recibo-info"><span class="recibo-info-label">Forma de Pago:</span><span class="recibo-info-value">' . htmlspecialchars($row1['fpago_descripcion']) . '</span></div>
-                <div class="recibo-info"><span class="recibo-info-label">Moneda:</span><span class="recibo-info-value">' . htmlspecialchars($row1['moneda_nombre']) . '</span></div>
             </div>
 
             <div class="recibo-seccion">

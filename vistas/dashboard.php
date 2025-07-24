@@ -202,7 +202,7 @@
                   <div class="icon">
                       <i class="fas fa-exclamation-triangle"></i>
                   </div>
-                  <a href="#" onclick="CargarContenido('vistas/reporte_mora.php','content-wrapper')" 
+                                          <a href="#" onclick="CargarContenido('vistas/reportes_financieros.php','content-wrapper')" 
                      class="small-box-footer" title="Ver reporte detallado de mora">
                       Ver Mora <i class="fas fa-chart-pie"></i>
                   </a>
@@ -424,8 +424,7 @@
             dataType: 'json',
             data: { accion: 'cargar_tarjetas_filtradas', sucursal_id: sucursalId, periodo: periodo },
             success: function(respuesta) {
-                console.log('[cargarTarjetasConFiltros] Respuesta AJAX:', respuesta);
-                if (!Array.isArray(respuesta) || respuesta.length === 0) {
+                   if (!Array.isArray(respuesta) || respuesta.length === 0) {
                     $("#total_caja").html('C$ 0.00');
                     $("#total_clientes").html('0');
                     $("#total_prestamos").html('0');
@@ -471,8 +470,7 @@
             dataType: 'json',
             data: { accion: 'cargar_grafico_filtrado', sucursal_id: sucursalId, periodo: periodo },
             success: function(respuesta) {
-                console.log('[cargarGraficoConFiltros] Respuesta AJAX:', respuesta);
-                // Logic to update the chart with filtered data
+                    // Logic to update the chart with filtered data
             },
             error: function(xhr, status, error) {
                 console.error('[cargarGraficoConFiltros] Error al cargar gráfico filtrado:', error);
@@ -504,7 +502,6 @@
             dataType: 'json',
             data: { accion: 'cargar_kpis_filtrados', sucursal_id: sucursalId, periodo: periodo },
             success: function(respuesta) {
-                console.log('[cargarKpisGerencialesConFiltros] Respuesta AJAX:', respuesta);
                 // Logic to update KPIs with filtered data
                 if (!Array.isArray(respuesta) || respuesta.length === 0) {
                     $("#saldo_cartera").html('C$ 0.00');

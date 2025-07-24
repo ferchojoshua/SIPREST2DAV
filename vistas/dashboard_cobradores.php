@@ -447,7 +447,7 @@
                 if (response && Array.isArray(response) && response.length > 0) {
                     response.forEach(function(ruta) {
                         const textoRuta = ruta.texto_descriptivo || ruta.ruta_nombre || `Ruta ${ruta.ruta_id}`;
-                        selectRuta.append(`<option value="${ruta.ruta_id}">${textoRuta}</option>`);
+                        selectRuta.append(`<option value="${ruta.id}">${ruta.nombre_ruta}</option>`);
                     });
                     console.log(`[Dashboard] ✅ Cargadas ${response.length} rutas`);
                 } else {

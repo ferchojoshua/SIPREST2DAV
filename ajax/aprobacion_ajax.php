@@ -157,28 +157,49 @@ class AjaxAprobacion
     public function ajaxObtenerDatosCompletoPrestamo()
     {
         try {
+            error_log("[DEBUG] ==========================================");
+            error_log("[DEBUG] ajaxObtenerDatosCompletoPrestamo iniciado");
+            error_log("[DEBUG] nro_prestamo: " . ($this->nro_prestamo ?? 'NULL'));
+            error_log("[DEBUG] Método HTTP: " . $_SERVER['REQUEST_METHOD']);
+            error_log("[DEBUG] Parámetros GET: " . json_encode($_GET));
+            error_log("[DEBUG] Parámetros POST: " . json_encode($_POST));
+            
             if (empty($this->nro_prestamo)) {
+                error_log("[DEBUG] ERROR: Número de préstamo vacío");
                 throw new Exception("Número de préstamo requerido");
             }
 
+            error_log("[DEBUG] Llamando a mdlObtenerDatosCompletoPrestamo con: " . $this->nro_prestamo);
             $datos = AprobacionModelo::mdlObtenerDatosCompletoPrestamo($this->nro_prestamo);
+            error_log("[DEBUG] Resultado de mdlObtenerDatosCompletoPrestamo: " . ($datos ? 'SUCCESS' : 'FALSE'));
             
             if ($datos) {
-                echo json_encode([
+                error_log("[DEBUG] Enviando respuesta exitosa");
+                $response = [
                     'estado' => 'ok',
                     'data' => $datos
-                ]);
+                ];
+                error_log("[DEBUG] Respuesta JSON: " . json_encode($response));
+                echo json_encode($response);
             } else {
-                echo json_encode([
+                error_log("[DEBUG] No se encontraron datos del préstamo");
+                $response = [
                     'estado' => 'error',
                     'mensaje' => 'No se encontraron datos del préstamo'
-                ]);
+                ];
+                error_log("[DEBUG] Respuesta JSON: " . json_encode($response));
+                echo json_encode($response);
             }
+            error_log("[DEBUG] ==========================================");
         } catch (Exception $e) {
-            echo json_encode([
+            error_log("[DEBUG] Excepción capturada: " . $e->getMessage());
+            $response = [
                 'estado' => 'error',
                 'mensaje' => $e->getMessage()
-            ]);
+            ];
+            error_log("[DEBUG] Respuesta JSON: " . json_encode($response));
+            echo json_encode($response);
+            error_log("[DEBUG] ==========================================");
         }
     }
 
@@ -228,9 +249,12 @@ if (isset($_POST['accion']) && $_POST['accion'] == 1) { //LISTAR  PRESTAMOS POR 
     $ajax = new AjaxAprobacion();
     $ajax->ajaxListarCobradoresActivos();
 
-} else if (isset($_GET['accion']) && $_GET['accion'] == 'obtener_datos_prestamo') { //OBTENER DATOS COMPLETOS DEL PRÉSTAMO
+} else if (
+    (isset($_POST['accion']) && $_POST['accion'] == 9) ||
+    (isset($_GET['accion']) && $_GET['accion'] == 9)
+) {
     $ajax = new AjaxAprobacion();
-    $ajax->nro_prestamo = $_GET['nro_prestamo'];
+    $ajax->nro_prestamo = isset($_POST['nro_prestamo']) ? $_POST['nro_prestamo'] : $_GET['nro_prestamo'];
     $ajax->ajaxObtenerDatosCompletoPrestamo();
 
 }

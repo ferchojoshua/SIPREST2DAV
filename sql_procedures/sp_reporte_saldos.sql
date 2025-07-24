@@ -1,5 +1,5 @@
 -- Script para crear el procedimiento almacenado para el reporte de saldos arrastrados.
--- Ejecutar este script en la base de datos `dbprestamo`.
+-- Ejecutar este script en la base de datos `credicrece`.
 
 DELIMITER $$
 

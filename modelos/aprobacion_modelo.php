@@ -480,7 +480,15 @@ class AprobacionModelo
     static public function mdlObtenerDatosCompletoPrestamo($nro_prestamo)
     {
         try {
-            $stmt = Conexion::conectar()->prepare("
+            // Verificar si el préstamo existe
+            $stmtCheck = Conexion::conectar()->prepare("SELECT nro_prestamo, pres_aprobacion FROM prestamo_cabecera WHERE nro_prestamo = :nro_prestamo");
+            $stmtCheck->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
+            $stmtCheck->execute();
+            $checkResult = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            if (!$checkResult) {
+                return false;
+            }
+            $query = "
                 SELECT 
                     pc.pres_id,
                     pc.nro_prestamo,
@@ -495,6 +503,7 @@ class AprobacionModelo
                     pc.pres_monto_interes,
                     pc.pres_monto_total,
                     pc.tipo_calculo,
+                    pc.pres_aprobacion,
                     fp.fpago_descripcion,
                     m.moneda_simbolo,
                     c.cliente_nombres
@@ -502,23 +511,19 @@ class AprobacionModelo
                 INNER JOIN forma_pago fp ON pc.fpago_id = fp.fpago_id
                 INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
                 INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
-                WHERE pc.nro_prestamo = :nro_prestamo
-                AND pc.pres_aprobacion = 'pendiente'
-            ");
-            
+                WHERE pc.nro_prestamo = :nro_prestamo 
+                AND pc.pres_aprobacion = 'pendiente' or pc.pres_aprobacion = 'aprobado'
+            ";
+            $stmt = Conexion::conectar()->prepare($query);
             $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
             $stmt->execute();
-            
             $datos = $stmt->fetch(PDO::FETCH_ASSOC);
-            
             if ($datos) {
                 return $datos;
             } else {
                 return false;
             }
-            
         } catch (Exception $e) {
-            error_log("Error en mdlObtenerDatosCompletoPrestamo: " . $e->getMessage());
             return false;
         }
     }

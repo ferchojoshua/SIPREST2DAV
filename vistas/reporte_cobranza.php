@@ -125,6 +125,9 @@ if (isset($_SESSION["usuario"])) {
                         </h3>
                         <div class="card-tools">
                             <div class="btn-group">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="enviarCorreoReporteCobranza()">
+                                    <i class="fas fa-envelope"></i> Correo
+                                </button>
                                 <button type="button" class="btn btn-success btn-sm" onclick="exportarExcel()">
                                     <i class="fas fa-file-excel"></i> Excel
                                 </button>
@@ -310,7 +313,7 @@ function mostrarResultados(datos) {
     // Inicializar DataTable
     $('#tabla_cobranza').DataTable({
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+            url: "vistas/assets/plugins/datatables/i18n/Spanish.json"
         },
         responsive: true,
         order: [[0, "desc"]], // Ordenar por hora descendente
@@ -382,6 +385,102 @@ function resumenPorCobrador() {
     });
     
     $('#modal_resumen_cobrador').modal('show');
+}
+
+function enviarCorreoReporteCobranza() {
+    if (!$('#area_resultados').is(':visible')) {
+        Swal.fire('Atención', 'Debe generar el reporte primero.', 'warning');
+        return;
+    }
+    
+    var fecha = $('#fecha_cobranza').val();
+    var sucursal = $('#select_sucursal option:selected').text();
+    
+    Swal.fire({
+        title: 'Enviar Reporte por Correo',
+        html: `
+            <div class="form-group text-left">
+                <label for="emailDestino">Correo electrónico de destino:</label>
+                <input type="email" id="emailDestino" class="form-control" placeholder="ejemplo@correo.com">
+            </div>
+            <div class="form-group text-left">
+                <label for="asuntoCorreo">Asunto:</label>
+                <input type="text" id="asuntoCorreo" class="form-control" value="Reporte de Cobranza - ${fecha} (${sucursal})">
+            </div>
+            <div class="form-group text-left">
+                <label for="mensajeCorreo">Mensaje (opcional):</label>
+                <textarea id="mensajeCorreo" class="form-control" rows="3" placeholder="Mensaje adicional..."></textarea>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Enviar',
+        cancelButtonText: 'Cancelar',
+        focusConfirm: false,
+        preConfirm: () => {
+            const email = document.getElementById('emailDestino').value;
+            const asunto = document.getElementById('asuntoCorreo').value;
+            const mensaje = document.getElementById('mensajeCorreo').value;
+            
+            if (!email) {
+                Swal.showValidationMessage('Debe ingresar un correo electrónico');
+                return false;
+            }
+            
+            if (!asunto) {
+                Swal.showValidationMessage('Debe ingresar un asunto');
+                return false;
+            }
+            
+            return { email: email, asunto: asunto, mensaje: mensaje };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Enviando correo...',
+                text: 'Por favor espere.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            $.ajax({
+                url: 'ajax/reportes_ajax.php',
+                method: 'POST',
+                data: {
+                    accion: 'enviar_correo_reporte_cobranza',
+                    fecha: fecha,
+                    sucursal_id: $('#select_sucursal').val(),
+                    email_destino: result.value.email,
+                    asunto: result.value.asunto,
+                    mensaje: result.value.mensaje
+                },
+                dataType: 'json',
+                success: function(respuesta) {
+                    Swal.close();
+                    
+                    if (respuesta.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Correo enviado exitosamente',
+                            text: respuesta.mensaje
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al enviar correo',
+                            text: respuesta.mensaje || 'Ocurrió un error inesperado'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Error', 'Error al enviar el correo electrónico.', 'error');
+                }
+            });
+        }
+    });
 }
 
 function exportarExcel() {

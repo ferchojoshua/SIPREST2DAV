@@ -82,79 +82,97 @@ $menuUsuario = UsuarioControlador::ctrObtenerMenuUsuario($_SESSION["usuario"]->i
 </aside>
 
 <script>
-// SOLUCION PARA PROBLEMAS DE MENUS DESPLEGABLES CON BOOTSTRAP 5
 $(document).ready(function() {
-    // Remover inicializaciones previas del treeview
-    $('#sidebarMenu').off('.lte.treeview');
-    
-    // Configuración manual del treeview para compatibilidad con Bootstrap 5
-    const treeviewConfig = {
-        trigger: '[data-widget="treeview"] .nav-link',
-        animationSpeed: 300,
-        accordion: true,
-        expandSidebar: false,
-        sidebarButtonSelector: '[data-widget="pushmenu"]'
-    };
+    try {
+        // Remover inicializaciones previas del treeview
+        if ($('#sidebarMenu').data('lte.treeview')) {
+            $('#sidebarMenu').off('.lte.treeview');
+        }
+        
+        // Configuración del treeview
+        const treeviewConfig = {
+            trigger: '[data-widget="treeview"] .nav-link',
+            animationSpeed: 300,
+            accordion: true,
+            expandSidebar: false,
+            sidebarButtonSelector: '[data-widget="pushmenu"]'
+        };
 
-    // Función personalizada para manejar el toggle de menús
-    function toggleTreeview(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const $link = $(e.currentTarget);
-        const $li = $link.closest('.nav-item');
-        const $treeview = $li.find('> .nav-treeview');
-        
-        // Si no hay submenu, no hacer nada
-        if ($treeview.length === 0) {
-            return;
+        // Función para manejar el toggle de menús
+        function toggleTreeview(e) {
+            try {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $link = $(this);
+                const $li = $link.closest('.nav-item');
+                const $treeview = $li.find('> .nav-treeview');
+                
+                // Si no hay submenu, no hacer nada
+                if ($treeview.length === 0) {
+                    return;
+                }
+                
+                const isOpen = $li.hasClass('menu-open');
+                
+                // Si accordion está activado, cerrar otros menús
+                if (treeviewConfig.accordion) {
+                    const $openMenus = $li.siblings('.menu-open');
+                    $openMenus.removeClass('menu-open menu-is-opening');
+                    $openMenus.find('> .nav-treeview').slideUp(treeviewConfig.animationSpeed);
+                }
+                
+                if (isOpen) {
+                    // Cerrar menú
+                    $li.removeClass('menu-open menu-is-opening');
+                    $treeview.slideUp(treeviewConfig.animationSpeed);
+                } else {
+                    // Abrir menú
+                    $li.addClass('menu-is-opening');
+                    $treeview.slideDown(treeviewConfig.animationSpeed, function() {
+                        $li.addClass('menu-open').removeClass('menu-is-opening');
+                    });
+                }
+            } catch (error) {
+                console.error('Error en toggleTreeview:', error);
+            }
         }
         
-        const isOpen = $li.hasClass('menu-open');
+        // Remover eventos anteriores
+        $(document).off('click', '.nav-item.has-treeview > .nav-link');
+        $('.nav-link').off('click');
         
-        // Si accordion está activado, cerrar otros menús
-        if (treeviewConfig.accordion) {
-            $li.siblings('.menu-open').removeClass('menu-open menu-is-opening')
-               .find('> .nav-treeview').slideUp(treeviewConfig.animationSpeed);
-        }
+        // Asignar nuevos eventos
+        $(document).on('click', '.nav-item.has-treeview > .nav-link', toggleTreeview);
         
-        if (isOpen) {
-            // Cerrar menú
-            $li.removeClass('menu-open menu-is-opening');
-            $treeview.slideUp(treeviewConfig.animationSpeed);
-        } else {
-            // Abrir menú
-            $li.addClass('menu-is-opening');
-            $treeview.slideDown(treeviewConfig.animationSpeed, function() {
-                $li.addClass('menu-open').removeClass('menu-is-opening');
-            });
-        }
+        // Manejar clicks en enlaces normales
+        $('.nav-link').on('click', function(e) {
+            try {
+                if (!$(this).closest('.nav-item').hasClass('has-treeview')) {
+                    $('.nav-link').removeClass('active');
+                    $(this).addClass('active');
+                }
+            } catch (error) {
+                console.error('Error en click handler:', error);
+            }
+        });
+        
+        // Inicializar estado de menús
+        $('.nav-item.has-treeview').each(function() {
+            try {
+                const $li = $(this);
+                const $treeview = $li.find('> .nav-treeview');
+                
+                if ($treeview.find('.nav-link.active').length > 0) {
+                    $li.addClass('menu-open');
+                    $treeview.show();
+                }
+            } catch (error) {
+                console.error('Error inicializando menú:', error);
+            }
+        });
+    } catch (error) {
+        console.error('Error general en inicialización del menú:', error);
     }
-    
-    // Asignar evento click a los enlaces que tienen submenús
-    $(document).on('click', '.nav-item.has-treeview > .nav-link', toggleTreeview);
-    
-    // Manejar clicks en enlaces normales (sin submenú)
-    $(".nav-link").on('click', function(e) {
-        // Solo remover active si no es un menú padre
-        if (!$(this).closest('.nav-item').hasClass('has-treeview')) {
-            $(".nav-link").removeClass('active');
-            $(this).addClass('active');
-        }
-    });
-    
-    // Inicializar estado de menús abiertos si los hay
-    $('.nav-item.has-treeview').each(function() {
-        const $li = $(this);
-        const $treeview = $li.find('> .nav-treeview');
-        
-        // Si algún submenu está activo, abrir el menú padre
-        if ($treeview.find('.nav-link.active').length > 0) {
-            $li.addClass('menu-open');
-            $treeview.show();
-        }
-    });
-    
-    console.log('[Menu] Sistema de menús desplegables inicializado correctamente');
 });
 </script>

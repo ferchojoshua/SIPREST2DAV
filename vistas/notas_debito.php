@@ -181,7 +181,7 @@ $(document).ready(function() {
         ],
         order: [[1, 'desc']],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json',
+            url: 'vistas/assets/plugins/datatables/i18n/Spanish.json',
             loadingRecords: 'Cargando...',
             processing: 'Procesando...',
             emptyTable: 'No hay datos disponibles',

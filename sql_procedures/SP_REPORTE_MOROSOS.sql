@@ -15,7 +15,7 @@ BEGIN
         m.moneda_simbolo,
         (SELECT COUNT(*) FROM prestamo_detalle pd2 WHERE pd2.nro_prestamo = pc.nro_prestamo AND pd2.pdetalle_estado_cuota = 'pendiente') AS cuotas_pendientes_prestamo
     FROM prestamo_detalle pd
-    INNER JOIN {51B8018B-CBC3-457B-B3C1-16A0D3BC4C36}.pngprestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+    INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
     INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
     INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
     WHERE pd.pdetalle_estado_cuota = 'pendiente'

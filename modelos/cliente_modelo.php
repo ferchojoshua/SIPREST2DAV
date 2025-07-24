@@ -342,4 +342,40 @@ class ClienteModelo
         }
     }
 
+    /*===================================================================*/
+    //BUSCAR SOLO CLIENTES DISPONIBLES (SIN PRÉSTAMOS ACTIVOS)
+    /*===================================================================*/
+    static public function mdlBuscarClientesDisponibles($busqueda)
+    {
+        try {
+            $busquedaParam = "%" . $busqueda . "%";
+            $stmt = Conexion::conectar()->prepare("SELECT DISTINCT
+                                                    c.cliente_id,
+                                                    c.cliente_nombres,
+                                                    c.cliente_dni,
+                                                    c.cliente_cel
+                                                FROM 
+                                                    clientes c
+                                                LEFT JOIN prestamo_cabecera pc ON c.cliente_id = pc.cliente_id 
+                                                    AND pc.pres_estado IN ('VIGENTE', 'PENDIENTE')
+                                                WHERE 
+                                                    c.cliente_estatus = '1' AND
+                                                    pc.cliente_id IS NULL AND
+                                                    (c.cliente_nombres LIKE :busqueda OR c.cliente_dni LIKE :busqueda)
+                                                ORDER BY 
+                                                    c.cliente_nombres ASC");
+            
+            $stmt->bindParam(":busqueda", $busquedaParam, PDO::PARAM_STR);
+            
+            $stmt->execute();
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $resultado;
+            
+        } catch (PDOException $e) {
+            error_log("Error en mdlBuscarClientesDisponibles: " . $e->getMessage());
+            return false;
+        }
+    }
+
 }

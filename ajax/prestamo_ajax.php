@@ -73,10 +73,10 @@ class AjaxPrestamo
     /*===================================================================
     // REGISTRAR CABECERA PRESTAMO
     /*===================================================================*/
-    public function ajaxRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo)
+    public function ajaxRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo, $sucursal_id = null)
     {
-        error_log("DEBUG: Inicia ajaxRegistrarPrestamo");
-        $registroPrestamo = PrestamoControlador::ctrRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo);
+        error_log("DEBUG: Inicia ajaxRegistrarPrestamo con sucursal_id: " . $sucursal_id);
+        $registroPrestamo = PrestamoControlador::ctrRegistrarPrestamo($nro_prestamo, $cliente_id, $pres_monto, $pres_cuotas, $pres_interes, $fpago_id, $moneda_id, $pres_f_emision, $pres_monto_cuota, $pres_monto_interes, $pres_monto_total, $id_usuario, $caja_id, $tipo_calculo, $sucursal_id);
         echo json_encode($registroPrestamo, JSON_UNESCAPED_UNICODE);
         error_log("DEBUG: Finaliza ajaxRegistrarPrestamo");
     }
@@ -171,7 +171,8 @@ if (isset($_POST['accion'])) {
                 $_POST['pres_monto_total'],
                 $_POST['id_usuario'],
                 $_POST['caja_id'],
-                $_POST['tipo_calculo']
+                $_POST['tipo_calculo'],
+                $_POST['sucursal_id'] ?? null // Pass sucursal_id
             );
             break;
         case '2': // Guardar detalle del préstamo

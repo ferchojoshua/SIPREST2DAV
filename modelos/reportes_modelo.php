@@ -148,11 +148,16 @@ class ReportesModelo
                     pd.pdetalle_nro_cuota,
                     pd.pdetalle_monto_cuota as pago_monto,
                     COALESCE(DATE_FORMAT(pd.pdetalle_fecha_registro, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')) as pago_fecha,
-                    m.moneda_simbolo
+                    m.moneda_simbolo,
+                    COALESCE(s.nombre, 'N/A') as sucursal_nombre,
+                    COALESCE(s.id, 0) as sucursal_id
                 FROM prestamo_detalle pd
                 INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
                 INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
                 INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
+                LEFT JOIN clientes_rutas cr ON c.cliente_id = cr.cliente_id
+                LEFT JOIN rutas r ON cr.ruta_id = r.ruta_id
+                LEFT JOIN sucursales s ON r.sucursal_id = s.id
                 WHERE pd.pdetalle_estado_cuota = 'pagada'
                   AND (
                       pd.pdetalle_fecha_registro IS NULL 
@@ -313,33 +318,41 @@ class ReportesModelo
      */
     static public function mdlReporteCuotasAtrasadas($fecha)
     {
-        $stmt = Conexion::conectar()->prepare('
-            SELECT 
-                u.usuario AS promotor,
-                c.cliente_id,
-                c.cliente_nombres,
-                c.cliente_direccion,
-                c.cliente_celular,
-                pc.nro_prestamo,
-                pd.pdetalle_nro_cuota,
-                DATE(pd.pdetalle_fecha) AS fecha,
-                pd.pdetalle_monto_cuota AS principal,
-                0 AS interes, -- Ajustar si hay campo de interés
-                pd.pdetalle_monto_cuota AS total,
-                pd.pdetalle_monto_cuota AS cuota_segun,
-                DATEDIFF(:fecha, DATE(pd.pdetalle_fecha)) AS dias_atraso,
-                pc.pres_monto_restante AS saldo_total
-            FROM prestamo_detalle pd
-            INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
-            INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
-            INNER JOIN usuarios u ON pc.id_usuario = u.id_usuario
-            WHERE DATE(pd.pdetalle_fecha) < :fecha
-              AND pd.pdetalle_estado_cuota = "pendiente"
-            ORDER BY u.usuario, c.cliente_nombres
-        ');
-        $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = Conexion::conectar()->prepare('
+                SELECT 
+                    c.cliente_id,
+                    c.cliente_nombres AS cliente_nombre,
+                    COALESCE(c.cliente_celular, c.cliente_telefono, "N/A") AS telefono,
+                    pc.nro_prestamo,
+                    pd.pdetalle_nro_cuota AS nro_cuota,
+                    DATE(pd.pdetalle_fecha) AS fecha_programada,
+                    DATEDIFF(:fecha, DATE(pd.pdetalle_fecha)) AS dias_atraso,
+                    pd.pdetalle_monto_cuota AS monto_atrasado,
+                    COALESCE(u.usuario, "Sin asignar") AS cobrador,
+                    COALESCE(s.nombre, "N/A") AS sucursal,
+                    pc.pres_monto_restante AS saldo_total,
+                    pd.pdetalle_estado_cuota AS estado
+                FROM prestamo_detalle pd
+                INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
+                INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
+                LEFT JOIN usuarios u ON pc.id_usuario = u.id_usuario
+                LEFT JOIN clientes_rutas cr ON c.cliente_id = cr.cliente_id
+                LEFT JOIN rutas r ON cr.ruta_id = r.ruta_id
+                LEFT JOIN sucursales s ON r.sucursal_id = s.id
+                WHERE DATE(pd.pdetalle_fecha) < :fecha
+                  AND pd.pdetalle_estado_cuota = "pendiente"
+                  AND pc.pres_aprobacion = 1
+                ORDER BY DATEDIFF(:fecha_order, DATE(pd.pdetalle_fecha)) DESC, c.cliente_nombres
+            ');
+            $stmt->bindParam(":fecha", $fecha, PDO::PARAM_STR);
+            $stmt->bindParam(":fecha_order", $fecha, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en mdlReporteCuotasAtrasadas: " . $e->getMessage());
+            return [];
+        }
     }
 
     /*===================================================================*/

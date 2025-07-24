@@ -331,11 +331,13 @@ $(document).ready(function() {
     $('.select2').select2();
 
     // Cargar combos iniciales
+    console.log('Reportes Financieros: Iniciando carga de sucursales...');
     cargarSucursales();
 
     // Lógica para cargar rutas cuando cambia la sucursal
     $('#filtro_sucursal').on('change', function() {
         var idSucursal = $(this).val();
+        console.log('Reportes Financieros: Sucursal seleccionada:', idSucursal);
         if (idSucursal) {
             cargarRutas(idSucursal);
             $('#filtro_ruta').prop('disabled', false);
@@ -369,39 +371,66 @@ function getTituloReporte(tipoReporte) {
 
 function cargarSucursales() {
     $.ajax({
-        url: 'ajax/reportes_financieros_ajax.php',
+        url: 'ajax/rutas_ajax.php',
         method: 'POST',
-        data: { accion: 'obtener_sucursales' },
+        data: { accion: 'listar_sucursales' },
         dataType: 'json',
         success: function(respuesta) {
+            console.log('Sucursales cargadas en reportes financieros:', respuesta);
             var select = $('#filtro_sucursal');
             select.find('option:gt(0)').remove(); // Limpiar opciones viejas
-            respuesta.forEach(function(sucursal) {
-                select.append(new Option(sucursal.sucursal_nombre, sucursal.sucursal_id));
-            });
+            if (respuesta && Array.isArray(respuesta)) {
+                respuesta.forEach(function(sucursal) {
+                    select.append(new Option(sucursal.sucursal_nombre || sucursal.nombre, sucursal.sucursal_id || sucursal.id));
+                });
+            }
         },
-        error: function() {
-            console.error('Error al cargar las sucursales.');
-            Swal.fire('Error', 'No se pudieron cargar las sucursales', 'error');
+        error: function(xhr, status, error) {
+            console.error('Error al cargar las sucursales:', error);
+            console.log('Intentando método alternativo para sucursales...');
+            
+            // Intentar método alternativo usando sucursales_ajax.php
+            $.ajax({
+                url: 'ajax/sucursales_ajax.php',
+                method: 'POST',
+                data: { accion: 'listar' },
+                dataType: 'json',
+                success: function(respuesta) {
+                    console.log('Sucursales cargadas con método alternativo:', respuesta);
+                    var select = $('#filtro_sucursal');
+                    select.find('option:gt(0)').remove();
+                    if (respuesta && Array.isArray(respuesta)) {
+                        respuesta.forEach(function(sucursal) {
+                            select.append(new Option(sucursal.sucursal_nombre || sucursal.nombre, sucursal.sucursal_id || sucursal.id));
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudieron cargar las sucursales con ningún método', 'error');
+                }
+            });
         }
     });
 }
 
 function cargarRutas(idSucursal) {
     $.ajax({
-        url: 'ajax/reportes_financieros_ajax.php',
+        url: 'ajax/rutas_ajax.php',
         method: 'POST',
-        data: { accion: 'obtener_rutas', sucursal_id: idSucursal },
+        data: { accion: 'obtener_rutas_sucursal', sucursal_id: idSucursal },
         dataType: 'json',
         success: function(respuesta) {
+            console.log('Rutas cargadas en reportes financieros:', respuesta);
             var select = $('#filtro_ruta');
             select.empty().append('<option value="">Todas las rutas</option>');
-            respuesta.forEach(function(ruta) {
-                select.append(new Option(ruta.ruta_nombre, ruta.ruta_id));
-            });
+            if (respuesta && Array.isArray(respuesta)) {
+                respuesta.forEach(function(ruta) {
+                    select.append(new Option(ruta.nombre_ruta, ruta.id));
+                });
+            }
         },
-        error: function() {
-            console.error('Error al cargar las rutas.');
+        error: function(xhr, status, error) {
+            console.error('Error al cargar las rutas:', error);s
             Swal.fire('Error', 'No se pudieron cargar las rutas', 'error');
         }
     });
@@ -657,7 +686,7 @@ function ejecutarGeneracionReporte(tipoReporte, parametros) {
                 responsive: true,
                 processing: true,
                 language: {
-                    url: "https://cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json",
+                    url: "https:vistas/assets/plugins/datatables/i18n/Spanish.json",
                     processing: "Procesando datos...",
                     emptyTable: "No hay datos disponibles"
                 },
@@ -914,7 +943,7 @@ function mostrarResultadosReporte(respuesta, tipoReporte) {
             }
         },
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+            url: "vistas/assets/plugins/datatables/i18n/Spanish.json"
         }
     });
 

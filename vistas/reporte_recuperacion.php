@@ -246,6 +246,14 @@
                                  '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                             buttons: [
                                 {
+                                    text: '<i class="fas fa-envelope"></i> Correo',
+                                    className: 'btn btn-primary btn-sm mr-1',
+                                    titleAttr: 'Enviar por correo',
+                                    action: function(e, dt, node, config) {
+                                        enviarCorreoReporteRecuperacion();
+                                    }
+                                },
+                                {
                                     extend: 'excelHtml5',
                                     title: 'Reporte de Recuperación - ' + fecha_inicial + ' al ' + fecha_final,
                                     text: '<i class="fas fa-file-excel text-success"></i> Excel',
@@ -381,5 +389,130 @@
             "sSortAscending": ": ordenar de manera Ascendente",
             "SSortDescending": ": ordenar de manera Descendente ",
         }
+    }
+
+    /*===================================================================*/
+    // FUNCIÓN PARA ENVIAR CORREO - REPORTE RECUPERACIÓN
+    /*===================================================================*/
+    function enviarCorreoReporteRecuperacion() {
+        var fecha_inicial = $("#fecha_inicial_recuperacion").val();
+        var fecha_final = $("#fecha_final_recuperacion").val();
+        var moneda_filtro = $("#select_moneda_recuperacion").val();
+        
+        if (!fecha_inicial || !fecha_final) {
+            Toast.fire({
+                icon: 'warning',
+                title: 'Debe generar el reporte antes de enviarlo por correo'
+            });
+            return;
+        }
+        
+        // Obtener información de la sucursal actual (si está disponible)
+        var sucursal_id = localStorage.getItem('sucursal_id') || '';
+        
+        Swal.fire({
+            title: '<strong>📧 Enviar Reporte por Correo</strong>',
+            html: `
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label class="form-label text-left d-block"><i class="fas fa-envelope text-primary"></i> Correo destino:</label>
+                        <input type="email" id="email_destino_recuperacion" class="form-control" placeholder="ejemplo@empresa.com" required>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label text-left d-block"><i class="fas fa-tag text-info"></i> Asunto:</label>
+                        <input type="text" id="asunto_recuperacion" class="form-control" 
+                               value="Reporte de Recuperación (${fecha_inicial} al ${fecha_final})" required>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label text-left d-block"><i class="fas fa-comment text-success"></i> Mensaje:</label>
+                        <textarea id="mensaje_recuperacion" class="form-control" rows="3" 
+                                  placeholder="Mensaje personalizado (opcional)">Adjunto encontrará el reporte de recuperación correspondiente al período ${fecha_inicial} al ${fecha_final}.
+
+Saludos cordiales.</textarea>
+                    </div>
+                </div>
+            `,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Enviar',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#dc3545',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                const email = document.getElementById('email_destino_recuperacion').value;
+                const asunto = document.getElementById('asunto_recuperacion').value;
+                const mensaje = document.getElementById('mensaje_recuperacion').value;
+                
+                if (!email) {
+                    Swal.showValidationMessage('Por favor ingrese el correo destino');
+                    return false;
+                }
+                
+                if (!asunto) {
+                    Swal.showValidationMessage('Por favor ingrese el asunto');
+                    return false;
+                }
+                
+                // Validar formato de email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    Swal.showValidationMessage('Por favor ingrese un correo válido');
+                    return false;
+                }
+                
+                return {
+                    email: email,
+                    asunto: asunto,
+                    mensaje: mensaje
+                };
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Enviar correo vía AJAX
+                $.ajax({
+                    url: "ajax/reportes_ajax.php",
+                    type: "POST",
+                    data: {
+                        'accion': 'enviar_correo_reporte_recuperacion',
+                        'fecha_inicial': fecha_inicial,
+                        'fecha_final': fecha_final,
+                        'moneda_filtro': moneda_filtro,
+                        'sucursal_id': sucursal_id,
+                        'email_destino': result.value.email,
+                        'asunto': result.value.asunto,
+                        'mensaje': result.value.mensaje
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Correo enviado!',
+                                text: response.message,
+                                confirmButtonColor: '#28a745'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error al enviar',
+                                text: response.message,
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error AJAX:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de conexión',
+                            text: 'No se pudo enviar el correo. Intente nuevamente.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                });
+            }
+        });
     }
 </script> 

@@ -10,12 +10,14 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h4 class="m-0">Reporte de Desembolsos</h4>
+                    <h1 class="m-0">📊 Reporte de Desembolsos</h1>
+                    <p class="text-muted">Control y seguimiento de préstamos desembolsados</p>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="index.php">Inicio</a></li>
-                        <li class="breadcrumb-item active">Reporte de Desembolsos</li>
+                        <li class="breadcrumb-item"><a href="#">Reportes</a></li>
+                        <li class="breadcrumb-item active">Desembolsos</li>
                     </ol>
                 </div>
             </div>
@@ -24,11 +26,118 @@
 
     <div class="content">
         <div class="container-fluid">
+            
+            <!-- Tarjetas de Resumen -->
+            <div class="row mb-3" id="tarjetas_resumen" style="display: none;">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3 id="total_desembolsos">0</h3>
+                            <p>Total Desembolsos</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3 id="monto_total">C$ 0</h3>
+                            <p>Monto Total</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3 id="promedio_desembolso">C$ 0</h3>
+                            <p>Promedio por Préstamo</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3 id="clientes_unicos">0</h3>
+                            <p>Clientes Únicos</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros Mejorados -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-filter"></i> Filtros de Consulta
+                            </h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-calendar-alt text-primary"></i> Fecha Inicio:</label>
+                                        <input type="date" class="form-control" id="fechaInicio" value="<?php echo date('Y-m-01'); ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-calendar-check text-primary"></i> Fecha Fin:</label>
+                                        <input type="date" class="form-control" id="fechaFin" value="<?php echo date('Y-m-d'); ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-clock text-primary"></i> Rango Rápido:</label>
+                                        <select class="form-control" id="rangoRapido">
+                                            <option value="">Seleccionar período...</option>
+                                            <option value="hoy">📅 Hoy</option>
+                                            <option value="ayer">📅 Ayer</option>
+                                            <option value="semana">📊 Esta semana</option>
+                                            <option value="mes">📊 Este mes</option>
+                                            <option value="mes_anterior">📊 Mes anterior</option>
+                                            <option value="trimestre">📊 Este trimestre</option>
+                                            <option value="ano">📊 Este año</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button type="button" class="btn btn-primary btn-block" id="btnFiltrarDesembolsos">
+                                            <i class="fas fa-search"></i> Consultar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Resultados -->
             <div class="row">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Desembolsos Diarios e Históricos</h3>
+                            <h3 class="card-title">📋 Resultados de Desembolsos</h3>
                             <div class="card-tools">
                                 <button type="button" class="btn btn-success btn-sm" id="exportarExcelDesembolsos">
                                     <i class="fas fa-file-excel"></i> Excel
@@ -42,23 +151,6 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="form-group row">
-                                <label for="fechaInicio" class="col-sm-2 col-form-label">Fecha Inicio:</label>
-                                <div class="col-sm-4">
-                                    <input type="date" class="form-control" id="fechaInicio">
-                                </div>
-                                <label for="fechaFin" class="col-sm-2 col-form-label">Fecha Fin:</label>
-                                <div class="col-sm-4">
-                                    <input type="date" class="form-control" id="fechaFin">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-12 text-right">
-                                    <button type="button" class="btn btn-primary" id="btnFiltrarDesembolsos">
-                                        <i class="fas fa-filter"></i> Filtrar
-                                    </button>
-                                </div>
-                            </div>
                             <div class="table-responsive">
                                 <table id="tbl_desembolsos" class="table table-striped table-bordered table-hover w-100">
                                     <thead>
@@ -85,175 +177,237 @@
 
 <?php require_once "modulos/footer.php"; ?>
 
-<!-- REQUIRED SCRIPTS -->
-<script src="vistas/assets/plugins/jquery/jquery.min.js"></script>
-<script src="vistas/assets/plugins/datatables/jquery.dataTables.min.js"></script>
-<script src="vistas/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-<script src="vistas/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-<script src="vistas/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-<script src="vistas/assets/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
-<script src="vistas/assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
-<script src="vistas/assets/plugins/jszip/jszip.min.js"></script>
-<script src="vistas/assets/plugins/pdfmake/pdfmake.min.js"></script>
-<script src="vistas/assets/plugins/pdfmake/vfs_fonts.js"></script>
-<script src="vistas/assets/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
-<script src="vistas/assets/plugins/datatables-buttons/js/buttons.print.min.js"></script>
-<script src="vistas/assets/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
-<script src="vistas/assets/plugins/moment/moment.min.js"></script>
-<script src="vistas/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 $(document).ready(function() {
     var tablaDesembolsos;
+    
+    console.log('📊 Inicializando Reporte de Desembolsos...');
+    
+    // Inicializar tabla
+    inicializarTabla();
+    
+    // Configurar eventos
+    configurarEventos();
+    
+    // Cargar datos iniciales del mes actual
+    cargarDesembolsos();
+});
 
-    // Función robusta para cerrar modales de desembolsos
-    function cerrarModalDesebolsos(modalId, origen) {
-        let modalCerrado = false;
-        
-        // Método 1: Swal.close() estándar
-        try {
-            if (typeof Swal !== 'undefined' && Swal.isVisible()) {
-                Swal.close();
-                modalCerrado = true;
+// Inicializar DataTable
+function inicializarTabla() {
+    tablaDesembolsos = $('#tbl_desembolsos').DataTable({
+        responsive: true,
+        processing: true,
+        language: {
+            url: "vistas/assets/plugins/datatables/i18n/Spanish.json"
+        },
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm'
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm'
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Imprimir',
+                className: 'btn btn-info btn-sm'
             }
-        } catch (e) {
-            console.error('Error con Swal.close():', e);
-        }
-        
-        // Método 2: Limpieza manual del DOM (backup)
-        setTimeout(function() {
-            const containers = $('.swal2-container');
-            if (containers.length > 0) {
-                containers.remove();
-                modalCerrado = true;
-            }
-            
-            // Limpiar clases del body y html
-            $('body').removeClass('swal2-shown swal2-height-auto');
-            $('html').removeClass('swal2-shown swal2-height-auto');
-        }, 100);
-    }
-
-    // Función mejorada para cargar desembolsos con manejo robusto de errores
-    function cargarDesembolsos(fechaInicio = '', fechaFin = '') {
-        try {
-            // Verificar si SweetAlert2 está disponible
-            if (typeof Swal === 'undefined') {
-                alert('Error: SweetAlert2 no está disponible. Recargue la página.');
-                return;
-            }
-            
-            // Forzar cierre de cualquier modal anterior
-            if (Swal.isVisible()) {
-                Swal.close();
-            }
-            
-            // Limpiar cualquier modal residual en el DOM
-            $('.swal2-container').remove();
-            $('body').removeClass('swal2-shown swal2-height-auto');
-            $('html').removeClass('swal2-shown swal2-height-auto');
-            
-            // Crear modal con ID único para rastreo
-            const modalId = 'modal-desembolsos-' + Date.now();
-            Swal.fire({
-                title: 'Cargando datos...',
-                text: 'Por favor espere.',
-                allowEscapeKey: false,
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                customClass: {
-                    container: modalId
-                },
-                didOpen: () => {
-                    Swal.showLoading();
+        ],
+        columns: [
+            { data: 'nro_prestamo', title: 'N° Préstamo' },
+            { data: 'cliente_nombres', title: 'Cliente' },
+            { 
+                data: 'pres_monto', 
+                title: 'Monto',
+                render: function(data) {
+                    return 'C$ ' + parseFloat(data || 0).toLocaleString('es-NI', {minimumFractionDigits: 2});
                 }
-            });
-
-            // Limpiar tabla existente
-            if ($.fn.DataTable.isDataTable('#tbl_desembolsos')) {
-                $('#tbl_desembolsos').DataTable().destroy();
-            }
-
-            tablaDesembolsos = $('#tbl_desembolsos').DataTable({
-                "ajax": {
-                    "url": "ajax/reportes_ajax.php",
-                    "type": "POST",
-                    "data": function(d) {
-                        d.accion = "obtener_desembolsos";
-                        d.fecha_inicio = fechaInicio;
-                        d.fecha_fin = fechaFin;
-                        return d;
-                    },
-                    "dataSrc": "",
-                    "success": function(response) {
-                        // Cerrar modal de múltiples formas para garantizar cierre
-                        cerrarModalDesebolsos(modalId, 'success');
-                        
-                        if (response.error) {
-                            Swal.fire('Error', response.message, 'error');
-                            return;
-                        }
-                    },
-                    "error": function(xhr, status, error) {
-                        // Cerrar modal de múltiples formas
-                        cerrarModalDesebolsos(modalId, 'error');
-                        
-                        Swal.fire('Error', 'Error al cargar los datos. Intente nuevamente.', 'error');
-                        console.error("Error AJAX:", status, error);
-                    },
-                    "complete": function() {
-                        // No necesario cerrar aquí, ya se hace en success/error
-                    }
-                },
-                "columns": [
-                    { "data": "nro_prestamo" },
-                    { "data": "cliente_nombres" },
-                    { "data": "monto_desembolsado" },
-                    { "data": "fecha_desembolso" },
-                    { "data": "fecha_registro_prestamo" },
-                    { "data": "pres_aprobacion" }
-                ],
-                "order": [[3, "desc"]], // Order by fecha_desembolso descending
-                "language": {
-                    "url": "vistas/assets/plugins/datatables/i18n/Spanish.json"
-                },
-                "dom": 'Bfrtip',
-                "buttons": [
-                    'colvis' // Only column visibility, custom buttons are in HTML
-                ],
-                "responsive": true, "lengthChange": false, "autoWidth": false,
-                "drawCallback": function(settings) {
-                    // Tabla dibujada correctamente
+            },
+            { data: 'fecha_desembolso', title: 'F. Desembolso' },
+            { data: 'fecha_registro', title: 'F. Registro' },
+            { 
+                data: 'pres_estado', 
+                title: 'Estado',
+                render: function(data) {
+                    if (data === 'VIGENTE') return '<span class="badge badge-success">Vigente</span>';
+                    if (data === 'CANCELADO') return '<span class="badge badge-info">Cancelado</span>';
+                    if (data === 'PENDIENTE') return '<span class="badge badge-warning">Pendiente</span>';
+                    return '<span class="badge badge-secondary">' + data + '</span>';
                 }
-            });
-        } catch (e) {
-            console.error('Error inesperado en cargarDesembolsos:', e);
-            alert('Error inesperado al cargar los datos. Intente nuevamente.');
-        }
-    }
-
-        // Cargar desembolsos al cargar la página (todos históricos)
-        cargarDesembolsos();
-
-        // Evento de clic para el botón de filtrar
-        $('#btnFiltrarDesembolsos').on('click', function() {
-            var fechaInicio = $('#fechaInicio').val();
-            var fechaFin = $('#fechaFin').val();
-            cargarDesembolsos(fechaInicio, fechaFin);
-        });
-
-        // Custom export buttons handlers
-        $('#exportarExcelDesembolsos').on('click', function() {
-            tablaDesembolsos.button('.buttons-excel').trigger();
-        });
-
-        $('#exportarPdfDesembolsos').on('click', function() {
-            tablaDesembolsos.button('.buttons-pdf').trigger();
-        });
-
-        $('#imprimirDesembolsos').on('click', function() {
-            tablaDesembolsos.button('.buttons-print').trigger();
-        });
+            }
+        ]
     });
+}
+
+// Configurar eventos
+function configurarEventos() {
+    // Rango rápido
+    $('#rangoRapido').on('change', function() {
+        var rango = $(this).val();
+        if (rango) {
+            var fechas = calcularRangoFechas(rango);
+            $('#fechaInicio').val(fechas.inicio);
+            $('#fechaFin').val(fechas.fin);
+        }
+    });
+    
+    // Botón filtrar
+    $('#btnFiltrarDesembolsos').on('click', function() {
+        cargarDesembolsos();
+    });
+    
+    // Exportaciones
+    $('#exportarExcelDesembolsos').on('click', function() {
+        tablaDesembolsos.button('.buttons-excel').trigger();
+    });
+    
+    $('#exportarPdfDesembolsos').on('click', function() {
+        tablaDesembolsos.button('.buttons-pdf').trigger();
+    });
+    
+    $('#imprimirDesembolsos').on('click', function() {
+        tablaDesembolsos.button('.buttons-print').trigger();
+    });
+}
+
+// Calcular rangos de fechas
+function calcularRangoFechas(rango) {
+    var hoy = new Date();
+    var inicio, fin;
+    
+    switch(rango) {
+        case 'hoy':
+            inicio = fin = hoy.toISOString().split('T')[0];
+            break;
+        case 'ayer':
+            var ayer = new Date(hoy);
+            ayer.setDate(hoy.getDate() - 1);
+            inicio = fin = ayer.toISOString().split('T')[0];
+            break;
+        case 'semana':
+            var inicioSemana = new Date(hoy);
+            inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+            inicio = inicioSemana.toISOString().split('T')[0];
+            fin = hoy.toISOString().split('T')[0];
+            break;
+        case 'mes':
+            inicio = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-01';
+            fin = hoy.toISOString().split('T')[0];
+            break;
+        case 'mes_anterior':
+            var mesAnterior = new Date(hoy);
+            mesAnterior.setMonth(hoy.getMonth() - 1);
+            inicio = mesAnterior.getFullYear() + '-' + String(mesAnterior.getMonth() + 1).padStart(2, '0') + '-01';
+            var ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            fin = ultimoDia.toISOString().split('T')[0];
+            break;
+        case 'trimestre':
+            var mesActual = hoy.getMonth();
+            var inicioTrimestre = Math.floor(mesActual / 3) * 3;
+            inicio = hoy.getFullYear() + '-' + String(inicioTrimestre + 1).padStart(2, '0') + '-01';
+            fin = hoy.toISOString().split('T')[0];
+            break;
+        case 'ano':
+            inicio = hoy.getFullYear() + '-01-01';
+            fin = hoy.toISOString().split('T')[0];
+            break;
+        default:
+            inicio = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-01';
+            fin = hoy.toISOString().split('T')[0];
+    }
+    
+    return { inicio: inicio, fin: fin };
+}
+
+// Cargar datos de desembolsos
+function cargarDesembolsos() {
+    var fechaInicio = $('#fechaInicio').val();
+    var fechaFin = $('#fechaFin').val();
+    
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Por favor seleccione ambas fechas.', 'warning');
+        return;
+    }
+    
+    if (fechaInicio > fechaFin) {
+        Swal.fire('Error', 'La fecha de inicio no puede ser mayor a la fecha fin.', 'warning');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Consultando...',
+        text: 'Obteniendo datos de desembolsos.',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    $.ajax({
+        url: 'ajax/reportes_ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'reporte_desembolsos',
+            fecha_inicio: fechaInicio,
+            fecha_fin: fechaFin
+        },
+        dataType: 'json',
+        success: function(respuesta) {
+            Swal.close();
+            
+            if (respuesta && Array.isArray(respuesta)) {
+                // Cargar datos en tabla
+                tablaDesembolsos.clear().rows.add(respuesta).draw();
+                
+                // Actualizar tarjetas de resumen
+                actualizarResumen(respuesta);
+                
+                // Mostrar tarjetas
+                $('#tarjetas_resumen').show();
+                
+                if (respuesta.length > 0) {
+                    Swal.fire('Éxito', `Se encontraron ${respuesta.length} registros de desembolsos.`, 'success');
+                } else {
+                    Swal.fire('Sin resultados', 'No se encontraron desembolsos en el período seleccionado.', 'info');
+                }
+            } else {
+                Swal.fire('Error', 'No se pudieron obtener los datos.', 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.close();
+            console.error('Error al cargar desembolsos:', error);
+            Swal.fire('Error', 'Error al consultar los datos. Intente nuevamente.', 'error');
+        }
+    });
+}
+
+// Actualizar tarjetas de resumen
+function actualizarResumen(datos) {
+    if (!datos || datos.length === 0) {
+        $('#total_desembolsos').text('0');
+        $('#monto_total').text('C$ 0');
+        $('#promedio_desembolso').text('C$ 0');
+        $('#clientes_unicos').text('0');
+        return;
+    }
+    
+    var totalDesembolsos = datos.length;
+    var montoTotal = datos.reduce((sum, item) => sum + parseFloat(item.pres_monto || 0), 0);
+    var promedioDesembolso = montoTotal / totalDesembolsos;
+    var clientesUnicos = new Set(datos.map(item => item.cliente_nombres)).size;
+    
+    $('#total_desembolsos').text(totalDesembolsos.toLocaleString());
+    $('#monto_total').text('C$ ' + montoTotal.toLocaleString('es-NI', {minimumFractionDigits: 2}));
+    $('#promedio_desembolso').text('C$ ' + promedioDesembolso.toLocaleString('es-NI', {minimumFractionDigits: 2}));
+    $('#clientes_unicos').text(clientesUnicos.toLocaleString());
+}
 </script> 

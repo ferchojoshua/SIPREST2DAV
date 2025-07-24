@@ -1,8 +1,9 @@
+(function() {
 // =====================================================
 // FUNCIONES DEL DASHBOARD DE CAJA - DESARROLLADOR SENIOR
 // =====================================================
 
-// Variables globales
+// Variables locales
 let dashboardData = {};
 let updateInterval;
 
@@ -333,12 +334,42 @@ function mostrarAuditoria() {
 // =====================================================
 
 function abrirCaja() {
-    // Redirigir a la página de apertura de caja o abrir modal
-    if (typeof CargarContenido === 'function') {
-        CargarContenido('vistas/caja.php', 'content-wrapper');
-    } else {
-        window.location.href = 'index.php?ruta=caja';
-    }
+    // Verificar permisos primero
+    $.ajax({
+        url: "ajax/caja_ajax.php",
+        method: "POST",
+        data: {
+            accion: "verificar_permisos_caja",
+            sub_accion: "ABRIR_CAJA"
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success && response.permisos.puede_ejecutar) {
+                // Mostrar el modal de apertura
+                $("#modal_abrir_caja").modal('show');
+                
+                // Cargar sucursales si es necesario
+                cargarSucursalesModal();
+                
+                // Establecer valores por defecto
+                $("#text_descripcion").val('Apertura de Caja');
+                $("#text_monto_ini").focus();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Permisos',
+                    text: 'No tiene los permisos necesarios para abrir caja'
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron verificar los permisos'
+            });
+        }
+    });
 }
 
 function cerrarCaja() {
@@ -486,6 +517,9 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     }, 5000);
 }
 
+// Exponer al ámbito global
+window.mostrarNotificacion = mostrarNotificacion;
+
 // =====================================================
 // FUNCIONES ADICIONALES NECESARIAS
 // =====================================================
@@ -506,9 +540,39 @@ function cerrarCajaRapido(cajaId) {
     });
 }
 
-function verDetalleCaja(cajaId) {
-    mostrarNotificacion('Función de detalles en desarrollo', 'info');
-}
+function verDetalleCaja(caja_id) {
+    $('#detalle-caja-body').html('<div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>');
+    $('#modal-detalle-caja').modal('show');
+    $.ajax({
+        url: 'ajax/caja_ajax.php',
+        method: 'POST',
+        dataType: 'json',
+        data: { accion: 'detalle_caja', caja_id },
+        success: function(response) {
+            if (response.success && response.data) {
+                const c = response.data;
+                let html = `<div class='mb-2'><strong>${c.caja_descripcion}</strong> <span class='badge badge-${c.caja_estado === 'VIGENTE' ? 'success' : 'secondary'}'>${c.caja_estado}</span></div>`;
+                html += `<div><b>Usuario:</b> ${c.usuario_apertura_nombre || 'N/A'}</div>`;
+                html += `<div><b>Fecha Apertura:</b> ${c.caja_f_apertura} ${c.caja_hora_apertura || ''}</div>`;
+                html += `<div><b>Sucursal:</b> ${c.sucursal_nombre || 'N/A'}</div>`;
+                html += `<hr class='my-2'>`;
+                html += `<div><b>Monto Inicial:</b> ${formatearMoneda(c.caja_monto_inicial)}</div>`;
+                html += `<div><b>Ingresos:</b> ${formatearMoneda(c.caja_monto_ingreso)}</div>`;
+                html += `<div><b>Egresos:</b> ${formatearMoneda(c.caja__monto_egreso)}</div>`;
+                html += `<div><b>Préstamos:</b> ${formatearMoneda(c.caja_prestamo)}</div>`;
+                html += `<div><b>Saldo Actual:</b> ${formatearMoneda(c.caja_monto_total)}</div>`;
+                if (c.observaciones_apertura) html += `<div><b>Obs. Apertura:</b> ${c.observaciones_apertura}</div>`;
+                if (c.observaciones_cierre) html += `<div><b>Obs. Cierre:</b> ${c.observaciones_cierre}</div>`;
+                $('#detalle-caja-body').html(html);
+            } else {
+                $('#detalle-caja-body').html('<div class="text-danger">No se encontraron detalles de la caja.</div>');
+            }
+        },
+        error: function() {
+            $('#detalle-caja-body').html('<div class="text-danger">Error al obtener detalles de la caja.</div>');
+        }
+    });
+};
 
 function abrirNuevaCaja() {
     abrirCaja();
@@ -578,10 +642,465 @@ function abrirModalConteoFisico() {
     mostrarNotificacion('Modal de conteo físico en desarrollo', 'info');
 }
 
+// === CONTEO FÍSICO CON DENOMINACIONES ===
+window.realizarConteoFisico = function() {
+    // Limpiar el formulario
+    $('#form-conteo-fisico')[0].reset();
+    $('#total-denominaciones').text('0');
+    $('#tabla-denominaciones .denom-total').text('0');
+    $('#modal-conteo-fisico').modal('show');
+};
+
+// Función para cerrar el modal manualmente
+window.cerrarModalConteoFisico = function() {
+    $('#modal-conteo-fisico').modal('hide');
+};
+
+// Event listeners para cerrar el modal
+$(document).ready(function() {
+    // Botón X del modal
+    $('#modal-conteo-fisico .close').on('click', function() {
+        $('#modal-conteo-fisico').modal('hide');
+    });
+    
+    // Botón Cancelar del modal
+    $('#modal-conteo-fisico .btn-secondary').on('click', function() {
+        $('#modal-conteo-fisico').modal('hide');
+    });
+});
+
+// Calcular total de denominaciones en tiempo real
+$(document).on('input', '.input-denom', function() {
+    let total = 0;
+    $('#tabla-denominaciones tbody tr').each(function() {
+        const valor = parseFloat($(this).find('.input-denom').data('valor'));
+        const cantidad = parseInt($(this).find('.input-denom').val()) || 0;
+        const subtotal = valor * cantidad;
+        $(this).find('.denom-total').text(subtotal);
+        total += subtotal;
+    });
+    $('#total-denominaciones').text(total);
+});
+
+window.confirmarConteoFisico = function() {
+    const tipo = $('#tipo-conteo').val();
+    const saldoFisico = parseFloat($('#saldo-fisico').val()) || 0;
+    const observaciones = $('#observaciones-conteo').val();
+    // Denominaciones
+    let denominaciones = [];
+    $('#tabla-denominaciones tbody tr').each(function() {
+        const valor = parseFloat($(this).find('.input-denom').data('valor'));
+        const cantidad = parseInt($(this).find('.input-denom').val()) || 0;
+        if (cantidad > 0) {
+            denominaciones.push({ valor, cantidad });
+        }
+    });
+    // Validación básica
+    if (saldoFisico <= 0) {
+        Swal.fire('Error', 'Ingrese el saldo físico contado.', 'warning');
+        return;
+    }
+    Swal.fire({
+        title: '¿Registrar conteo físico?',
+        text: 'Esta acción guardará el conteo físico de la caja.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Registrar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'ajax/caja_ajax.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'registrar_conteo_fisico',
+                    tipo_conteo: tipo,
+                    saldo_fisico: saldoFisico,
+                    denominaciones: JSON.stringify(denominaciones),
+                    observaciones: observaciones
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Éxito', response.message || 'Conteo físico registrado correctamente.', 'success');
+                        $('#modal-conteo-fisico').modal('hide');
+                        if (typeof window.actualizarDashboard === 'function') {
+                            window.actualizarDashboard();
+                        }
+                    } else {
+                        Swal.fire('Error', response.message || 'No se pudo registrar el conteo físico.', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                }
+            });
+        }
+    });
+};
+
+// === GENERAR REPORTE ===
+window.generarReporte = function() {
+    $('#form-generar-reporte')[0].reset();
+    $('#modal-generar-reporte').modal('show');
+};
+
+// Descargar reporte
+$(document).on('click', '#btn-descargar-reporte', function() {
+    const tipo = $('#tipo-reporte').val();
+    const formato = $('#formato-reporte').val();
+    if (!tipo || !formato) {
+        Swal.fire('Error', 'Seleccione tipo y formato de reporte.', 'warning');
+        return;
+    }
+    Swal.fire({ title: 'Generando reporte...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    $.ajax({
+        url: 'ajax/caja_ajax.php',
+        method: 'POST',
+        data: { accion: 'generar_reporte_caja', tipo, formato },
+        xhrFields: { responseType: 'blob' },
+        success: function(data, status, xhr) {
+            Swal.close();
+            // Descargar archivo
+            const blob = new Blob([data], { type: xhr.getResponseHeader('Content-Type') });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reporte_caja.${formato === 'pdf' ? 'pdf' : formato === 'excel' ? 'xlsx' : 'csv'}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        },
+        error: function() {
+            Swal.fire('Error', 'No se pudo generar el reporte.', 'error');
+        }
+    });
+});
+
+// Enviar reporte por correo
+$(document).on('click', '#btn-enviar-reporte', function() {
+    const tipo = $('#tipo-reporte').val();
+    const formato = $('#formato-reporte').val();
+    const email = $('#email-reporte').val();
+    if (!tipo || !formato) {
+        Swal.fire('Error', 'Seleccione tipo y formato de reporte.', 'warning');
+        return;
+    }
+    if (!email || !email.includes('@')) {
+        Swal.fire('Error', 'Ingrese un correo válido.', 'warning');
+        return;
+    }
+    Swal.fire({ title: 'Enviando reporte...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    $.ajax({
+        url: 'ajax/caja_ajax.php',
+        method: 'POST',
+        data: { accion: 'enviar_reporte_caja', tipo, formato, email },
+        dataType: 'json',
+        success: function(response) {
+            Swal.close();
+            if (response.success) {
+                Swal.fire('Éxito', response.message || 'Reporte enviado correctamente.', 'success');
+                $('#modal-generar-reporte').modal('hide');
+            } else {
+                Swal.fire('Error', response.message || 'No se pudo enviar el reporte.', 'error');
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        }
+    });
+});
+
+window.cerrarCajaEspecifica = function(caja_id) {
+    Swal.fire({
+        title: '¿Cerrar esta caja?',
+        text: 'Esta acción cerrará la caja seleccionada.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cerrar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'ajax/caja_ajax.php',
+                method: 'POST',
+                dataType: 'json',
+                data: { accion: 'cerrar_caja_especifica', caja_id },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Éxito', response.message || 'Caja cerrada correctamente.', 'success');
+                        if (typeof window.actualizarDashboard === 'function') window.actualizarDashboard();
+                    } else {
+                        Swal.fire('Error', response.message || 'No se pudo cerrar la caja.', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                }
+            });
+        }
+    });
+};
+
+window.verDetalleCaja = function(caja_id) {
+    $.ajax({
+        url: 'ajax/caja_ajax.php',
+        method: 'POST',
+        dataType: 'json',
+        data: { accion: 'detalle_caja', caja_id },
+        success: function(response) {
+            if (response.success) {
+                const data = response.data;
+                $('#detalleCajaModalLabel').text(`Detalle de Caja - ${data.nombre || 'ID: ' + caja_id}`);
+                
+                // Llenar los datos del modal
+                $('#detalle_caja_id').text(data.id || caja_id);
+                $('#detalle_usuario').text(data.usuario || 'No disponible');
+                $('#detalle_sucursal').text(data.sucursal || 'No disponible');
+                $('#detalle_fecha_apertura').text(data.fecha_apertura || 'No disponible');
+                $('#detalle_saldo_inicial').text(data.saldo_inicial || '$0');
+                $('#detalle_saldo_actual').text(data.saldo_actual || '$0');
+                $('#detalle_total_ingresos').text(data.total_ingresos || '$0');
+                $('#detalle_total_egresos').text(data.total_egresos || '$0');
+                $('#detalle_estado').text(data.estado || 'Activa');
+                
+                // Mostrar el modal
+                $('#detalleCajaModal').modal('show');
+            } else {
+                Swal.fire('Error', response.message || 'No se pudieron obtener los detalles de la caja.', 'error');
+            }
+        },
+        error: function() {
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        }
+    });
+};
+
+window.cerrarCaja = function() {
+    Swal.fire({
+        title: '¿Realizar cierre del día?',
+        text: 'Esta acción cerrará todas las cajas activas y generará el reporte de cierre.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cerrar día',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'ajax/caja_ajax.php',
+                method: 'POST',
+                dataType: 'json',
+                data: { accion: 'cerrar_dia' },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Éxito', response.message || 'Cierre del día realizado correctamente.', 'success');
+                        if (typeof window.actualizarDashboard === 'function') window.actualizarDashboard();
+                    } else {
+                        Swal.fire('Error', response.message || 'No se pudo realizar el cierre del día.', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                }
+            });
+        }
+    });
+};
+
 // =====================================================
 // INICIALIZACIÓN
 // =====================================================
 
-$(document).ready(function() {
-    console.log('Funciones del dashboard de caja cargadas correctamente');
-}); 
+// Función para obtener el contexto del usuario
+function obtenerContextoUsuario() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: "ajax/caja_ajax.php",
+            method: "POST",
+            data: {
+                accion: "obtener_contexto_usuario"
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    resolve(response.data);
+                } else {
+                    reject(new Error(response.message || 'Error al obtener contexto'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error obteniendo contexto:', error);
+                if (xhr.status === 401 || xhr.responseJSON?.message?.includes('sesión')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Sesión Expirada',
+                        text: 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Iniciar Sesión',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = 'login.php';
+                        }
+                    });
+                } else {
+                    reject(new Error('Error al obtener contexto: ' + error));
+                }
+            }
+        });
+    });
+}
+
+// Función para inicializar el dashboard
+async function inicializarDashboard() {
+    try {
+        const contexto = await obtenerContextoUsuario();
+        
+        // Actualizar información del usuario en la interfaz
+        $('#usuario-nombre').text(contexto.usuario.nombre);
+        $('#usuario-perfil').text(contexto.usuario.perfil);
+        if (contexto.usuario.sucursal) {
+            $('#usuario-sucursal').text(contexto.usuario.sucursal);
+        }
+
+        // Configurar permisos y accesos
+        if (contexto.usuario.es_admin || contexto.permisos_caja.puede_ejecutar) {
+            $('.btn-caja').show();
+            $('.btn-admin').show();
+        } else {
+            $('.btn-caja').hide();
+            $('.btn-admin').hide();
+        }
+
+        // Inicializar otros componentes del dashboard
+        actualizarEstadisticas();
+        inicializarEventos();
+        
+    } catch (error) {
+        console.error('Error inicializando dashboard:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Error al inicializar el dashboard',
+            showConfirmButton: true,
+            confirmButtonText: 'Reintentar',
+            allowOutsideClick: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.reload();
+            }
+        });
+    }
+}
+
+// Función para actualizar la interfaz con estadísticas
+function actualizarInterfazEstadisticas(estadisticas) {
+    try {
+        console.log('Actualizando interfaz con estadísticas:', estadisticas);
+        
+        // Actualizar las tarjetas del dashboard
+        if (estadisticas.cajas_abiertas !== undefined) {
+            $('.card-dashboard .info-box-number, .small-box h3').each(function() {
+                const $this = $(this);
+                const parent = $this.closest('.small-box, .info-box');
+                
+                // Buscar por clases o texto para identificar cada tarjeta
+                if (parent.find('.small-box-footer, .info-box-text').text().includes('Estado de Caja') || 
+                    parent.hasClass('bg-info') || 
+                    $this.text().includes('$')) {
+                    
+                    // Esta es la tarjeta de estado de caja
+                    if (estadisticas.cajas_abiertas > 0) {
+                        $this.text('$' + parseFloat(estadisticas.saldo_total || 0).toLocaleString('es-CO', {minimumFractionDigits: 2}));
+                        parent.find('.progress-description, small').text('CON CAJA');
+                    } else {
+                        $this.text('$0.00');
+                        parent.find('.progress-description, small').text('SIN CAJA');
+                    }
+                }
+            });
+        }
+        
+        // Actualizar información adicional si existe
+        $('#cajas_abiertas_count').text(estadisticas.cajas_abiertas || 0);
+        $('#cajas_cerradas_count').text(estadisticas.cajas_cerradas || 0);
+        $('#saldo_total_display').text('$' + parseFloat(estadisticas.saldo_total || 0).toLocaleString('es-CO', {minimumFractionDigits: 2}));
+        
+    } catch (error) {
+        console.error('Error actualizando interfaz de estadísticas:', error);
+    }
+}
+
+// Función para actualizar estadísticas
+function actualizarEstadisticas() {
+    $.ajax({
+        url: "ajax/caja_ajax.php",
+        method: "POST",
+        data: {
+            accion: "obtener_dashboard_caja"
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                actualizarInterfazEstadisticas(response.data);
+            }
+        },
+        error: function(error) {
+            console.error('Error actualizando estadísticas:', error);
+        }
+    });
+}
+
+// Función para inicializar eventos
+function inicializarEventos() {
+    // Evento para actualizar automáticamente
+    setInterval(actualizarEstadisticas, 60000); // Actualizar cada minuto
+
+    // Otros eventos del dashboard
+    $('.btn-refresh').on('click', actualizarEstadisticas);
+}
+
+// =================================================================================================
+// INICIALIZACIÓN Y MANEJO DE EVENTOS CENTRALIZADO
+// =================================================================================================
+(function($) {
+    // Formatear moneda: redefinir solo si no está ya en global_functions.js
+    if (typeof window.formatearMoneda === 'undefined') {
+        window.formatearMoneda = function(valor) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(valor);
+        };
+    }
+
+    // Las funciones de acción (abrirCaja, cerrarCaja, etc.) ya están definidas como proxies en global_functions.js.
+    // Aquí nos aseguramos de que los listeners de jQuery llamen a las funciones globales.
+
+    // Manejo de eventos centralizado usando delegación de eventos
+    // Esto asegura que los botones funcionen incluso si se cargan dinámicamente.
+    $(document).on('click', '#btn-abrir-caja', function() {
+        window.abrirCaja();
+    });
+    $(document).on('click', '#btn-cerrar-caja', function() {
+        window.cerrarCaja();
+    });
+    $(document).on('click', '#btn-realizar-conteo', function() {
+        window.realizarConteoFisico();
+    });
+    $(document).on('click', '#btn-generar-reporte', function() {
+        window.generarReporte();
+    });
+
+    // Inicializar el dashboard cuando la página se carga
+    $(document).ready(function() {
+        // La inicialización ahora se hace a través de la función global
+        if (typeof inicializarDashboard === 'function') {
+            inicializarDashboard();
+        } else {
+            console.error("Error: inicializarDashboard no está definida.");
+        }
+    });
+
+})(jQuery);
+
+})(); 

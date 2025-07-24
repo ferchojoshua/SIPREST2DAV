@@ -66,6 +66,7 @@ class AdminPrestamosModelo
         // $stmt = Conexion::conectar()->prepare('call SP_VER_DETALLE_PRESTAMO(:nro_prestamo)');
         $stmt = Conexion::conectar()->prepare("SELECT
                                                 pd.pdetalle_id,
+                                                pd.nro_prestamo,
                                                 pd.pdetalle_nro_cuota,
                                                 CASE 
                                                     WHEN pd.pdetalle_fecha = '0000-00-00' OR pd.pdetalle_fecha IS NULL 
@@ -80,22 +81,22 @@ class AdminPrestamosModelo
                                                     THEN ''
                                                     ELSE DATE_FORMAT(pd.pdetalle_fecha_registro, '%d/%m/%Y %H:%i')
                                                 END as pdetalle_fecha_registro,
-                                                pc.nro_prestamo,
+                                                m.moneda_simbolo,
+                                                -- Datos de cabecera (solo una vez, no repetidos por cuota)
                                                 pc.pres_monto,
                                                 pc.pres_monto_total,
                                                 pc.pres_interes,
                                                 pc.pres_cuotas,
                                                 DATE_FORMAT(pc.pres_f_emision, '%d/%m/%Y') as pres_f_emision,
-                                                c.cliente_nombres AS cliente_nombres,
+                                                c.cliente_nombres,
                                                 c.cliente_dni,
-                                                fp.fpago_descripcion,
-                                                m.moneda_simbolo
-                                            FROM prestamo_cabecera pc
-                                            INNER JOIN prestamo_detalle pd ON pc.nro_prestamo = pd.nro_prestamo
+                                                fp.fpago_descripcion
+                                            FROM prestamo_detalle pd
+                                            INNER JOIN prestamo_cabecera pc ON pd.nro_prestamo = pc.nro_prestamo
                                             INNER JOIN clientes c ON pc.cliente_id = c.cliente_id
                                             INNER JOIN forma_pago fp ON pc.fpago_id = fp.fpago_id
                                             INNER JOIN moneda m ON pc.moneda_id = m.moneda_id
-                                            WHERE pc.nro_prestamo = :nro_prestamo
+                                            WHERE pd.nro_prestamo = :nro_prestamo
                                             ORDER BY pd.pdetalle_nro_cuota ASC");
         
         $stmt->bindParam(":nro_prestamo", $nro_prestamo, PDO::PARAM_STR);
