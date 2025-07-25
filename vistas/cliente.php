@@ -393,6 +393,8 @@
   }
   </style>
 
+<?php require_once "modulos/footer.php"; ?>
+
   <script>
       var accion;
       var tbl_clientes, titulo_modal;

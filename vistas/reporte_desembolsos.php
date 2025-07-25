@@ -103,8 +103,8 @@
                                         <input type="date" class="form-control" id="fechaFin" value="<?php echo date('Y-m-d'); ?>">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
+                                <div class="col-md-2">
+                                    <div class="form-group mb-4">
                                         <label><i class="fas fa-clock text-primary"></i> Rango Rápido:</label>
                                         <select class="form-control" id="rangoRapido">
                                             <option value="">Seleccionar período...</option>
@@ -151,21 +151,21 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
+                                   <div class="table-responsive">
                                 <table id="tbl_desembolsos" class="table table-striped table-bordered table-hover w-100">
-                                    <thead>
+                                  <thead class="bg-gradient-info text-white">
                                         <tr>
-                                            <th>Número Préstamo</th>
-                                            <th>Cliente</th>
-                                            <th>Monto Desembolsado</th>
-                                            <th>Fecha Desembolso</th>
-                                            <th>Fecha Registro Préstamo</th>
-                                            <th>Estado Aprobación</th>
+                                            <th class="text-center">Número Préstamo</th>
+                                            <th class="text-center">Cliente</th>
+                                            <th class="text-center">Monto Desembolsado</th>
+                                            <th class="text-center">Fecha Desembolso</th>
+                                            <th class="text-center">Fecha Registro Préstamo</th>
+                                            <th class="text-center">Estado Aprobación</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                     </tbody>
-                                </table>
+                                     </table>
                             </div>
                         </div>
                     </div>
@@ -181,10 +181,7 @@
 $(document).ready(function() {
     var tablaDesembolsos;
     
-    console.log('📊 Inicializando Reporte de Desembolsos...');
-    
-    // Inicializar tabla
-    inicializarTabla();
+   inicializarTabla();
     
     // Configurar eventos
     configurarEventos();
@@ -352,10 +349,10 @@ function cargarDesembolsos() {
     });
     
     $.ajax({
-        url: 'ajax/reportes_ajax.php',
+        url: 'ajax/reporte_desembolsos_ajax.php',
         type: 'POST',
         data: {
-            accion: 'reporte_desembolsos',
+            accion: 'obtener_desembolsos',
             fecha_inicio: fechaInicio,
             fecha_fin: fechaFin
         },

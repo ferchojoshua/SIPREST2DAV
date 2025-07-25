@@ -180,7 +180,7 @@ if (isset($_SESSION["usuario"])) {
 
     </div>
 </div>
-
+<?php require_once "modulos/footer.php"; ?>
 <script>
 var chartPivot = null;
 

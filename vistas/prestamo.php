@@ -33,88 +33,78 @@
                               <div class="col-md-8">
                                   <div class="card ">
                                       <div class="card-header">
-                                          <h6 class="card-title">SOLICITUD DEL CREDITO</h6>
+                                          <h6 class="card-title">SOLICITUD DE CREDITO</h6>
                                       </div>
                                       <div class=" card-body">
 
                                           <!-- PARA BUSCAR EL CLIENTE -->
-                                          <div class="row">
-                                              <div class="col-md-8 col-10">
-                                                  <div class="form-group mb-2">
-                                                      <!-- <label for="" class="">
+                                         <div class="row">
+                                                        <!-- Nº de Préstamo -->
+                                                        <div class="col-md-8 col-10">
+                                                            <div class="form-group mb-2">
+                                                            <input type="text" name="" id="cliente_id" hidden>
+                                                            <input type="text" name="" id="id_usuario" hidden>
+                                                            <input type="text" name="" id="id_caja" hidden>
 
-                                                          <span class="small"> Dni del Cliente</span>
-                                                      </label> -->
-                                                      <input type="text" name="" id="cliente_id" hidden>
-                                                      <input type="text" name="" id="id_usuario" hidden>
-                                                      <input type="text" name="" id="id_caja" hidden>
+                                                            <input type="text" class="form-control form-control-sm" id="text_nro_prestamo" required disabled>
+                                                            </div>
+                                                        </div>
 
-                                                      <input type="text" class=" form-control form-control-sm"
-                                                          id="text_nro_prestamo" required disabled>
+                                                        <!-- Cédula -->
+                                                        <div class="col-md-8 col-10">
+                                                            <div class="form-group mb-2">
+                                                            <input type="text" class="form-control form-control-sm" id="text_dni" autocomplete="off"
+                                                                name="text_dni" placeholder="Cédula o Nombre del Cliente" required>
+                                                            <div class="invalid-feedback">Debe ingresar la Cédula del cliente</div>
+                                                            </div>
+                                                        </div>
 
-                                                  </div>
-                                              </div>
-                                              <div class="col-md-8 col-10">
-                                                  <div class="form-group mb-2">
+                                                        <!-- Botón buscar cliente -->
+                                                        <div class="col-md-2 col-2">
+                                                            <div class="form-group mb-2 d-grid">
+                                                            <button class="btn btn-info btn-sm" id="abrirmodal_buscar_cliente">
+                                                                <i class="fas fa-search"></i>
+                                                            </button>
+                                                            </div>
+                                                        </div>
 
-                                                      <input type="text" class=" form-control form-control-sm"
-                                                          id="text_dni" autocomplete="off" name="text_dni"
-                                                          placeholder="Cédula del cliente" required>
+                                                        <!-- Nombre del cliente -->
+                                                        <div class="col-md-8">
+                                                            <div class="form-group mb-2">
+                                                            <input type="text" class="form-control form-control-sm" id="text_nombre" name="text_nombre"
+                                                                placeholder="Nombre del cliente" disabled>
+                                                            </div>
+                                                        </div>
 
-                                                      <div class="invalid-feedback">Debe ingresar la Cedula del cliente
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                              <div class="col-md-4 col-2">
-                                                  <div class="form-group mb-2">
-                                                      <!-- <label for="">&nbsp;&nbsp;</label><br> -->
+                                                        <!-- Documento del cliente -->
+                                                        <div class="col-md-2">
+                                                            <div class="form-group mb-2">
+                                                            <input type="text" class="form-control form-control-sm" id="text_doc_dn" name="text_doc_dn"
+                                                                placeholder="Cedula" disabled>
+                                                            </div>
+                                                        </div>
 
-                                                      <button class="btn btn-info btn-sm "
-                                                          id="abrirmodal_buscar_cliente"><i
-                                                              class="fas fa-search"></i></button>
-                                                      <!-- <button class="btn btn-info btn-sm float-right" id="abrirmodal_registrar_cliente"><i class="fas fa-plus"></i></button><br> -->
+                                                        <!-- Combo de Sucursal (solo visible para admin) -->
+                                                        <div class="col-md-3" id="combo-sucursal-container" style="display: none;">
+                                                            <div class="form-group mb-2">
+                                                            <label for="combo-sucursales" class="form-label fw-semibold text-dark small">
+                                                                <i class="fas fa-building me-1 text-primary"></i> Seleccione una Sucursal
+                                                            </label>
+                                                            <select class="form-select form-select-sm" id="combo-sucursales" required>
+                                                                <option value="" disabled selected class="text-muted"> Seleccione una sucursal</option>
+                                                                <!-- Opciones dinámicas -->
+                                                            </select>
+                                                            <div class="invalid-feedback small">
+                                                                Por favor, seleccione una sucursal válida.
+                                                            </div>
+                                                            </div>
+                                                        </div>
+                                                        </div>
 
-                                                  </div>
-                                              </div>
-                                              <!-- <br>
-                                              <br> -->
-
-                                              <div class="col-md-8">
-                                                  <div class="form-group mb-2">
-                                                      <input type="text" class=" form-control form-control-sm"
-                                                          id="text_nombre" name="text_nombre"
-                                                          placeholder="Nombre cliente" disabled>
-                                                  </div>
-                                              </div>
-                                              <div class="col-md-4">
-                                                  <div class="form-group mb-2">
-                                                      <input type="text" class=" form-control form-control-sm"
-                                                          id="text_doc_dn" name="text_doc_dn" placeholder="Documento"
-                                                          disabled>
-                                                  </div>
-                                              </div>
-
-                                          </div>
 
                                           <br>
                                           <hr>
                                           <h5 style="text-align:center;">Informacion del Prestamo</h5>
-                                          
-                                          <!-- COMBO SUCURSALES SOLO PARA ADMINISTRADORES -->
-                                          <div class="row" id="combo-sucursal-container" style="display: none;">
-                                              <div class="col-md-12">
-                                                  <div class="form-group mb-3">
-                                                      <label for="combo-sucursales" class="">
-                                                          <i class="fas fa-building"></i> <span class="small">Sucursal para el Préstamo</span>
-                                                      </label>
-                                                      <select class="form-control form-control-sm" id="combo-sucursales" required>
-                                                          <option value="">-- Seleccione Sucursal --</option>
-                                                      </select>
-                                                      <div class="invalid-feedback">Debe seleccionar una sucursal</div>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                          
                                           <br>
                                           <!-- PARA CALCULAR LAS CUOTAS E INTERES DEL PRESTAMO -->
                                           <!-- <form class="needs-validation" novalidate>  -->
@@ -232,6 +222,7 @@
                                                       <input type="text" class="form-control form-control-sm" id="text_total_resultado" readonly>
                                                   </div>
                                               </div>
+                                  
                                               <div class="col-12 d-flex justify-content-end mt-3">
                                                   <button type="button" class="btn btn-danger" id="btnLimpiarCampos" hidden>
                                                       <i class="fas fa-broom"></i> LIMPIAR
@@ -250,7 +241,7 @@
                                                   <table id="tbl_prestamo" class="table table-bordered table-striped table-sm compact" style="width: 100%">
                                                       <thead class="bg-gradient-info text-white">
                                                           <tr>
-                                                              <th class="text-center">Nro. C</th>
+                                                              <th class="text-center">Nº</th>
                                                               <th class="text-center">Fecha</th>
                                                               <th class="text-center">Monto</th>
                                                               <th class="text-center">Capital</th>
@@ -549,7 +540,7 @@
       </div>
   </div>
   <!-- fin Modal -->
-
+<?php require_once "modulos/footer.php"; ?>
   <script>
 // ============================================================================
 // FUNCIONES GLOBALES - DEFINIDAS ANTES DE TODO EL RESTO DEL CÓDIGO
@@ -580,7 +571,7 @@ function cargarSucursalesAdmin() {
         dataType: 'json',
         success: function(response) {
             const select = $('#combo-sucursales');
-            select.empty().append('<option value="">-- Seleccione Sucursal --</option>');
+            select.empty().append('<option value="">Seleccione Sucursal</option>');
             
             if (response && Array.isArray(response) && response.length > 0) {
                 response.forEach(function(sucursal) {
@@ -1179,7 +1170,7 @@ function RegistarPrestamo() {
                     CargarCorrelativo();
                     fechas();
                     $("#tbody_tabla_detalle_pro").empty();
-                    $("#tbody_tabla_detalle_pro").html('<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-calculator"></i> Complete los datos y calcule para ver la tabla de amortización</td></tr>');
+                    $("#tbody_tabla_detalle_pro").html('<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-calculator"></i> Complete los datos y calcule la tabla de amortización</td></tr>');
                     $("#btnRegistrar").attr('disabled', false);
                 },
                 error: function(xhr, status, error) {

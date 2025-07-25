@@ -63,9 +63,7 @@
                                         <th>Cantidad</th>
                                         <th>Monto Capital</th>
                                         <th>Monto Interés</th>
-                                        <th>Monto Total</th>
-                                        <th>Símbolo Moneda</th>
-                                        <th>Nombre Moneda</th>
+                                        <th>Monto Total</th>                                     
                                     </tr>
                                 </thead>
                                 <tbody class="small text-left">
@@ -78,7 +76,7 @@
         </div>
     </div>
 </div>
-
+<?php require_once "modulos/footer.php"; ?>
 <script>
 $(document).ready(function() {
     var tablaReporteDiario;
@@ -110,9 +108,7 @@ $(document).ready(function() {
                             item.cantidad,
                             parseFloat(item.monto_capital).toFixed(2),
                             parseFloat(item.monto_interes).toFixed(2),
-                            parseFloat(item.monto_total).toFixed(2),
-                            item.moneda_simbolo,
-                            item.moneda_nombre
+                            parseFloat(item.monto_total).toFixed(2)
                         ]);
                     });
                 } else if (respuesta.error) {

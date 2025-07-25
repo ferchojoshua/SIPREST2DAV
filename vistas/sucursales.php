@@ -270,7 +270,7 @@
         cursor: not-allowed;
     }
 </style>
-
+<?php require_once "modulos/footer.php"; ?>
 <script>
 // Contador de caracteres para la dirección
 document.addEventListener('DOMContentLoaded', function() {

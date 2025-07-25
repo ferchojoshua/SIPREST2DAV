@@ -350,7 +350,7 @@
     </div>
 </div>
 <!-- fin Modal -->
-
+<?php require_once "modulos/footer.php"; ?>
 <script>
     var accion;
     var tbl_usuarios, titulo_modal;
@@ -554,9 +554,7 @@
                     datos.append("nombre_usuario", $("#text_nombres").val());
                     datos.append("apellido_usuario", $("#text_apellidos").val());
                     datos.append("usuario", $("#text_usuario").val());
-                    if(accion == 1) {
-                        datos.append("clave", $("#text_clave").val());
-                    }
+                    if(accion == 1) {datos.append("clave", $("#text_clave").val());}
                     datos.append("id_perfil_usuario", $("#select_perfil").val());
                     datos.append("sucursal_id", $("#select_sucursal").val());
                     datos.append("telefono_whatsapp", $("#text_telefono_whatsapp").val());
@@ -737,7 +735,7 @@
                 data: 'estado_texto',
                 render: function(data, type, row) {
                     if (type === 'display') {
-                        return row.estado == 'Activo' ? 
+                        return row.estado_texto == 'Activo' ? 
                              '<span class="badge bg-success">Activo</span>': 
                             '<span class="badge bg-danger">Inactivo</span>' ;
                     }
@@ -902,7 +900,7 @@
     $('#tbl_usuarios').on('click', '.btn_editar_usuario', function() {
         var data = tbl_usuarios.row($(this).parents('tr')).data();
         accion = 2; // Modo edición
-        $("#iptclave").hide();
+        $("#iptclave").show();
         $("#div_estado_usuario").show(); // Mostrar campo de estado en edición
         $("#titulo_modal_usuario").html("Editar Usuario");
         $("#btnregistrar_usuario").html("Modificar"); // Cambiar texto del botón
@@ -918,6 +916,7 @@
         $("#text_nombres").val(data.nombre_usuario);
         $("#text_apellidos").val(data.apellido_usuario);
         $("#text_usuario").val(data.usuario);
+         $("#text_clave").val(data.clave);
         $("#text_cedula").val(data.cedula || '');
         $("#text_celular").val(data.celular || '');
         $("#text_ciudad").val(data.ciudad || '');
@@ -929,8 +928,7 @@
         $("#text_direccion").val(data.direccion || '');
         $("#text_telefono_whatsapp").val(data.telefono_whatsapp || '');
         $("#check_whatsapp_activo").prop('checked', data.whatsapp_activo == 1);
-        $("#check_whatsapp_admin").prop('checked', data.whatsapp_admin == 1);
-        
+        $("#check_whatsapp_admin").prop('checked', data.whatsapp_admin == 1);        
         // Establecer estado del usuario (1 = Activo, 0 = Inactivo)
         $("#select_estado_usuario").val(data.estado_texto === 'Activo' ? '1' : '0');
         

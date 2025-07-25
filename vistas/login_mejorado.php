@@ -304,7 +304,7 @@
             </div>
         </form>
     </div>
-
+<?php require_once "modulos/footer.php"; ?>
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');

@@ -979,6 +979,8 @@
   </div>
 </div>
 
+<?php require_once "modulos/footer.php"; ?>
+
   <script src="vistas/js/caja_page_functions.js"></script>
   <!-- Script para correcciones de modales -->
   <script src="vistas/assets/dist/js/caja-modales-corregidos.js"></script>

@@ -123,7 +123,7 @@
       </div>
   </div>
   <!-- fin Modal -->
-
+<?php require_once "modulos/footer.php"; ?>
 
   <script>
       var accion;

@@ -101,15 +101,25 @@ class AjaxUsuario
     /*===================================================================*/
     public function ajaxActualizarUsuario($data)
     {
+        try {
         $table = "usuarios"; //TABLA
         $id = $_POST["id_usuario"]; //LO QUE VIENE DE PRODUCTOS.PHP
-        $nameId = "id_usuario"; //CAMPO DE LA BASEbien bebe
+        $nameId = "id_usuario"; //CAMPO DE LA BASE
 
-        $respuesta = UsuarioControlador::ctrActualizarUsuario($table, $data, $id, $nameId);
+           if (empty($id)) {
+            echo json_encode(array("error" => "ID de usuario requerido"));
+            return;
+        }
+          $respuesta = UsuarioControlador::ctrActualizarUsuario($table, $data, $id, $nameId);
 
+        // Retornar respuesta en formato JSON
         echo json_encode($respuesta);
-    }
 
+    } catch (Exception $e) {
+        // Manejo de errores
+        echo json_encode(array("error" => "Error al actualizar usuario: " . $e->getMessage()));
+    }
+}
      /*===================================================================*/
     //ACTIVAR USUARIO
     /*===================================================================*/

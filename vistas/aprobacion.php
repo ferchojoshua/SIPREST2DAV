@@ -60,7 +60,7 @@
                                 <thead class="bg-gradient-info text-white">
                                     <tr>
                                         <th>Id</th>
-                                        <th># Prestamo</th>
+                                        <th>Nº Prestamo</th>
                                         <th>cliente id</th>
                                         <th>Cliente</th>
                                         <th>Monto</th>
@@ -428,6 +428,9 @@
         </div>
     </div>
 </div>
+
+<?php require_once "modulos/footer.php"; ?>
+
 
 <script>
     var accion;

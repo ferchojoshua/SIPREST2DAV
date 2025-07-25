@@ -273,6 +273,8 @@
 </div>
 <!-- /.content -->
 
+<?php require_once "modulos/footer.php"; ?>
+
 <script>
     $(document).ready(function() {
       // Solo ejecutar si estamos en la página del dashboard

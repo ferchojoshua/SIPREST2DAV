@@ -314,33 +314,100 @@ class UsuarioModelo
      /*=============================================
     ACTUALIZAR DATOS DEL USUARIO
     =============================================*/
-    static public function mdlActualizarUsuario($table, $data, $id, $nameId)
-    {
+  
+static public function mdlActualizarUsuario($table, $data, $id, $nameId)
+{
+    try {
+        // Campos permitidos para actualizar (lista completa basada en tu formulario)
+        $camposPermitidos = [
+            'nombre_usuario',
+            'apellido_usuario', 
+            'usuario',
+            'clave', // Solo si se proporciona
+            'id_perfil_usuario',
+            'sucursal_id',
+            'cedula',
+            'celular',
+            'ciudad',
+            'direccion',
+            'profesion',
+            'cargo',
+            'fecha_ingreso',
+            'numero_seguro',
+            'forma_pago',
+            'telefono_whatsapp',
+            'whatsapp_activo',
+            'whatsapp_admin',
+            'estado'
+        ];
 
+        // Filtrar solo los campos permitidos que vienen en $data
+        $datosLimpios = array();
+        foreach ($data as $key => $value) {
+            if (in_array($key, $camposPermitidos)) {
+                // Si es la clave y está vacía, no la incluimos en la actualización
+                if ($key === 'clave' && empty($value)) {
+                    continue;
+                }
+                $datosLimpios[$key] = $value;
+            }
+        }
+
+        // Verificar que hay datos para actualizar
+        if (empty($datosLimpios)) {
+            return array("error" => "No hay datos válidos para actualizar");
+        }
+
+        // Construir la consulta SET dinámicamente
         $set = "";
+        foreach ($datosLimpios as $key => $value) {
+            $set .= $key . " = :" . $key . ", ";
+        }
+        $set = rtrim($set, ", "); // Quitar la última coma y espacio
 
-        foreach ($data as $key => $value) {
-            $set .= $key . " = :" . $key . ","; //DEPENDE DEL ARRAY QUE VIENE DEL AJAX
+        // Preparar la consulta SQL
+        $sql = "UPDATE $table SET $set WHERE $nameId = :$nameId";
+        $stmt = Conexion::conectar()->prepare($sql);
+
+        // Vincular parámetros
+        foreach ($datosLimpios as $key => $value) {
+            // Determinar el tipo de parámetro
+            if ($key === 'id_perfil_usuario' || $key === 'sucursal_id' || 
+                $key === 'whatsapp_activo' || $key === 'whatsapp_admin' || 
+                $key === 'estado') {
+                $stmt->bindParam(":" . $key, $datosLimpios[$key], PDO::PARAM_INT);
+            } else {
+                $stmt->bindParam(":" . $key, $datosLimpios[$key], PDO::PARAM_STR);
+            }
         }
 
-        $set = substr($set, 0, -1); //QUITA LA COMA
-
-        $stmt = Conexion::conectar()->prepare("UPDATE $table SET $set WHERE $nameId = :$nameId");
-
-        foreach ($data as $key => $value) {
-            $stmt->bindParam(":" . $key, $data[$key], PDO::PARAM_STR);
-        }
-
+        // Vincular el ID
         $stmt->bindParam(":" . $nameId, $id, PDO::PARAM_INT);
 
+        // Ejecutar la consulta
         if ($stmt->execute()) {
             return "ok";
         } else {
-
-            return Conexion::conectar()->errorInfo();
+            $errorInfo = $stmt->errorInfo();
+            return array(
+                "error" => "Error en la base de datos",
+                "details" => $errorInfo[2],
+                "sql_state" => $errorInfo[0],
+                "error_code" => $errorInfo[1]
+            );
         }
-    }
 
+    } catch (PDOException $e) {
+        return array(
+            "error" => "Error de PDO: " . $e->getMessage(),
+            "code" => $e->getCode()
+        );
+    } catch (Exception $e) {
+        return array(
+            "error" => "Error general: " . $e->getMessage()
+        );
+    }
+}
 
     /*=============================================
     ACTIVAR USUARIO

@@ -80,8 +80,8 @@
                                             <h5 class="card-title"><i class="fas fa-money-check-alt"></i> Préstamos a Colocar / Monto Colocado</h5>
                                         </div>
                                         <div class="card-body">
-                                            <p><strong>Cantidad de Préstamos Colocados:</strong> <span id="cantidadColocados">0</span></p>
-                                            <p><strong>Monto Colocado:</strong> <span id="montoColocado">C$ 0.00</span></p>
+                                            <p><strong>Cantidad de Préstamos:</strong> <span id="cantidadColocados">0</span></p>
+                                            <p><strong>Monto :</strong> <span id="montoColocado">C$ 0.00</span></p>
                                         </div>
                                     </div>
                                 </div>

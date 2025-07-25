@@ -34,7 +34,7 @@
                                   <thead class="bg-gradient-info text-white">
                                       <tr>
                                           <th>Id</th>
-                                          <th>Nro Prestamo</th>
+                                          <th>Nº Prestamo</th>
                                           <th>cliente id</th>
                                           <th>Cliente</th>
                                           <th>Monto</th>
@@ -323,6 +323,7 @@
       </div>
   </div>
   <!-- fin Modal Abono -->
+   <?php require_once "modulos/footer.php"; ?>
 
   <script>
       var accion;

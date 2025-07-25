@@ -107,7 +107,7 @@ if (isset($_SESSION["usuario"])) {
 
     </div>
 </div>
-
+<?php require_once "modulos/footer.php"; ?>
 <script>
 $(document).ready(function() {
     // Inicializar Select2 para búsqueda de clientes

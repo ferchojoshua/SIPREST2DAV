@@ -207,6 +207,8 @@ MODAL VER MIEMBROS
 $borrarGrupo = new ControladorGruposReportes();
 $borrarGrupo->ctrBorrarGrupo();
 ?>
+
+<?php require_once "modulos/footer.php"; ?>
 <script>
   $(document).ready(function() {
     // Lógica para editar grupo

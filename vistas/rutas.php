@@ -763,7 +763,7 @@
         border-left-color: #ffc107;
     }
 </style>
-
+<?php require_once "modulos/footer.php"; ?>
 <!-- JavaScript para funcionalidad -->
 <script>
 $(document).ready(function() {

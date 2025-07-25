@@ -430,7 +430,7 @@
             </form>
         </div>
     </div>
-
+<?php require_once "modulos/footer.php"; ?>
     <script>
         // Focus automático en usuario
         document.addEventListener('DOMContentLoaded', function() {

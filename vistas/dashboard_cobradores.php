@@ -232,6 +232,9 @@
 
 </div>
 
+
+<?php require_once "modulos/footer.php"; ?>
+
 <!-- Scripts específicos del dashboard -->
 <script src="vistas/assets/dist/js/dashboard-charts.js"></script>
 <script>

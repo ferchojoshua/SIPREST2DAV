@@ -9,9 +9,12 @@ class ReporteDesembolsosControlador {
         $fechaFin = isset($_POST["fecha_fin"]) ? $_POST["fecha_fin"] : '';
 
         $respuesta = ReporteDesembolsosModelo::mdlObtenerDesembolsos($fechaInicio, $fechaFin);
+        if ($respuesta === null) {
+            $respuesta = [];
+        }
         return $respuesta;
     }
 
 }
 
-?> 
+?>

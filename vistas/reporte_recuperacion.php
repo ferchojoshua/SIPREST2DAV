@@ -123,7 +123,7 @@
     </div><!-- /.container-fluid -->
 </div>
 <!-- /.content -->
-
+<?php require_once "modulos/footer.php"; ?>
 <script>
     $(document).ready(function() {
         
